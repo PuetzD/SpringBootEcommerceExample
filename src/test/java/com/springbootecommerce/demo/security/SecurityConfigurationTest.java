@@ -1,0 +1,257 @@
+package com.springbootecommerce.demo.security;
+
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+
+import com.springbootecommerce.demo.account.domain.Account;
+import com.springbootecommerce.demo.account.domain.Role;
+import com.springbootecommerce.demo.account.persistence.AccountRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@Import(SecurityConfigurationTest.SecurityTestWebConfiguration.class)
+class SecurityConfigurationTest {
+
+  @Autowired private MockMvc mockMvc;
+
+  @Autowired private AccountRepository accountRepository;
+
+  @Autowired private PasswordEncoder passwordEncoder;
+
+  @BeforeEach
+  void clearAccounts() {
+    accountRepository.deleteAll();
+  }
+
+  @Test
+  void permitsAnonymousPublicRoutes() throws Exception {
+    mockMvc.perform(get("/catalog/security-test")).andExpect(status().isOk());
+    mockMvc.perform(get("/cart/security-test")).andExpect(status().isOk());
+    mockMvc.perform(get("/login")).andExpect(status().isOk());
+    mockMvc.perform(get("/admin/login")).andExpect(status().isOk());
+  }
+
+  @Test
+  void rendersHomepageInThePublicIndexWithSeoMetadata() throws Exception {
+    mockMvc
+        .perform(get("/"))
+        .andExpect(status().isOk())
+        .andExpect(view().name("storefront/homepage"))
+        .andExpect(
+            content()
+                .string(
+                    containsString("<title>Shop Happens - Buy stuff. Be happy.</title>")))
+        .andExpect(content().string(containsString("name=\"description\"")))
+        .andExpect(content().string(containsString("rel=\"canonical\"")))
+        .andExpect(content().string(containsString("property=\"og:url\"")))
+        .andExpect(content().string(containsString("/js/homepage.js")))
+        .andExpect(
+            content()
+                .string(
+                    containsString(
+                        "Discover amazing products at unbeatable prices. Shop the latest trends with confidence.")))
+        .andExpect(content().string(containsString("Featured Products")));
+  }
+
+  @Test
+  void redirectsAnonymousCustomerAndAdminRequestsToTheirLoginPages() throws Exception {
+    mockMvc
+        .perform(get("/account/security-test"))
+        .andExpect(status().isFound())
+        .andExpect(header().string("Location", containsString("/login")));
+    mockMvc
+        .perform(get("/admin/security-test"))
+        .andExpect(status().isFound())
+        .andExpect(header().string("Location", containsString("/admin/login")));
+  }
+
+  @Test
+  void grantsCustomerRoutesOnlyToCustomers() throws Exception {
+    mockMvc
+        .perform(get("/account/security-test").with(user("customer").roles("CUSTOMER")))
+        .andExpect(status().isOk());
+    mockMvc
+        .perform(get("/account/security-test").with(user("admin").roles("ADMIN")))
+        .andExpect(status().isForbidden())
+        .andExpect(forwardedUrl("/403"));
+  }
+
+  @Test
+  void grantsAdminRoutesOnlyToAdmins() throws Exception {
+    mockMvc
+        .perform(get("/admin/security-test").with(user("admin").roles("ADMIN")))
+        .andExpect(status().isOk());
+    mockMvc
+        .perform(get("/admin/security-test").with(user("customer").roles("CUSTOMER")))
+        .andExpect(status().isForbidden())
+        .andExpect(forwardedUrl("/403"));
+  }
+
+  @Test
+  void requiresCsrfForCustomerAndAdminStateChanges() throws Exception {
+    mockMvc
+        .perform(post("/order/security-test").with(user("customer").roles("CUSTOMER")))
+        .andExpect(status().isForbidden());
+    mockMvc
+        .perform(post("/order/security-test").with(user("customer").roles("CUSTOMER")).with(csrf()))
+        .andExpect(status().isOk());
+
+    mockMvc
+        .perform(post("/admin/security-test").with(user("admin").roles("ADMIN")))
+        .andExpect(status().isForbidden());
+    mockMvc
+        .perform(post("/admin/security-test").with(user("admin").roles("ADMIN")).with(csrf()))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void authenticatesKnownCustomerAndRejectsUnknownAndDisabledAccounts() throws Exception {
+    createAccount("customer@example.com", Role.CUSTOMER, true);
+    createAccount("disabled@example.com", Role.CUSTOMER, false);
+
+    mockMvc
+        .perform(formLogin("/login").user("customer@example.com").password("password"))
+        .andExpect(status().isFound())
+        .andExpect(header().string("Location", "/"));
+    mockMvc
+        .perform(formLogin("/login").user("missing@example.com").password("password"))
+        .andExpect(status().isFound())
+        .andExpect(header().string("Location", containsString("/login?error")));
+    mockMvc
+        .perform(formLogin("/login").user("disabled@example.com").password("password"))
+        .andExpect(status().isFound())
+        .andExpect(header().string("Location", containsString("/login?error")));
+  }
+
+  @Test
+  void authenticatesKnownAdministrator() throws Exception {
+    createAccount("admin@example.com", Role.ADMIN, true);
+
+    mockMvc
+        .perform(formLogin("/admin/login").user("admin@example.com").password("password"))
+        .andExpect(status().isFound())
+        .andExpect(header().string("Location", "/admin/index"));
+  }
+
+  @Test
+  void redirectsCustomersToTheirOriginalRequestAfterLogin() throws Exception {
+    createAccount("customer@example.com", Role.CUSTOMER, true);
+    var protectedRequest =
+        mockMvc.perform(get("/account/security-test")).andExpect(status().isFound()).andReturn();
+
+    mockMvc
+        .perform(
+            post("/login")
+                .param("username", "customer@example.com")
+                .param("password", "password")
+                .cookie(protectedRequest.getResponse().getCookie("SESSION"))
+                .with(csrf()))
+        .andExpect(status().isFound())
+        .andExpect(header().string("Location", containsString("/account/security-test")));
+  }
+
+  @Test
+  void deniesCustomerAccessAfterAdminLogin() throws Exception {
+    createAccount("customer@example.com", Role.CUSTOMER, true);
+
+    var loginResult =
+        mockMvc
+            .perform(formLogin("/admin/login").user("customer@example.com").password("password"))
+            .andExpect(status().isFound())
+            .andReturn();
+
+    mockMvc
+        .perform(get("/admin/index").cookie(loginResult.getResponse().getCookie("SESSION")))
+        .andExpect(status().isForbidden())
+        .andExpect(forwardedUrl("/403"));
+  }
+
+  @Test
+  void logsOutAuthenticatedCustomers() throws Exception {
+    createAccount("customer@example.com", Role.CUSTOMER, true);
+    var loginResult =
+        mockMvc
+            .perform(formLogin("/login").user("customer@example.com").password("password"))
+            .andExpect(status().isFound())
+            .andReturn();
+
+    mockMvc
+        .perform(
+            post("/logout").cookie(loginResult.getResponse().getCookie("SESSION")).with(csrf()))
+        .andExpect(status().isFound())
+        .andExpect(header().string("Location", "/login?logout"));
+
+    mockMvc
+        .perform(
+            get("/account/security-test").cookie(loginResult.getResponse().getCookie("SESSION")))
+        .andExpect(status().isFound())
+        .andExpect(header().string("Location", containsString("/login")));
+  }
+
+  private void createAccount(String email, Role role, boolean enabled) {
+    var account = new Account();
+    account.setEmail(email);
+    account.setPasswordHash(passwordEncoder.encode("password"));
+    account.setRole(role);
+    account.setEnabled(enabled);
+    accountRepository.saveAndFlush(account);
+  }
+
+  @TestConfiguration(proxyBeanMethods = false)
+  static class SecurityTestWebConfiguration {
+    @Bean
+    SecurityTestController securityTestController() {
+      return new SecurityTestController();
+    }
+  }
+
+  @RestController
+  static class SecurityTestController {
+    @GetMapping({"/catalog/security-test", "/cart/security-test"})
+    String publicRoute() {
+      return "public";
+    }
+
+    @GetMapping("/account/security-test")
+    String customerRoute() {
+      return "customer";
+    }
+
+    @PostMapping("/order/security-test")
+    String customerStateChange() {
+      return "customer-updated";
+    }
+
+    @GetMapping({"/admin/index", "/admin/security-test"})
+    String adminRoute() {
+      return "admin";
+    }
+
+    @PostMapping("/admin/security-test")
+    String adminStateChange() {
+      return "admin-updated";
+    }
+  }
+}

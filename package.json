@@ -3,11 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build:css": "node ./node_modules/tailwindcss/lib/cli.js -i ./src/main/resources/static/css/input.css -o ./src/main/resources/static/css/output.css --minify",
-    "dev:css": "node ./node_modules/tailwindcss/lib/cli.js -i ./src/main/resources/static/css/input.css -o ./src/main/resources/static/css/output.css --watch",
+    "build:css": "npx @tailwindcss/cli -i ./src/main/resources/static/css/input.css -o ./src/main/resources/static/css/output.css --minify",
+    "dev:css": "npx @tailwindcss/cli -i ./src/main/resources/static/css/input.css -o ./src/main/resources/static/css/output.css --watch",
     "test": "echo \"No frontend tests configured\""
   },
   "devDependencies": {
-    "tailwindcss": "3.4.17"
+    "tailwindcss": "^4.3.3",
+    "@tailwindcss/cli": "^4.3.3",
+    "daisyui": "^5.7.22",
+    "@iconify/tailwind4": "^1.2.3",
+    "@iconify-json/mdi": "^1.2.3"
   }
 }
