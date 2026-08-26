@@ -39,3 +39,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Node / Frontend ###
+node/
+node_modules/
+src/main/resources/static/css/output.css

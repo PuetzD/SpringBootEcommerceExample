@@ -1,0 +1,13 @@
+{
+  "name": "spring-boot-ecommerce",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build:css": "node ./node_modules/tailwindcss/lib/cli.js -i ./src/main/resources/static/css/input.css -o ./src/main/resources/static/css/output.css --minify",
+    "dev:css": "node ./node_modules/tailwindcss/lib/cli.js -i ./src/main/resources/static/css/input.css -o ./src/main/resources/static/css/output.css --watch",
+    "test": "echo \"No frontend tests configured\""
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17"
+  }
+}

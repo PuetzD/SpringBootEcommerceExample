@@ -1,8 +1,10 @@
-package com.springbootecommerce.demo.account.application;
+package com.springbootecommerce.demo.account.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.springbootecommerce.demo.account.application.AccountAuthenticationQuery;
+import com.springbootecommerce.demo.account.application.AuthenticatedAccount;
 import com.springbootecommerce.demo.account.domain.Role;
 import com.springbootecommerce.demo.integration.PostgresIntegrationTest;
 import org.junit.jupiter.api.Test;
