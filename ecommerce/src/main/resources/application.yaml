@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: ecommerce
+server:
+  port: 8080
+  datasource:
+    url: jdbc:postgresql://localhost:5432/demo
+    username: demo
+    password: demo
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  session:
+    timeout: 30m
+  docker:
+    compose:
+      enabled: true
+      lifecycle-management: start-and-stop
+      wait:
+        timeout: 60s
+        for: healthy
+logging:
+  level:
+    org:
+      springframework:
+        security: TRACE
+      hibernate:
+        SQL: DEBUG
+        orm:
+          jdbc:
+            bind: TRACE
