@@ -5,5 +5,4 @@ import org.springframework.stereotype.Controller;
 
 @RequiredArgsConstructor
 @Controller
-public class LoginController {
-}
+public class LoginController {}
