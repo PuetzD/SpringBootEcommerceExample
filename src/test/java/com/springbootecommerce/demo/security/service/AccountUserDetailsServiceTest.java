@@ -23,11 +23,12 @@ public class AccountUserDetailsServiceTest {
   @Test
   void mapsCustomerToCustomerAuthority() {
     var account =
-        new AuthenticatedAccount("customer@example.com", "{bcrypt}password-hash", Role.CUSTOMER, true);
+        new AuthenticatedAccount(
+            "customer@example.com", "{bcrypt}password-hash", Role.CUSTOMER, true);
     when(accountQuery.findByEmail("customer@example.com")).thenReturn(account);
 
     var userDetails =
-        new AccountUserDetailsService(accountQuery).loadUserByUsername("customer@example.com");
+        new AccountUserDetailsService(accountQuery).loadUserByUsername(" CUSTOMER@EXAMPLE.COM ");
 
     assertThat(userDetails.getAuthorities())
         .extracting(GrantedAuthority::getAuthority)
