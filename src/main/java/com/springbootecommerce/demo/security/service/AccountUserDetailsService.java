@@ -17,7 +17,8 @@ public class AccountUserDetailsService implements UserDetailsService {
   private final AccountAuthenticationQuery accountAuthenticationQuery;
 
   @Override
-  public @NonNull UserDetails loadUserByUsername(@NonNull String email) throws UsernameNotFoundException {
+  public @NonNull UserDetails loadUserByUsername(@NonNull String email)
+      throws UsernameNotFoundException {
     var account = accountAuthenticationQuery.findByEmail(EmailNormalizer.normalize(email));
     var role = account.role();
     if (role == null) {
