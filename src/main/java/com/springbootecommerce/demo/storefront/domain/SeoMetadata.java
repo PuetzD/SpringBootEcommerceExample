@@ -1,13 +1,6 @@
-package com.springbootecommerce.demo.shared.web;
+package com.springbootecommerce.demo.storefront.domain;
 
-public record SeoMetadata(
-    String title,
-    String description,
-    String canonicalPath,
-    String robots,
-    String openGraphTitle,
-    String openGraphDescription,
-    String openGraphType) {
+public record SeoMetadata(String title, String description, String canonicalPath, String robots) {
 
   public SeoMetadata {
     validateCanonicalPath(canonicalPath);

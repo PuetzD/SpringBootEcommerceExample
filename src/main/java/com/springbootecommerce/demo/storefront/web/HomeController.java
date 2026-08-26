@@ -1,7 +1,7 @@
 package com.springbootecommerce.demo.storefront.web;
 
-import com.springbootecommerce.demo.shared.web.CanonicalUrlFactory;
-import com.springbootecommerce.demo.shared.web.SeoMetadata;
+import com.springbootecommerce.demo.storefront.domain.CanonicalUrlFactory;
+import com.springbootecommerce.demo.storefront.domain.SeoMetadata;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,18 +20,11 @@ public class HomeController {
 
   @GetMapping("/")
   public String getHomepage(Model model, HttpServletRequest request) {
-    var seo =
-        new SeoMetadata(
-            HOMEPAGE_TITLE,
-            HOMEPAGE_DESCRIPTION,
-            "/",
-            "index,follow",
-            HOMEPAGE_TITLE,
-            HOMEPAGE_DESCRIPTION,
-            "website");
+    var seo = new SeoMetadata(HOMEPAGE_TITLE, HOMEPAGE_DESCRIPTION, "/", "index,follow");
 
     model.addAttribute("seo", seo);
-    model.addAttribute("canonicalUrl", canonicalUrlFactory.forRequest(request, seo.canonicalPath()));
+    model.addAttribute(
+        "canonicalUrl", canonicalUrlFactory.forRequest(request, seo.canonicalPath()));
     return "storefront/homepage";
   }
 }

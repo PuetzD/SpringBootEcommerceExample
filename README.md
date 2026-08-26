@@ -22,6 +22,7 @@ Future learning milestones may include:
 - Customer accounts and role-based administration
 - Shopping cart and checkout workflows
 - Order management and supporting ecommerce operations
+- Event-driven architecture with Kafka (async communication between components)
 
 The scope will evolve as the project is used to learn more of the Spring Boot
 ecosystem.

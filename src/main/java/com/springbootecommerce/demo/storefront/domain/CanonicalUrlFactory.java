@@ -1,4 +1,4 @@
-package com.springbootecommerce.demo.shared.web;
+package com.springbootecommerce.demo.storefront.domain;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Component;

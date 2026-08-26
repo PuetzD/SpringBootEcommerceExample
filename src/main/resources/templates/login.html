@@ -1,18 +1,31 @@
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-  <meta charset="UTF-8">
-  <title>Sign in</title>
-</head>
+<html
+    lang="en"
+    xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{index :: page(${seo}, ~{::main}, ~{::#page-scripts})}">
+<head></head>
 <body>
-<h1>Sign in</h1>
-<p th:if="${param.error}">Invalid email or password.</p>
-<p th:if="${param.logout}">You have been signed out.</p>
-<form th:action="@{/login}" method="post">
-  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-  <label>Email <input name="username" type="email" autocomplete="email" required></label>
-  <label>Password <input name="password" type="password" autocomplete="current-password" required></label>
-  <button type="submit">Sign in</button>
-</form>
+  <main class="flex-grow flex items-center justify-center py-16">
+    <div class="card w-full max-w-sm bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h1 class="card-title">Sign in</h1>
+        <p th:if="${param.error}" class="text-error">Invalid email or password.</p>
+        <p th:if="${param.logout}" class="text-success">You have been signed out.</p>
+        <form th:action="@{/login}" method="post" class="flex flex-col gap-4">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+          <label class="form-control">
+            Email
+            <input name="username" type="email" autocomplete="email" required class="input input-bordered">
+          </label>
+          <label class="form-control">
+            Password
+            <input name="password" type="password" autocomplete="current-password" required class="input input-bordered">
+          </label>
+          <button type="submit" class="btn btn-primary">Sign in</button>
+        </form>
+      </div>
+    </div>
+  </main>
+  <th:block id="page-scripts"></th:block>
 </body>
 </html>

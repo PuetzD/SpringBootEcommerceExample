@@ -44,5 +44,9 @@ build/
 node/
 node_modules/
 src/main/resources/static/css/output.css
+
+### ai
+/.agents/
 .worktrees/
-/.agents/skills/
+/docs/superpowers
+/.codex/config.toml

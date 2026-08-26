@@ -60,9 +60,7 @@ class SecurityConfigurationTest {
         .andExpect(status().isOk())
         .andExpect(view().name("storefront/homepage"))
         .andExpect(
-            content()
-                .string(
-                    containsString("<title>Shop Happens - Buy stuff. Be happy.</title>")))
+            content().string(containsString("<title>Shop Happens - Buy stuff. Be happy.</title>")))
         .andExpect(content().string(containsString("name=\"description\"")))
         .andExpect(content().string(containsString("rel=\"canonical\"")))
         .andExpect(content().string(containsString("property=\"og:url\"")))
@@ -73,6 +71,21 @@ class SecurityConfigurationTest {
                     containsString(
                         "Discover amazing products at unbeatable prices. Shop the latest trends with confidence.")))
         .andExpect(content().string(containsString("Featured Products")));
+  }
+
+  @Test
+  void rendersLoginAndAccessDeniedInsideThePublicShell() throws Exception {
+    mockMvc.perform(get("/login")).andExpect(status().isOk()).andExpect(view().name("login"));
+
+    mockMvc.perform(get("/403")).andExpect(status().isOk()).andExpect(view().name("403"));
+  }
+
+  @Test
+  void keepsAdminLoginOutsideThePublicShell() throws Exception {
+    mockMvc
+        .perform(get("/admin/login"))
+        .andExpect(status().isOk())
+        .andExpect(view().name("admin-login"));
   }
 
   @Test

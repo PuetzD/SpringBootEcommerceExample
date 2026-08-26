@@ -1,8 +1,10 @@
-package com.springbootecommerce.demo.shared.web;
+package com.springbootecommerce.demo.storefront.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.springbootecommerce.demo.storefront.domain.CanonicalUrlFactory;
+import com.springbootecommerce.demo.storefront.domain.SeoMetadata;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
@@ -44,17 +46,11 @@ class SeoMetadataTest {
     request.setServerPort(8080);
     request.setContextPath("/shop");
 
-    assertThat(factory.forRequest(request, "/products")).isEqualTo("http://localhost:8080/shop/products");
+    assertThat(factory.forRequest(request, "/products"))
+        .isEqualTo("http://localhost:8080/shop/products");
   }
 
   private SeoMetadata metadata(String canonicalPath) {
-    return new SeoMetadata(
-        "Title",
-        "Description",
-        canonicalPath,
-        "index,follow",
-        "Open Graph Title",
-        "Open Graph Description",
-        "website");
+    return new SeoMetadata("Title", "Description", canonicalPath, "index,follow");
   }
 }
