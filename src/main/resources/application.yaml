@@ -1,8 +1,6 @@
 spring:
   application:
     name: ecommerce
-server:
-  port: 8080
   datasource:
     url: jdbc:postgresql://localhost:5432/demo
     username: demo
@@ -29,6 +27,8 @@ server:
       wait:
         timeout: 60s
         for: healthy
+server:
+  port: 8080
 logging:
   level:
     org:
