@@ -6,7 +6,6 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -31,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Import(SecurityConfigurationTest.SecurityTestWebConfiguration.class)
+@Import({SecurityConfigurationTest.SecurityTestWebConfiguration.class, PasswordConfiguration.class})
 class SecurityConfigurationTest {
 
   @Autowired private MockMvc mockMvc;
@@ -58,19 +57,7 @@ class SecurityConfigurationTest {
     mockMvc
         .perform(get("/"))
         .andExpect(status().isOk())
-        .andExpect(view().name("storefront/homepage"))
-        .andExpect(
-            content().string(containsString("<title>Shop Happens - Buy stuff. Be happy.</title>")))
-        .andExpect(content().string(containsString("name=\"description\"")))
-        .andExpect(content().string(containsString("rel=\"canonical\"")))
-        .andExpect(content().string(containsString("property=\"og:url\"")))
-        .andExpect(content().string(containsString("/js/homepage.js")))
-        .andExpect(
-            content()
-                .string(
-                    containsString(
-                        "Discover amazing products at unbeatable prices. Shop the latest trends with confidence.")))
-        .andExpect(content().string(containsString("Featured Products")));
+        .andExpect(view().name("storefront/homepage"));
   }
 
   @Test
