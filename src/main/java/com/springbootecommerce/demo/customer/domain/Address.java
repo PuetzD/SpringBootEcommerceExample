@@ -1,6 +1,14 @@
 package com.springbootecommerce.demo.customer.domain;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,51 +20,51 @@ import org.hibernate.type.SqlTypes;
 @Entity
 @Table(name = "address")
 public class Address {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "customer_id", nullable = false)
-  private Customer customer;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Customer customer;
 
-  @Column(name = "recipient_name", nullable = false, length = 200)
-  private String recipientName;
+    @Column(name = "recipient_name", nullable = false, length = 200)
+    private String recipientName;
 
-  @Column(name = "company_name", length = 200)
-  private String companyName;
+    @Column(name = "company_name", length = 200)
+    private String companyName;
 
-  @Column(name = "address_line_1", nullable = false)
-  private String addressLine1;
+    @Column(name = "address_line_1", nullable = false)
+    private String addressLine1;
 
-  @Column(name = "address_line_2")
-  private String addressLine2;
+    @Column(name = "address_line_2")
+    private String addressLine2;
 
-  @Column(length = 100)
-  private String city;
+    @Column(length = 100)
+    private String city;
 
-  @Column(length = 100)
-  private String region;
+    @Column(length = 100)
+    private String region;
 
-  @Column(name = "postal_code", length = 32)
-  private String postalCode;
+    @Column(name = "postal_code", length = 32)
+    private String postalCode;
 
-  @Column(name = "country_code")
-  @JdbcTypeCode(SqlTypes.CHAR)
-  private String countryCode;
+    @Column(name = "country_code")
+    @JdbcTypeCode(SqlTypes.CHAR)
+    private String countryCode;
 
-  @Column(name = "phone_number", length = 32)
-  private String phoneNumber;
+    @Column(name = "phone_number", length = 32)
+    private String phoneNumber;
 
-  @Column(name = "is_default_shipping", nullable = false)
-  private boolean defaultShipping;
+    @Column(name = "is_default_shipping", nullable = false)
+    private boolean defaultShipping;
 
-  @Column(name = "is_default_billing", nullable = false)
-  private boolean defaultBilling;
+    @Column(name = "is_default_billing", nullable = false)
+    private boolean defaultBilling;
 
-  @Column(name = "created_at", insertable = false, updatable = false)
-  private OffsetDateTime createdAt;
+    @Column(name = "created_at", insertable = false, updatable = false)
+    private OffsetDateTime createdAt;
 
-  @Column(name = "updated_at", insertable = false, updatable = false)
-  private OffsetDateTime updatedAt;
+    @Column(name = "updated_at", insertable = false, updatable = false)
+    private OffsetDateTime updatedAt;
 }

@@ -6,21 +6,21 @@ import org.junit.jupiter.api.Test;
 
 class PasswordConfigurationTest {
 
-  private final PasswordConfiguration passwordConfiguration = new PasswordConfiguration();
+    private final PasswordConfiguration passwordConfiguration = new PasswordConfiguration();
 
-  @Test
-  void encodesPasswordsWithBcryptIdentifier() {
-    var passwordHash = passwordConfiguration.passwordEncoder().encode("password");
+    @Test
+    void encodesPasswordsWithBcryptIdentifier() {
+        var passwordHash = passwordConfiguration.passwordEncoder().encode("password");
 
-    assertThat(passwordHash).startsWith("{bcrypt}");
-  }
+        assertThat(passwordHash).startsWith("{bcrypt}");
+    }
 
-  @Test
-  void matchesCorrectPassword() {
-    var passwordEncoder = passwordConfiguration.passwordEncoder();
-    var passwordHash = passwordEncoder.encode("password");
+    @Test
+    void matchesCorrectPassword() {
+        var passwordEncoder = passwordConfiguration.passwordEncoder();
+        var passwordHash = passwordEncoder.encode("password");
 
-    assertThat(passwordEncoder.matches("password", passwordHash)).isTrue();
-    assertThat(passwordEncoder.matches("incorrect-password", passwordHash)).isFalse();
-  }
+        assertThat(passwordEncoder.matches("password", passwordHash)).isTrue();
+        assertThat(passwordEncoder.matches("incorrect-password", passwordHash)).isFalse();
+    }
 }

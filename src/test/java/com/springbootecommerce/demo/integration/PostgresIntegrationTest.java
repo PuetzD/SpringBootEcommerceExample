@@ -13,13 +13,13 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 public abstract class PostgresIntegrationTest {
 
-  @Container
-  static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:18.6");
+    @Container
+    static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:18.6");
 
-  @DynamicPropertySource
-  static void databaseProperties(DynamicPropertyRegistry registry) {
-    registry.add("spring.datasource.url", postgres::getJdbcUrl);
-    registry.add("spring.datasource.username", postgres::getUsername);
-    registry.add("spring.datasource.password", postgres::getPassword);
-  }
+    @DynamicPropertySource
+    static void databaseProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+    }
 }

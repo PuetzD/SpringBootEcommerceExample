@@ -15,52 +15,50 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class CatalogQueryService {
 
-  private final ProductRepository productRepository;
-  private final CategoryRepository categoryRepository;
+    private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
 
-  public CatalogQueryService(
-      ProductRepository productRepository, CategoryRepository categoryRepository) {
-    this.productRepository = productRepository;
-    this.categoryRepository = categoryRepository;
-  }
+    public CatalogQueryService(
+            ProductRepository productRepository, CategoryRepository categoryRepository) {
+        this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
+    }
 
-  public List<ProductView> findAllActiveProducts() {
-    return productRepository.findByActiveTrue().stream().map(this::toProductView).toList();
-  }
+    public List<ProductView> findAllActiveProducts() {
+        return productRepository.findByActiveTrue().stream().map(this::toProductView).toList();
+    }
 
-  public List<ProductView> findProductsByCategory(Long categoryId) {
-    return productRepository.findByActiveTrueAndCategoriesId(categoryId).stream()
-        .map(this::toProductView)
-        .toList();
-  }
+    public List<ProductView> findProductsByCategory(Long categoryId) {
+        return productRepository.findByActiveTrueAndCategoriesId(categoryId).stream()
+                .map(this::toProductView)
+                .toList();
+    }
 
-  public Optional<ProductView> findProductBySku(String sku) {
-    return productRepository.findBySku(sku).map(this::toProductView);
-  }
+    public Optional<ProductView> findProductBySku(String sku) {
+        return productRepository.findBySku(sku).map(this::toProductView);
+    }
 
-  public List<CategoryView> findAllCategories() {
-    return categoryRepository.findAll().stream().map(this::toCategoryView).toList();
-  }
+    public List<CategoryView> findAllCategories() {
+        return categoryRepository.findAll().stream().map(this::toCategoryView).toList();
+    }
 
-  public Optional<CategoryView> findCategoryBySlug(String slug) {
-    return categoryRepository.findBySlug(slug).map(this::toCategoryView);
-  }
+    public Optional<CategoryView> findCategoryBySlug(String slug) {
+        return categoryRepository.findBySlug(slug).map(this::toCategoryView);
+    }
 
-  private ProductView toProductView(Product product) {
-    var primaryCategory =
-        product.getCategories().stream().findFirst().map(Category::getName).orElse("");
-    return new ProductView(
-        product.getId(),
-        product.getSku(),
-        product.getName(),
-        product.getDescription(),
-        product.getPrice(),
-        product.getStockQuantity(),
-        product.getImageUrl(),
-        product.isActive());
-  }
+    private ProductView toProductView(Product product) {
+        return new ProductView(
+                product.getId(),
+                product.getSku(),
+                product.getName(),
+                product.getDescription(),
+                product.getPrice(),
+                product.getStockQuantity(),
+                product.getImageUrl(),
+                product.isActive());
+    }
 
-  private CategoryView toCategoryView(Category category) {
-    return new CategoryView(category.getId(), category.getName(), category.getSlug());
-  }
+    private CategoryView toCategoryView(Category category) {
+        return new CategoryView(category.getId(), category.getName(), category.getSlug());
+    }
 }
