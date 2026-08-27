@@ -6,12 +6,12 @@ import com.springbootecommerce.demo.account.domain.Account;
 import com.springbootecommerce.demo.account.domain.Role;
 import com.springbootecommerce.demo.account.persistence.AccountRepository;
 import com.springbootecommerce.demo.customer.domain.Customer;
-import com.springbootecommerce.demo.integration.PostgresIntegrationTest;
+import com.springbootecommerce.demo.integration.AbstractIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
-class CustomerRepositoryIT extends PostgresIntegrationTest {
+class CustomerRepositoryIT extends AbstractIntegrationTest {
 
     @Autowired CustomerRepository customerRepository;
     @Autowired AccountRepository accountRepository;

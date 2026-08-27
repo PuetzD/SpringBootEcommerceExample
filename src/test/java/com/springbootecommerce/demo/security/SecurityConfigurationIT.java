@@ -14,10 +14,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.springbootecommerce.demo.account.domain.Account;
 import com.springbootecommerce.demo.account.domain.Role;
 import com.springbootecommerce.demo.account.persistence.AccountRepository;
+import com.springbootecommerce.demo.integration.AbstractIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Bean;
@@ -28,10 +28,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@SpringBootTest
 @AutoConfigureMockMvc
-@Import({SecurityConfigurationTest.SecurityTestWebConfiguration.class, PasswordConfiguration.class})
-class SecurityConfigurationTest {
+@Import({SecurityConfigurationIT.SecurityTestWebConfiguration.class, PasswordConfiguration.class})
+class SecurityConfigurationIT extends AbstractIntegrationTest {
 
     @Autowired private MockMvc mockMvc;
 

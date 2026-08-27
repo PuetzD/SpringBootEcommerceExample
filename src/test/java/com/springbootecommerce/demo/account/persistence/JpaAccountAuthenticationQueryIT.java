@@ -6,13 +6,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.springbootecommerce.demo.account.application.AccountAuthenticationQuery;
 import com.springbootecommerce.demo.account.application.AuthenticatedAccount;
 import com.springbootecommerce.demo.account.domain.Role;
-import com.springbootecommerce.demo.integration.PostgresIntegrationTest;
+import com.springbootecommerce.demo.integration.AbstractIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-class JpaAccountAuthenticationQueryIT extends PostgresIntegrationTest {
+class JpaAccountAuthenticationQueryIT extends AbstractIntegrationTest {
 
     @Autowired private AccountAuthenticationQuery accountAuthenticationQuery;
 

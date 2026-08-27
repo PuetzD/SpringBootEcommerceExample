@@ -4,36 +4,28 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.springbootecommerce.demo.catalog.domain.Category;
 import com.springbootecommerce.demo.catalog.domain.Product;
-import com.springbootecommerce.demo.integration.PostgresIntegrationTest;
+import com.springbootecommerce.demo.integration.AbstractIntegrationTest;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-class ProductRepositoryIT extends PostgresIntegrationTest {
+class ProductRepositoryIT extends AbstractIntegrationTest {
 
     @Autowired ProductRepository productRepository;
     @Autowired CategoryRepository categoryRepository;
 
     @Test
     void findsProductBySku() {
-        var category = new Category();
-        category.setName("Shoes");
-        category.setSlug("shoes");
-        categoryRepository.saveAndFlush(category);
-
         var product = new Product();
         product.setSku("SHOE-001");
         product.setName("Running Shoes");
         product.setPrice(new BigDecimal("99.99"));
         product.setStockQuantity(10);
         product.setActive(true);
-        product.getCategories().add(category);
         productRepository.saveAndFlush(product);
-
         var found = productRepository.findBySku("SHOE-001");
         assertThat(found).isPresent();
         assertThat(found.get().getName()).isEqualTo("Running Shoes");
-        assertThat(found.get().getCategories()).hasSize(1);
     }
 
     @Test

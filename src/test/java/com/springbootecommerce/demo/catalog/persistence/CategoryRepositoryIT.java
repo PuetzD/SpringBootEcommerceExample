@@ -3,11 +3,11 @@ package com.springbootecommerce.demo.catalog.persistence;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.springbootecommerce.demo.catalog.domain.Category;
-import com.springbootecommerce.demo.integration.PostgresIntegrationTest;
+import com.springbootecommerce.demo.integration.AbstractIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-class CategoryRepositoryIT extends PostgresIntegrationTest {
+class CategoryRepositoryIT extends AbstractIntegrationTest {
 
     @Autowired CategoryRepository categoryRepository;
 
