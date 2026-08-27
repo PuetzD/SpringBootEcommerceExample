@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.springbootecommerce.demo.catalog.domain.Category;
 import com.springbootecommerce.demo.catalog.domain.Product;
 import com.springbootecommerce.demo.integration.AbstractIntegrationTest;
+import com.springbootecommerce.demo.sharedkernel.money.Money;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,16 +17,19 @@ class ProductRepositoryIT extends AbstractIntegrationTest {
 
     @Test
     void findsProductBySku() {
-        var product = new Product();
-        product.setSku("SHOE-001");
-        product.setName("Running Shoes");
-        product.setPrice(new BigDecimal("99.99"));
-        product.setStockQuantity(10);
-        product.setActive(true);
+        var product =
+                Product.create(
+                        "SHOE-001",
+                        "Running Shoes",
+                        "Comfortable running shoes",
+                        new Money(new BigDecimal("99.99")),
+                        10,
+                        "/images/product-placeholder.svg");
         productRepository.saveAndFlush(product);
         var found = productRepository.findBySku("SHOE-001");
         assertThat(found).isPresent();
         assertThat(found.get().getName()).isEqualTo("Running Shoes");
+        assertThat(found.get().getPrice().amount()).isEqualByComparingTo("99.99");
     }
 
     @Test
@@ -35,21 +39,26 @@ class ProductRepositoryIT extends AbstractIntegrationTest {
         category.setSlug("test-electronics");
         categoryRepository.saveAndFlush(category);
 
-        var activeProduct = new Product();
-        activeProduct.setSku("TEST-ELEC-001");
-        activeProduct.setName("Test Headphones");
-        activeProduct.setPrice(new BigDecimal("49.99"));
-        activeProduct.setStockQuantity(5);
-        activeProduct.setActive(true);
+        var activeProduct =
+                Product.create(
+                        "TEST-ELEC-001",
+                        "Test Headphones",
+                        "Over-ear headphones",
+                        new Money(new BigDecimal("49.99")),
+                        5,
+                        "/images/product-placeholder.svg");
         activeProduct.getCategories().add(category);
         productRepository.saveAndFlush(activeProduct);
 
-        var inactiveProduct = new Product();
-        inactiveProduct.setSku("TEST-ELEC-002");
-        inactiveProduct.setName("Test Old Speaker");
-        inactiveProduct.setPrice(new BigDecimal("29.99"));
-        inactiveProduct.setStockQuantity(0);
-        inactiveProduct.setActive(false);
+        var inactiveProduct =
+                Product.create(
+                        "TEST-ELEC-002",
+                        "Test Old Speaker",
+                        "An old speaker",
+                        new Money(new BigDecimal("29.99")),
+                        0,
+                        "/images/product-placeholder.svg");
+        inactiveProduct.deactivate();
         inactiveProduct.getCategories().add(category);
         productRepository.saveAndFlush(inactiveProduct);
 

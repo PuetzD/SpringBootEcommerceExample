@@ -18,6 +18,7 @@ public class JpaAccountAuthenticationQuery implements AccountAuthenticationQuery
                 .map(
                         account ->
                                 new AuthenticatedAccount(
+                                        account.getId(),
                                         account.getEmail(),
                                         account.getPasswordHash(),
                                         account.getRole(),

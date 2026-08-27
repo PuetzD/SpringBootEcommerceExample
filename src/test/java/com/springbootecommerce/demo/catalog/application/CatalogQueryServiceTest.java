@@ -8,6 +8,7 @@ import com.springbootecommerce.demo.catalog.domain.Category;
 import com.springbootecommerce.demo.catalog.domain.Product;
 import com.springbootecommerce.demo.catalog.persistence.CategoryRepository;
 import com.springbootecommerce.demo.catalog.persistence.ProductRepository;
+import com.springbootecommerce.demo.sharedkernel.money.Money;
 import java.math.BigDecimal;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,10 +34,14 @@ class CatalogQueryServiceTest {
         category.setName("Electronics");
         category.setSlug("electronics");
 
-        var product = new Product();
-        product.setId(1L);
-        product.setName("Test Product");
-        product.setPrice(new BigDecimal("99.99"));
+        var product =
+                Product.create(
+                        "TEST-001",
+                        "Test Product",
+                        "Test description",
+                        new Money(new BigDecimal("99.99")),
+                        10,
+                        "/images/product-placeholder.svg");
         product.getCategories().add(category);
 
         when(productRepository.findByActiveTrue()).thenReturn(List.of(product));
@@ -61,12 +66,14 @@ class CatalogQueryServiceTest {
         category.setName("Shoes");
         category.setSlug("shoes");
 
-        var product = new Product();
-        product.setId(1L);
-        product.setSku("SHOE-001");
-        product.setName("Running Shoes");
-        product.setPrice(new BigDecimal("89.99"));
-        product.setStockQuantity(10);
+        var product =
+                Product.create(
+                        "SHOE-001",
+                        "Running Shoes",
+                        "Comfortable running shoes",
+                        new Money(new BigDecimal("89.99")),
+                        10,
+                        "/images/product-placeholder.svg");
         product.getCategories().add(category);
 
         when(productRepository.findBySku("SHOE-001")).thenReturn(java.util.Optional.of(product));
