@@ -7,11 +7,11 @@ import com.springbootecommerce.demo.account.domain.Role;
 import com.springbootecommerce.demo.account.persistence.AccountRepository;
 import com.springbootecommerce.demo.customer.domain.Address;
 import com.springbootecommerce.demo.customer.domain.Customer;
-import com.springbootecommerce.demo.integration.PostgresIntegrationTest;
+import com.springbootecommerce.demo.integration.AbstractIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-class AddressRepositoryIT extends PostgresIntegrationTest {
+class AddressRepositoryIT extends AbstractIntegrationTest {
 
     @Autowired AddressRepository addressRepository;
     @Autowired CustomerRepository customerRepository;
