@@ -31,6 +31,8 @@ spring:
         for: healthy
 server:
   port: 8080
+storefront:
+  public-origin: ${STOREFRONT_PUBLIC_ORIGIN:http://localhost:8080}
 logging:
   level:
     org:

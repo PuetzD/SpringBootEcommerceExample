@@ -7,7 +7,7 @@ JPA, PostgreSQL/Flyway, Tailwind CSS 4, and daisyUI.
 
 ## Layout
 
-- `src/main/java/com/springbootecommerce/demo/`
+- `src/main/java/com/springbootecommerce/shophappens/`
   - `account/`: account domain, queries, persistence
   - `security/`: authentication, authorization, login web endpoints
   - `storefront/`: public storefront controllers
