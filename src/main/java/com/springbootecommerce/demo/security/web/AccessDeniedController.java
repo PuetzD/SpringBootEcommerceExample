@@ -11,20 +11,20 @@ import org.springframework.web.bind.annotation.GetMapping;
 @RequiredArgsConstructor
 @Controller
 public class AccessDeniedController {
-  private final CanonicalUrlFactory canonicalUrlFactory;
+    private final CanonicalUrlFactory canonicalUrlFactory;
 
-  @GetMapping("/403")
-  public String accessDenied(Model model, HttpServletRequest request) {
-    var seo =
-        new SeoMetadata(
-            "Access denied",
-            "You do not have permission to access this page.",
-            "/403",
-            "noindex,nofollow");
+    @GetMapping("/403")
+    public String accessDenied(Model model, HttpServletRequest request) {
+        var seo =
+                new SeoMetadata(
+                        "Access denied",
+                        "You do not have permission to access this page.",
+                        "/403",
+                        "noindex,nofollow");
 
-    model.addAttribute("seo", seo);
-    model.addAttribute(
-        "canonicalUrl", canonicalUrlFactory.forRequest(request, seo.canonicalPath()));
-    return "403";
-  }
+        model.addAttribute("seo", seo);
+        model.addAttribute(
+                "canonicalUrl", canonicalUrlFactory.forRequest(request, seo.canonicalPath()));
+        return "403";
+    }
 }

@@ -15,79 +15,79 @@ import org.junit.jupiter.api.Test;
 
 class CatalogQueryServiceTest {
 
-  private ProductRepository productRepository;
-  private CategoryRepository categoryRepository;
-  private CatalogQueryService catalogQueryService;
+    private ProductRepository productRepository;
+    private CategoryRepository categoryRepository;
+    private CatalogQueryService catalogQueryService;
 
-  @BeforeEach
-  void setUp() {
-    productRepository = mock(ProductRepository.class);
-    categoryRepository = mock(CategoryRepository.class);
-    catalogQueryService = new CatalogQueryService(productRepository, categoryRepository);
-  }
+    @BeforeEach
+    void setUp() {
+        productRepository = mock(ProductRepository.class);
+        categoryRepository = mock(CategoryRepository.class);
+        catalogQueryService = new CatalogQueryService(productRepository, categoryRepository);
+    }
 
-  @Test
-  void returnsActiveProducts() {
-    var category = new Category();
-    category.setId(1L);
-    category.setName("Electronics");
-    category.setSlug("electronics");
+    @Test
+    void returnsActiveProducts() {
+        var category = new Category();
+        category.setId(1L);
+        category.setName("Electronics");
+        category.setSlug("electronics");
 
-    var product = new Product();
-    product.setId(1L);
-    product.setName("Test Product");
-    product.setPrice(new BigDecimal("99.99"));
-    product.getCategories().add(category);
+        var product = new Product();
+        product.setId(1L);
+        product.setName("Test Product");
+        product.setPrice(new BigDecimal("99.99"));
+        product.getCategories().add(category);
 
-    when(productRepository.findByActiveTrue()).thenReturn(List.of(product));
+        when(productRepository.findByActiveTrue()).thenReturn(List.of(product));
 
-    var results = catalogQueryService.findAllActiveProducts();
-    assertThat(results).hasSize(1);
-    assertThat(results.getFirst().name()).isEqualTo("Test Product");
-  }
+        var results = catalogQueryService.findAllActiveProducts();
+        assertThat(results).hasSize(1);
+        assertThat(results.getFirst().name()).isEqualTo("Test Product");
+    }
 
-  @Test
-  void returnsEmptyListWhenNoActiveProducts() {
-    when(productRepository.findByActiveTrue()).thenReturn(List.of());
+    @Test
+    void returnsEmptyListWhenNoActiveProducts() {
+        when(productRepository.findByActiveTrue()).thenReturn(List.of());
 
-    var results = catalogQueryService.findAllActiveProducts();
-    assertThat(results).isEmpty();
-  }
+        var results = catalogQueryService.findAllActiveProducts();
+        assertThat(results).isEmpty();
+    }
 
-  @Test
-  void findsProductBySku() {
-    var category = new Category();
-    category.setId(1L);
-    category.setName("Shoes");
-    category.setSlug("shoes");
+    @Test
+    void findsProductBySku() {
+        var category = new Category();
+        category.setId(1L);
+        category.setName("Shoes");
+        category.setSlug("shoes");
 
-    var product = new Product();
-    product.setId(1L);
-    product.setSku("SHOE-001");
-    product.setName("Running Shoes");
-    product.setPrice(new BigDecimal("89.99"));
-    product.setStockQuantity(10);
-    product.getCategories().add(category);
+        var product = new Product();
+        product.setId(1L);
+        product.setSku("SHOE-001");
+        product.setName("Running Shoes");
+        product.setPrice(new BigDecimal("89.99"));
+        product.setStockQuantity(10);
+        product.getCategories().add(category);
 
-    when(productRepository.findBySku("SHOE-001")).thenReturn(java.util.Optional.of(product));
+        when(productRepository.findBySku("SHOE-001")).thenReturn(java.util.Optional.of(product));
 
-    var found = catalogQueryService.findProductBySku("SHOE-001");
-    assertThat(found).isPresent();
-    assertThat(found.get().name()).isEqualTo("Running Shoes");
-    assertThat(found.get().sku()).isEqualTo("SHOE-001");
-  }
+        var found = catalogQueryService.findProductBySku("SHOE-001");
+        assertThat(found).isPresent();
+        assertThat(found.get().name()).isEqualTo("Running Shoes");
+        assertThat(found.get().sku()).isEqualTo("SHOE-001");
+    }
 
-  @Test
-  void returnsAllCategories() {
-    var category = new Category();
-    category.setId(1L);
-    category.setName("Electronics");
-    category.setSlug("electronics");
+    @Test
+    void returnsAllCategories() {
+        var category = new Category();
+        category.setId(1L);
+        category.setName("Electronics");
+        category.setSlug("electronics");
 
-    when(categoryRepository.findAll()).thenReturn(List.of(category));
+        when(categoryRepository.findAll()).thenReturn(List.of(category));
 
-    var results = catalogQueryService.findAllCategories();
-    assertThat(results).hasSize(1);
-    assertThat(results.getFirst().name()).isEqualTo("Electronics");
-  }
+        var results = catalogQueryService.findAllCategories();
+        assertThat(results).hasSize(1);
+        assertThat(results.getFirst().name()).isEqualTo("Electronics");
+    }
 }

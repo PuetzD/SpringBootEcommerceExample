@@ -9,19 +9,19 @@ import org.springframework.stereotype.Repository;
 @RequiredArgsConstructor
 @Repository
 public class JpaAccountAuthenticationQuery implements AccountAuthenticationQuery {
-  private final AccountRepository accountRepository;
+    private final AccountRepository accountRepository;
 
-  @Override
-  public AuthenticatedAccount findByEmail(String email) throws UsernameNotFoundException {
-    return accountRepository
-        .findByEmailIgnoreCase(email)
-        .map(
-            account ->
-                new AuthenticatedAccount(
-                    account.getEmail(),
-                    account.getPasswordHash(),
-                    account.getRole(),
-                    account.isEnabled()))
-        .orElseThrow(() -> new UsernameNotFoundException("Unknown email: " + email));
-  }
+    @Override
+    public AuthenticatedAccount findByEmail(String email) throws UsernameNotFoundException {
+        return accountRepository
+                .findByEmailIgnoreCase(email)
+                .map(
+                        account ->
+                                new AuthenticatedAccount(
+                                        account.getEmail(),
+                                        account.getPasswordHash(),
+                                        account.getRole(),
+                                        account.isEnabled()))
+                .orElseThrow(() -> new UsernameNotFoundException("Unknown email: " + email));
+    }
 }

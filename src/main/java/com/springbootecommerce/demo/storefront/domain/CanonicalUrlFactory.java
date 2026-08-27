@@ -6,25 +6,25 @@ import org.springframework.stereotype.Component;
 @Component
 public class CanonicalUrlFactory {
 
-  public String forRequest(HttpServletRequest request, String canonicalPath) {
-    SeoMetadata.validateCanonicalPath(canonicalPath);
+    public String forRequest(HttpServletRequest request, String canonicalPath) {
+        SeoMetadata.validateCanonicalPath(canonicalPath);
 
-    var builder =
-        new StringBuilder()
-            .append(request.getScheme())
-            .append("://")
-            .append(request.getServerName());
+        var builder =
+                new StringBuilder()
+                        .append(request.getScheme())
+                        .append("://")
+                        .append(request.getServerName());
 
-    if (shouldIncludePort(request.getScheme(), request.getServerPort())) {
-      builder.append(':').append(request.getServerPort());
+        if (shouldIncludePort(request.getScheme(), request.getServerPort())) {
+            builder.append(':').append(request.getServerPort());
+        }
+
+        builder.append(request.getContextPath()).append(canonicalPath);
+        return builder.toString();
     }
 
-    builder.append(request.getContextPath()).append(canonicalPath);
-    return builder.toString();
-  }
-
-  private boolean shouldIncludePort(String scheme, int port) {
-    return !("http".equalsIgnoreCase(scheme) && port == 80
-        || "https".equalsIgnoreCase(scheme) && port == 443);
-  }
+    private boolean shouldIncludePort(String scheme, int port) {
+        return !("http".equalsIgnoreCase(scheme) && port == 80
+                || "https".equalsIgnoreCase(scheme) && port == 443);
+    }
 }

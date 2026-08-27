@@ -9,22 +9,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 class CategoryRepositoryIT extends PostgresIntegrationTest {
 
-  @Autowired CategoryRepository categoryRepository;
+    @Autowired CategoryRepository categoryRepository;
 
-  @Test
-  void findsCategoryBySlug() {
-    var category = new Category();
-    category.setName("Test Category");
-    category.setSlug("test-category");
-    categoryRepository.saveAndFlush(category);
+    @Test
+    void findsCategoryBySlug() {
+        var category = new Category();
+        category.setName("Test Category");
+        category.setSlug("test-category");
+        categoryRepository.saveAndFlush(category);
 
-    var found = categoryRepository.findBySlug("test-category");
-    assertThat(found).isPresent();
-    assertThat(found.get().getName()).isEqualTo("Test Category");
-  }
+        var found = categoryRepository.findBySlug("test-category");
+        assertThat(found).isPresent();
+        assertThat(found.get().getName()).isEqualTo("Test Category");
+    }
 
-  @Test
-  void returnsEmptyForMissingSlug() {
-    assertThat(categoryRepository.findBySlug("nonexistent")).isEmpty();
-  }
+    @Test
+    void returnsEmptyForMissingSlug() {
+        assertThat(categoryRepository.findBySlug("nonexistent")).isEmpty();
+    }
 }

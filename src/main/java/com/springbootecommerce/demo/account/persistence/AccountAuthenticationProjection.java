@@ -3,11 +3,11 @@ package com.springbootecommerce.demo.account.persistence;
 import com.springbootecommerce.demo.account.domain.Role;
 
 public interface AccountAuthenticationProjection {
-  String getEmail();
+    String getEmail();
 
-  String getPasswordHash();
+    String getPasswordHash();
 
-  Role getRole();
+    Role getRole();
 
-  boolean isEnabled();
+    boolean isEnabled();
 }
