@@ -1,17 +1,9 @@
-/.idea/.gitignore
-/.idea/compiler.xml
-/.idea/encodings.xml
-/.idea/gradle.xml
-/.idea/jarRepositories.xml
-/.idea/misc.xml
-/.idea/remote-targets.xml
-/.idea/SpringBootEcommerceExample.iml
-/.idea/vcs.xml
-/docs/superpowers
-
 ### Maven ###
 /target/
 .mvn/wrapper/maven-wrapper.jar
+
+### Gradle ###
+.gradle/
 
 ### STS ###
 .apt_generated
@@ -39,6 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+### IntelliJ ###
+.idea/
 
 ### Node / Frontend ###
 node/
@@ -48,5 +42,5 @@ src/main/resources/static/css/output.css
 ### ai
 /.agents/
 .worktrees/
-/docs/superpowers
+/docs/superpowers/
 /.codex/config.toml
