@@ -12,8 +12,10 @@ JPA, PostgreSQL/Flyway, Tailwind CSS 4, and daisyUI.
   - `security/`: authentication, authorization, login web endpoints
   - `storefront/`: public storefront controllers
 - `src/main/resources/`
-  - `db/migration/`: Flyway SQL migrations; add new versioned files, never edit
-    applied migrations
+  - `db/migration/`: pre-release Flyway baseline; keep V1 onward clean and
+    coherent by editing or renumbering migrations while local database resets
+    remain acceptable. Freeze applied migrations once a release or shared
+    persistent environment exists.
   - `templates/`: Thymeleaf views
   - `static/`: CSS and JavaScript assets
 - `src/test/java/`: unit and integration tests; `*IT` tests use PostgreSQL

@@ -1,6 +1,18 @@
 {
   "version": 1,
   "skills": {
+    "E-commerce Domain Knowledge": {
+      "source": "danhvb/my-ba-skills",
+      "sourceType": "github",
+      "skillPath": "multi-agent-ba/.agent/skills/domain-knowledge/ecommerce/SKILL.md",
+      "computedHash": "bb87118bd1232699d9034c86305b670ed8df7b1fe6e0bf9336fd411542314ff8"
+    },
+    "accessibility-commerce": {
+      "source": "finsilabs/awesome-ecommerce-skills",
+      "sourceType": "github",
+      "skillPath": "skills/storefront-ui/accessibility-commerce/SKILL.md",
+      "computedHash": "4b3e01deb3e714a988a6050f09b4103e7d5fcbc65cc577b5386dcc5841bbcdf5"
+    },
     "brainstorming": {
       "source": "obra/superpowers",
       "sourceType": "github",
@@ -91,6 +103,18 @@
       "skillPath": "skills/caveman-stats/SKILL.md",
       "computedHash": "57c7db449641379e2afd1389fdb17cec8f33d9c8e25b1d28093937b4431895e8"
     },
+    "clean-architecture": {
+      "source": "giuseppe-trisciuoglio/developer-kit",
+      "sourceType": "github",
+      "skillPath": "plugins/developer-kit-java/skills/clean-architecture/SKILL.md",
+      "computedHash": "930e4d5639e1a0afcebb0f2d43c6d90fedcbacb2c6844d6396ad0d324f758982"
+    },
+    "commerce-blueprint": {
+      "source": "gravito-framework/gravito",
+      "sourceType": "github",
+      "skillPath": ".skills/commerce-blueprint/SKILL.md",
+      "computedHash": "9e5c4ec4901fa5714df086b33cef3f08fed75e8021f61a015ae7a0e21b6c8053"
+    },
     "daisyui": {
       "source": "saadeghi/daisyui",
       "sourceType": "github",
@@ -169,6 +193,36 @@
       "skillPath": "skills/safe-refactor/SKILL.md",
       "computedHash": "9df34a21a7a2c18ce13dbbe4a3f66b4e91df9e4bc33c1c9da8a80261583367ec"
     },
+    "spring-boot-cache": {
+      "source": "giuseppe-trisciuoglio/developer-kit",
+      "sourceType": "github",
+      "skillPath": "plugins/developer-kit-java/skills/spring-boot-cache/SKILL.md",
+      "computedHash": "46de281bd90f33c35d20e702f0c18978c37755c6c7bc9132722bdead42b174d0"
+    },
+    "spring-boot-dependency-injection": {
+      "source": "giuseppe-trisciuoglio/developer-kit",
+      "sourceType": "github",
+      "skillPath": "plugins/developer-kit-java/skills/spring-boot-dependency-injection/SKILL.md",
+      "computedHash": "f205c2e439ae70db6bb59f79fcd8dbca32f4febcf9b8df8bb1d047de650ed91d"
+    },
+    "spring-boot-rest-api-standards": {
+      "source": "giuseppe-trisciuoglio/developer-kit",
+      "sourceType": "github",
+      "skillPath": "plugins/developer-kit-java/skills/spring-boot-rest-api-standards/SKILL.md",
+      "computedHash": "64cdf48d3045aaea5108a0d125d4193dc0cbf70804a37cd0d07d17a4851c1414"
+    },
+    "spring-data-jpa": {
+      "source": "giuseppe-trisciuoglio/developer-kit",
+      "sourceType": "github",
+      "skillPath": "plugins/developer-kit-java/skills/spring-data-jpa/SKILL.md",
+      "computedHash": "be931b019eabb76dcdb72620f982997e6e6b4b942e794a797c1afe02e59aa592"
+    },
+    "springboot-security": {
+      "source": "affaan-m/ecc",
+      "sourceType": "github",
+      "skillPath": "skills/springboot-security/SKILL.md",
+      "computedHash": "c518a86c3a473e0545c35065d82284d13a5d99d6f7a0e17780594f3a44af38ad"
+    },
     "subagent-driven-development": {
       "source": "obra/superpowers",
       "sourceType": "github",
@@ -192,6 +246,24 @@
       "sourceType": "github",
       "skillPath": "skills/test-driven-development/SKILL.md",
       "computedHash": "a4126a9c5f17be3c228aa9e5755898ade283448b86099f56f40852e8c14532be"
+    },
+    "unit-test-bean-validation": {
+      "source": "giuseppe-trisciuoglio/developer-kit",
+      "sourceType": "github",
+      "skillPath": "plugins/developer-kit-java/skills/unit-test-bean-validation/SKILL.md",
+      "computedHash": "2eaed25096c921d9dd7d96f7bc2536ae2645255ffedd773752b81b871066416f"
+    },
+    "unit-test-controller-layer": {
+      "source": "giuseppe-trisciuoglio/developer-kit",
+      "sourceType": "github",
+      "skillPath": "plugins/developer-kit-java/skills/unit-test-controller-layer/SKILL.md",
+      "computedHash": "dd99f0b9ad568d187f79396448b3409f9482b45e2f096083c74bf9cf54c987b5"
+    },
+    "unit-test-scheduled-async": {
+      "source": "giuseppe-trisciuoglio/developer-kit",
+      "sourceType": "github",
+      "skillPath": "plugins/developer-kit-java/skills/unit-test-scheduled-async/SKILL.md",
+      "computedHash": "bf3ddbd2246aef53bce7f040c827303cda8629e531c7bb69ecfa8ed5bf39e17c"
     },
     "using-git-worktrees": {
       "source": "obra/superpowers",
