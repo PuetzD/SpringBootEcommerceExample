@@ -24,7 +24,7 @@ public class AccountUserDetailsServiceTest {
     void mapsCustomerToCustomerAuthority() {
         var account =
                 new AuthenticatedAccount(
-                        "customer@example.com", "{bcrypt}password-hash", Role.CUSTOMER, true);
+                        42L, "customer@example.com", "{bcrypt}password-hash", Role.CUSTOMER, true);
         when(accountQuery.findByEmail("customer@example.com")).thenReturn(account);
 
         var userDetails =
@@ -34,6 +34,8 @@ public class AccountUserDetailsServiceTest {
         assertThat(userDetails.getAuthorities())
                 .extracting(GrantedAuthority::getAuthority)
                 .containsExactly("ROLE_CUSTOMER");
+        assertThat(userDetails).isInstanceOf(AuthenticatedAccountPrincipal.class);
+        assertThat(((AuthenticatedAccountPrincipal) userDetails).accountId()).isEqualTo(42L);
         verify(accountQuery).findByEmail("customer@example.com");
     }
 
@@ -41,7 +43,7 @@ public class AccountUserDetailsServiceTest {
     void mapsAdminToAdminAuthority() {
         var account =
                 new AuthenticatedAccount(
-                        "admin@example.com", "{bcrypt}password-hash", Role.ADMIN, true);
+                        43L, "admin@example.com", "{bcrypt}password-hash", Role.ADMIN, true);
         when(accountQuery.findByEmail("admin@example.com")).thenReturn(account);
 
         var adminDetails =
@@ -50,6 +52,8 @@ public class AccountUserDetailsServiceTest {
         assertThat(adminDetails.getAuthorities())
                 .extracting(GrantedAuthority::getAuthority)
                 .containsExactly("ROLE_ADMIN");
+        assertThat(adminDetails).isInstanceOf(AuthenticatedAccountPrincipal.class);
+        assertThat(((AuthenticatedAccountPrincipal) adminDetails).accountId()).isEqualTo(43L);
         verify(accountQuery).findByEmail("admin@example.com");
     }
 
@@ -57,7 +61,7 @@ public class AccountUserDetailsServiceTest {
     void preservesDisabledAccount() {
         var account =
                 new AuthenticatedAccount(
-                        "disabled@example.com", "{bcrypt}password-hash", Role.CUSTOMER, false);
+                        44L, "disabled@example.com", "{bcrypt}password-hash", Role.CUSTOMER, false);
         when(accountQuery.findByEmail("disabled@example.com")).thenReturn(account);
 
         var userDetails =
@@ -85,7 +89,7 @@ public class AccountUserDetailsServiceTest {
     void rejectsAccountWithoutRole() {
         var account =
                 new AuthenticatedAccount(
-                        "missing-role@example.com", "{bcrypt}password-hash", null, true);
+                        45L, "missing-role@example.com", "{bcrypt}password-hash", null, true);
         when(accountQuery.findByEmail("missing-role@example.com")).thenReturn(account);
 
         assertThatThrownBy(

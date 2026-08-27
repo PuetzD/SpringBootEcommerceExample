@@ -4,7 +4,6 @@ import com.springbootecommerce.demo.account.application.AccountAuthenticationQue
 import com.springbootecommerce.demo.account.application.EmailNormalizer;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -31,10 +30,11 @@ public class AccountUserDetailsService implements UserDetailsService {
                     case ADMIN -> "ROLE_ADMIN";
                 };
 
-        return User.withUsername(account.email())
-                .password(account.passwordHash())
-                .authorities(authority)
-                .disabled(!account.enabled())
-                .build();
+        return new AuthenticatedAccountPrincipal(
+                account.id(),
+                account.email(),
+                account.passwordHash(),
+                account.enabled(),
+                authority);
     }
 }

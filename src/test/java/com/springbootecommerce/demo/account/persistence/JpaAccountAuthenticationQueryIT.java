@@ -4,9 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.springbootecommerce.demo.account.application.AccountAuthenticationQuery;
-import com.springbootecommerce.demo.account.application.AuthenticatedAccount;
 import com.springbootecommerce.demo.account.domain.Role;
 import com.springbootecommerce.demo.integration.AbstractIntegrationTest;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -20,7 +20,7 @@ class JpaAccountAuthenticationQueryIT extends AbstractIntegrationTest {
 
     @Test
     void findsAccountByEmail() {
-        var email = "customer@example.com";
+        var email = "query-" + UUID.randomUUID() + "@example.com";
         var passwordHash = "{bcrypt}password-hash";
         jdbcTemplate.update(
                 "INSERT INTO account (email, password_hash, role, enabled) VALUES (?, ?, ?, ?)",
@@ -29,10 +29,32 @@ class JpaAccountAuthenticationQueryIT extends AbstractIntegrationTest {
                 Role.CUSTOMER.name(),
                 true);
 
+        var id =
+                jdbcTemplate.queryForObject(
+                        "SELECT id FROM account WHERE email = ?", Long.class, email);
         var account = accountAuthenticationQuery.findByEmail(email);
 
-        assertThat(account)
-                .isEqualTo(new AuthenticatedAccount(email, passwordHash, Role.CUSTOMER, true));
+        assertThat(account.id()).isEqualTo(id);
+        assertThat(account.email()).isEqualTo(email);
+        assertThat(account.passwordHash()).isEqualTo(passwordHash);
+        assertThat(account.role()).isEqualTo(Role.CUSTOMER);
+        assertThat(account.enabled()).isTrue();
+    }
+
+    @Test
+    void resolvesNormalizedStoredEmail() {
+        var email = "norm-" + UUID.randomUUID() + "@example.com";
+        jdbcTemplate.update(
+                "INSERT INTO account (email, password_hash, role, enabled) VALUES (?, ?, ?, ?)",
+                email,
+                "{bcrypt}password-hash",
+                Role.CUSTOMER.name(),
+                true);
+
+        var account = accountAuthenticationQuery.findByEmail(email);
+
+        assertThat(account).isNotNull();
+        assertThat(account.email()).isEqualTo(email);
     }
 
     @Test

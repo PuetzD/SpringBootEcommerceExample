@@ -26,8 +26,7 @@ class AddressRepositoryIT extends AbstractIntegrationTest {
         account.setEnabled(true);
         accountRepository.saveAndFlush(account);
 
-        var customer = new Customer();
-        customer.setAccount(account);
+        var customer = Customer.forAccount(account.getId());
         customerRepository.saveAndFlush(customer);
 
         var address = new Address();
@@ -54,8 +53,7 @@ class AddressRepositoryIT extends AbstractIntegrationTest {
         account.setEnabled(true);
         accountRepository.saveAndFlush(account);
 
-        var customer = new Customer();
-        customer.setAccount(account);
+        var customer = Customer.forAccount(account.getId());
         customerRepository.saveAndFlush(customer);
 
         var address = new Address();
