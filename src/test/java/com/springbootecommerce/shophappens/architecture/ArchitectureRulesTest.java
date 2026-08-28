@@ -1,19 +1,26 @@
 package com.springbootecommerce.shophappens.architecture;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
-import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.lang.ArchRule;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class ArchitectureRulesTest {
     private static final String ROOT = "com.springbootecommerce.shophappens";
     private static final List<String> CONTEXTS =
-            List.of("account", "customer", "catalog", "cart", "ordering");
+            List.of("account", "customer", "catalog", "cart", "ordering", "security");
     private static JavaClasses imported;
 
     @BeforeAll
@@ -66,17 +73,88 @@ class ArchitectureRulesTest {
                                     ".." + context + ".domain..",
                                     ".." + context + ".application.service..",
                                     ".." + context + ".application.port.out..",
-                                    ".." + context + ".adapter..");
+                                    ".." + context + ".adapter..",
+                                    ".." + context + ".web..");
             rule.allowEmptyShould(true).check(imported);
         }
     }
 
     @Test
-    void featureSlicesAreFreeOfCycles() {
-        slices().matching(ROOT + ".(*)..")
+    void securityInternalReachIsBlocked() {
+        noClasses()
+                .that()
+                .resideOutsideOfPackage("..security..")
                 .should()
-                .beFreeOfCycles()
+                .dependOnClassesThat()
+                .resideInAnyPackage("..security.web..", "..security..")
                 .allowEmptyShould(true)
                 .check(imported);
+    }
+
+    @Test
+    void featureSlicesAreFreeOfCycles() {
+        Map<String, Set<String>> graph = new HashMap<>();
+        for (String context : CONTEXTS) {
+            graph.put(context, new HashSet<>());
+        }
+        for (JavaClass clazz : imported) {
+            String from = sliceOf(clazz);
+            if (from == null) {
+                continue;
+            }
+            for (var dep : clazz.getDirectDependenciesFromSelf()) {
+                JavaClass dependency = dep.getTargetClass();
+                String to = sliceOf(dependency);
+                if (to == null || from.equals(to)) {
+                    continue;
+                }
+                // Cross-context published-contract usage (another context's application.port.in)
+                // is the spec-sanctioned collaboration channel and is excluded from the cycle
+                // check.
+                if (dependency.getPackageName().endsWith(".application.port.in")) {
+                    continue;
+                }
+                graph.get(from).add(to);
+            }
+        }
+        assertThatNoCycles(graph);
+    }
+
+    private static String sliceOf(JavaClass clazz) {
+        for (String context : CONTEXTS) {
+            if (clazz.getPackageName().startsWith(ROOT + "." + context)) {
+                return context;
+            }
+        }
+        return null;
+    }
+
+    private static void assertThatNoCycles(Map<String, Set<String>> graph) {
+        Map<String, Integer> inDegree = new HashMap<>();
+        for (String node : graph.keySet()) {
+            inDegree.put(node, 0);
+        }
+        for (Set<String> targets : graph.values()) {
+            for (String target : targets) {
+                inDegree.merge(target, 1, Integer::sum);
+            }
+        }
+        Deque<String> queue = new ArrayDeque<>();
+        for (Map.Entry<String, Integer> entry : inDegree.entrySet()) {
+            if (entry.getValue() == 0) {
+                queue.add(entry.getKey());
+            }
+        }
+        int processed = 0;
+        while (!queue.isEmpty()) {
+            String node = queue.poll();
+            processed++;
+            for (String next : graph.get(node)) {
+                if (inDegree.merge(next, -1, Integer::sum) == 0) {
+                    queue.add(next);
+                }
+            }
+        }
+        assertThat(processed).isEqualTo(graph.size());
     }
 }

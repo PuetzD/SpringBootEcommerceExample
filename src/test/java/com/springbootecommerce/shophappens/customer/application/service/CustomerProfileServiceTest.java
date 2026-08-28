@@ -52,6 +52,18 @@ class CustomerProfileServiceTest {
         assertThat(result.customer()).isEqualTo(new CustomerReference(7L));
     }
 
+    @Test
+    void removesAnOwnedAddress() {
+        var customer = restoredCustomerWithAddress(7L, 11L);
+        when(customers.findById(new CustomerId(7L))).thenReturn(Optional.of(customer));
+        when(customers.save(any(Customer.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.remove(new CustomerReference(7L), new AddressReference(11L));
+
+        assertThat(customer.addresses()).isEmpty();
+    }
+
     private Customer restoredCustomerWithAddress(long customerId, long addressId) {
         var address =
                 Address.restore(

@@ -1,7 +1,7 @@
 package com.springbootecommerce.shophappens.security.web;
 
-import com.springbootecommerce.shophappens.catalog.web.CanonicalUrlFactory;
-import com.springbootecommerce.shophappens.catalog.web.SeoMetadata;
+import com.springbootecommerce.shophappens.web.support.CanonicalUrlFactory;
+import com.springbootecommerce.shophappens.web.support.SeoMetadata;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

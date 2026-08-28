@@ -52,6 +52,11 @@ public final class Customer {
         owned.update(details, shipping, billing);
     }
 
+    public void removeAddress(AddressId id) {
+        Address owned = address(id);
+        addresses.remove(owned);
+    }
+
     public Address address(AddressId id) {
         return addresses.stream()
                 .filter(address -> id.equals(address.id().orElse(null)))

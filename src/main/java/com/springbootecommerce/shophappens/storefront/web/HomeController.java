@@ -1,8 +1,8 @@
 package com.springbootecommerce.shophappens.storefront.web;
 
 import com.springbootecommerce.shophappens.catalog.application.CatalogQueryService;
-import com.springbootecommerce.shophappens.catalog.web.CanonicalUrlFactory;
-import com.springbootecommerce.shophappens.catalog.web.SeoMetadata;
+import com.springbootecommerce.shophappens.web.support.CanonicalUrlFactory;
+import com.springbootecommerce.shophappens.web.support.SeoMetadata;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;

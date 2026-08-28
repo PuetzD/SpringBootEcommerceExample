@@ -11,9 +11,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
-import com.springbootecommerce.shophappens.account.domain.Account;
-import com.springbootecommerce.shophappens.account.domain.Role;
-import com.springbootecommerce.shophappens.account.persistence.AccountRepository;
 import com.springbootecommerce.shophappens.integration.AbstractIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,6 +19,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,13 +32,13 @@ class SecurityConfigurationIT extends AbstractIntegrationTest {
 
     @Autowired private MockMvc mockMvc;
 
-    @Autowired private AccountRepository accountRepository;
+    @Autowired private JdbcTemplate jdbc;
 
     @Autowired private PasswordEncoder passwordEncoder;
 
     @BeforeEach
     void clearAccounts() {
-        accountRepository.deleteAll();
+        jdbc.update("delete from account");
     }
 
     @Test
@@ -121,8 +119,8 @@ class SecurityConfigurationIT extends AbstractIntegrationTest {
 
     @Test
     void authenticatesKnownCustomerAndRejectsUnknownAndDisabledAccounts() throws Exception {
-        createAccount("customer@example.com", Role.CUSTOMER, true);
-        createAccount("disabled@example.com", Role.CUSTOMER, false);
+        createAccount("customer@example.com", "CUSTOMER", true);
+        createAccount("disabled@example.com", "CUSTOMER", false);
 
         mockMvc.perform(formLogin("/login").user("customer@example.com").password("password"))
                 .andExpect(status().isFound())
@@ -137,7 +135,7 @@ class SecurityConfigurationIT extends AbstractIntegrationTest {
 
     @Test
     void authenticatesKnownAdministrator() throws Exception {
-        createAccount("admin@example.com", Role.ADMIN, true);
+        createAccount("admin@example.com", "ADMIN", true);
 
         mockMvc.perform(formLogin("/admin/login").user("admin@example.com").password("password"))
                 .andExpect(status().isFound())
@@ -146,7 +144,7 @@ class SecurityConfigurationIT extends AbstractIntegrationTest {
 
     @Test
     void redirectsCustomersToTheirOriginalRequestAfterLogin() throws Exception {
-        createAccount("customer@example.com", Role.CUSTOMER, true);
+        createAccount("customer@example.com", "CUSTOMER", true);
         var protectedRequest =
                 mockMvc.perform(get("/account/security-test"))
                         .andExpect(status().isFound())
@@ -164,7 +162,7 @@ class SecurityConfigurationIT extends AbstractIntegrationTest {
 
     @Test
     void deniesCustomerAccessAfterAdminLogin() throws Exception {
-        createAccount("customer@example.com", Role.CUSTOMER, true);
+        createAccount("customer@example.com", "CUSTOMER", true);
 
         var loginResult =
                 mockMvc.perform(
@@ -181,7 +179,7 @@ class SecurityConfigurationIT extends AbstractIntegrationTest {
 
     @Test
     void logsOutAuthenticatedCustomers() throws Exception {
-        createAccount("customer@example.com", Role.CUSTOMER, true);
+        createAccount("customer@example.com", "CUSTOMER", true);
         var loginResult =
                 mockMvc.perform(
                                 formLogin("/login")
@@ -204,13 +202,13 @@ class SecurityConfigurationIT extends AbstractIntegrationTest {
                 .andExpect(header().string("Location", containsString("/login")));
     }
 
-    private void createAccount(String email, Role role, boolean enabled) {
-        var account = new Account();
-        account.setEmail(email);
-        account.setPasswordHash(passwordEncoder.encode("password"));
-        account.setRole(role);
-        account.setEnabled(enabled);
-        accountRepository.saveAndFlush(account);
+    private void createAccount(String email, String role, boolean enabled) {
+        jdbc.update(
+                "insert into account (email, password_hash, role, enabled) values (?,?,?,?)",
+                email,
+                passwordEncoder.encode("password"),
+                role,
+                enabled);
     }
 
     @TestConfiguration(proxyBeanMethods = false)
