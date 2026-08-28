@@ -82,6 +82,14 @@ public class CustomerProfileService
     }
 
     @Override
+    @Transactional
+    public void remove(CustomerReference customer, AddressReference address) {
+        var aggregate = requireCustomer(customer);
+        aggregate.removeAddress(new AddressId(address.value()));
+        customers.save(aggregate);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<AddressSnapshot> findForCustomer(CustomerReference customer) {
         var aggregate = requireCustomer(customer);
