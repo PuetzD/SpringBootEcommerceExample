@@ -4,7 +4,6 @@ import com.springbootecommerce.shophappens.cart.domain.Cart;
 import com.springbootecommerce.shophappens.cart.domain.Quantity;
 import com.springbootecommerce.shophappens.cart.persistence.CartRepository;
 import com.springbootecommerce.shophappens.catalog.application.CatalogQueryService;
-import com.springbootecommerce.shophappens.catalog.domain.ProductUnavailableException;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +53,7 @@ public class CartService {
     @Transactional
     public void addProduct(Long customerId, Long productId, int quantity) {
         if (catalog.findActiveProductById(productId).isEmpty()) {
-            throw new ProductUnavailableException(productId, null);
+            throw new ProductUnavailableException(productId);
         }
         repository.ensureExistsForCustomer(customerId);
         var cart =
