@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 class LegacyArchitectureDebtTest {
     private static final Set<String> LEGACY_FRAMEWORK_COUPLED_DOMAIN_TYPES =
             Set.of(
-                    "com.springbootecommerce.shophappens.account.domain.Account",
                     "com.springbootecommerce.shophappens.catalog.domain.Product",
                     "com.springbootecommerce.shophappens.catalog.domain.Category",
                     "com.springbootecommerce.shophappens.cart.domain.Cart",

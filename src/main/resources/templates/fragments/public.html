@@ -10,6 +10,7 @@
         <div class="hidden md:flex space-x-8">
           <a th:href="@{/}" class="text-base-content hover:text-primary font-medium transition">Home</a>
           <a th:href="@{/catalog}" class="text-base-content hover:text-primary font-medium transition">Products</a>
+          <a th:href="@{/account/addresses}" sec:authorize="hasRole('CUSTOMER')" class="text-base-content hover:text-primary font-medium transition">Addresses</a>
           <a href="#" class="text-base-content hover:text-primary font-medium transition">About</a>
           <a href="#" class="text-base-content hover:text-primary font-medium transition">Contact</a>
           <nav aria-label="Product category tree"></nav>

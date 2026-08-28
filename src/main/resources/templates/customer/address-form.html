@@ -1,0 +1,75 @@
+<!doctype html>
+<html
+    lang="en"
+    xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{index :: page(${seo}, ~{::main}, ~{::#page-scripts})}">
+<head></head>
+<body>
+  <main class="flex-grow py-12">
+    <div class="max-w-xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h1 class="text-2xl font-bold mb-6" th:text="${seo.title}">Address</h1>
+      <form th:action="${formAction}" method="post" th:object="${addressForm}" class="flex flex-col gap-4">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <label class="form-control">
+          Recipient name
+          <input name="recipientName" type="text" autocomplete="name" th:field="*{recipientName}" class="input input-bordered" aria-describedby="recipientName-errors" aria-invalid="${#fields.hasErrors('recipientName')}">
+          <span id="recipientName-errors" class="text-error text-sm" th:if="${#fields.hasErrors('recipientName')}" th:errors="*{recipientName}"></span>
+        </label>
+        <label class="form-control">
+          Company (optional)
+          <input name="companyName" type="text" autocomplete="organization" th:field="*{companyName}" class="input input-bordered">
+        </label>
+        <label class="form-control">
+          Street address
+          <input name="addressLine1" type="text" autocomplete="address-line1" th:field="*{addressLine1}" class="input input-bordered" aria-describedby="addressLine1-errors" aria-invalid="${#fields.hasErrors('addressLine1')}">
+          <span id="addressLine1-errors" class="text-error text-sm" th:if="${#fields.hasErrors('addressLine1')}" th:errors="*{addressLine1}"></span>
+        </label>
+        <label class="form-control">
+          Street address line 2 (optional)
+          <input name="addressLine2" type="text" autocomplete="address-line2" th:field="*{addressLine2}" class="input input-bordered">
+        </label>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <label class="form-control">
+            City
+            <input name="city" type="text" autocomplete="address-level2" th:field="*{city}" class="input input-bordered" aria-describedby="city-errors" aria-invalid="${#fields.hasErrors('city')}">
+            <span id="city-errors" class="text-error text-sm" th:if="${#fields.hasErrors('city')}" th:errors="*{city}"></span>
+          </label>
+          <label class="form-control">
+            Region / State (optional)
+            <input name="region" type="text" autocomplete="address-level1" th:field="*{region}" class="input input-bordered">
+          </label>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <label class="form-control">
+            Postal code
+            <input name="postalCode" type="text" autocomplete="postal-code" th:field="*{postalCode}" class="input input-bordered" aria-describedby="postalCode-errors" aria-invalid="${#fields.hasErrors('postalCode')}">
+            <span id="postalCode-errors" class="text-error text-sm" th:if="${#fields.hasErrors('postalCode')}" th:errors="*{postalCode}"></span>
+          </label>
+          <label class="form-control">
+            Country
+            <input name="countryCode" type="text" maxlength="2" th:field="*{countryCode}" class="input input-bordered uppercase" aria-describedby="countryCode-errors" aria-invalid="${#fields.hasErrors('countryCode')}">
+            <span id="countryCode-errors" class="text-error text-sm" th:if="${#fields.hasErrors('countryCode')}" th:errors="*{countryCode}"></span>
+          </label>
+        </div>
+        <label class="form-control">
+          Phone (optional)
+          <input name="phoneNumber" type="tel" autocomplete="tel" th:field="*{phoneNumber}" class="input input-bordered">
+        </label>
+        <label class="cursor-pointer flex items-center gap-3 label">
+          <input name="defaultShipping" type="checkbox" th:field="*{defaultShipping}" class="checkbox checkbox-primary">
+          <span>Use as default shipping address</span>
+        </label>
+        <label class="cursor-pointer flex items-center gap-3 label">
+          <input name="defaultBilling" type="checkbox" th:field="*{defaultBilling}" class="checkbox checkbox-primary">
+          <span>Use as default billing address</span>
+        </label>
+        <div class="flex items-center gap-4">
+          <button type="submit" class="btn btn-primary">Save address</button>
+          <a th:href="@{/account/addresses}" class="link link-neutral">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </main>
+  <th:block id="page-scripts"></th:block>
+</body>
+</html>
