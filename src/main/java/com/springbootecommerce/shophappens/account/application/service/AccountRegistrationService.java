@@ -12,8 +12,10 @@ import com.springbootecommerce.shophappens.account.domain.model.Account;
 import com.springbootecommerce.shophappens.account.domain.model.AccountId;
 import com.springbootecommerce.shophappens.account.domain.model.Email;
 import com.springbootecommerce.shophappens.account.domain.model.PasswordHash;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Service
 public class AccountRegistrationService implements RegisterCustomerAccountUseCase {
 
     private final AccountRepository accounts;

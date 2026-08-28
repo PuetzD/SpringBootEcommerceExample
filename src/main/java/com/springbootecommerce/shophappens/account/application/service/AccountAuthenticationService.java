@@ -10,8 +10,10 @@ import com.springbootecommerce.shophappens.account.domain.model.AccountId;
 import com.springbootecommerce.shophappens.account.domain.model.Email;
 import com.springbootecommerce.shophappens.account.domain.model.Role;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Service
 public class AccountAuthenticationService implements AuthenticateAccountQuery {
 
     private final AccountRepository accounts;
