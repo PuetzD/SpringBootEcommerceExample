@@ -21,13 +21,13 @@ class CustomerAddressServiceTest {
     @Test
     void returnsOnlyAddressesOwnedByCustomer() {
         var service = new CustomerAddressService(repository);
-        var address = address(11L, 42L, "Daniela Pütz", "Marburg");
+        var address = address(11L, 42L, "Alex Tester", "Testcity");
         when(repository.findByCustomerIdOrderByDefaultShippingDesc(42L))
                 .thenReturn(List.of(address));
 
         assertThat(service.findForCustomer(42L))
                 .extracting(AddressSnapshot::recipientName)
-                .containsExactly("Daniela Pütz");
+                .containsExactly("Alex Tester");
     }
 
     @Test
