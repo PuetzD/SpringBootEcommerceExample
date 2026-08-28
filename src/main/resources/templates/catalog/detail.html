@@ -1,0 +1,41 @@
+<!doctype html>
+<html
+    lang="en"
+    xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{index :: page(${seo}, ~{::main}, ~{::#page-scripts})}">
+<head></head>
+<body>
+  <main class="flex-grow container mx-auto px-4 sm:px-6 py-12">
+    <nav aria-label="Breadcrumb" class="mb-6">
+      <ul class="flex items-center gap-2 text-sm text-base-content/70">
+        <li><a th:href="@{/}" class="link">Home</a></li>
+        <li aria-hidden="true">/</li>
+        <li><a th:href="@{/catalog}" class="link">Products</a></li>
+        <li aria-hidden="true">/</li>
+        <li aria-current="page" th:text="${product.name()}">Product</li>
+      </ul>
+    </nav>
+
+    <div class="card card-lg card-border bg-base-100 sm:card-side">
+      <figure th:if="${product.imageUrl() != null}">
+        <img
+            th:src="${product.imageUrl()}"
+            alt=""
+            width="640"
+            height="360"
+            fetchpriority="high">
+      </figure>
+      <div class="card-body">
+        <div class="flex items-start justify-between gap-4">
+          <h1 class="card-title text-3xl" th:text="${product.name()}">Product</h1>
+          <span class="badge badge-success badge-soft" th:if="${product.inStock()}">In stock</span>
+          <span class="badge badge-warning badge-soft" th:unless="${product.inStock()}">Out of stock</span>
+        </div>
+        <p class="text-base-content/70" th:text="${product.description()}">Description</p>
+        <p class="text-2xl font-semibold" th:text="${#numbers.formatDecimal(product.price().amount(), 1, 2)}">0.00</p>
+      </div>
+    </div>
+  </main>
+  <th:block id="page-scripts"></th:block>
+</body>
+</html>
