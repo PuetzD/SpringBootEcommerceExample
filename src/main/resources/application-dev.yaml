@@ -1,0 +1,13 @@
+spring:
+  jpa:
+    show-sql: true
+logging:
+  level:
+    org:
+      springframework:
+        security: TRACE
+      hibernate:
+        SQL: DEBUG
+        orm:
+          jdbc:
+            bind: TRACE

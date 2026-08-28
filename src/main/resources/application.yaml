@@ -7,13 +7,15 @@ spring:
     password: demo
     driver-class-name: org.postgresql.Driver
   jpa:
-    show-sql: true
+    show-sql: false
     hibernate:
       ddl-auto: validate
     open-in-view: false
   flyway:
     enabled: true
-    locations: classpath:db/migration
+    locations:
+      - classpath:db/migration
+      - classpath:db/demo
   data:
     redis:
       host: localhost
@@ -29,13 +31,5 @@ spring:
         for: healthy
 server:
   port: 8080
-logging:
-  level:
-    org:
-      springframework:
-        security: TRACE
-      hibernate:
-        SQL: DEBUG
-        orm:
-          jdbc:
-            bind: TRACE
+storefront:
+  public-origin: ${STOREFRONT_PUBLIC_ORIGIN:http://localhost:8080}
