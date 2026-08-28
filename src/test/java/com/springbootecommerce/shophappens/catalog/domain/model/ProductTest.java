@@ -32,8 +32,7 @@ class ProductTest {
         assertThat(inactive.stockQuantity()).isEqualTo(5);
 
         Product scarce = productWithStock(1);
-        assertThatThrownBy(() -> scarce.purchase(2))
-                .isInstanceOf(InsufficientStockException.class);
+        assertThatThrownBy(() -> scarce.purchase(2)).isInstanceOf(InsufficientStockException.class);
         assertThat(scarce.stockQuantity()).isEqualTo(1);
     }
 
@@ -70,8 +69,12 @@ class ProductTest {
 
     private Product productWithStock(int stock) {
         return Product.create(
-                new Sku("ELEC-001"), "Headphones", "Description",
-                new Money(new BigDecimal("19.99")), stock,
-                "/images/product-placeholder.svg", Set.of(new CategoryId(3L)));
+                new Sku("ELEC-001"),
+                "Headphones",
+                "Description",
+                new Money(new BigDecimal("19.99")),
+                stock,
+                "/images/product-placeholder.svg",
+                Set.of(new CategoryId(3L)));
     }
 }
