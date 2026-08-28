@@ -50,6 +50,14 @@ docker compose up -d
 ./mvnw spring-boot:run
 ```
 
+By default the application logs quietly and hides SQL bindings. To opt into
+verbose local diagnostics (Spring Security trace and Hibernate SQL/binding
+logging), activate the `dev` profile:
+
+```bash
+SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
+```
+
 Run the backend test suite with:
 
 ```bash
