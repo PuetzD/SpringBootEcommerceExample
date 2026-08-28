@@ -1,7 +1,5 @@
 package com.springbootecommerce.shophappens.customer.adapter.in.web;
 
-import com.springbootecommerce.shophappens.catalog.web.CanonicalUrlFactory;
-import com.springbootecommerce.shophappens.catalog.web.SeoMetadata;
 import com.springbootecommerce.shophappens.customer.application.CustomerNotFoundException;
 import com.springbootecommerce.shophappens.customer.application.port.in.AddressReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.AddressSnapshot;
@@ -10,6 +8,8 @@ import com.springbootecommerce.shophappens.customer.application.port.in.ManageCu
 import com.springbootecommerce.shophappens.customer.application.port.in.ManageCustomerAddressesUseCase.SaveAddressCommand;
 import com.springbootecommerce.shophappens.customer.application.port.in.OwnedAddressQuery;
 import com.springbootecommerce.shophappens.customer.domain.exception.AddressNotOwnedException;
+import com.springbootecommerce.shophappens.web.support.CanonicalUrlFactory;
+import com.springbootecommerce.shophappens.web.support.SeoMetadata;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

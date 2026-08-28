@@ -10,7 +10,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
-import com.springbootecommerce.shophappens.catalog.web.CanonicalUrlFactory;
 import com.springbootecommerce.shophappens.customer.application.port.in.AddressReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.AddressSnapshot;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
@@ -18,6 +17,7 @@ import com.springbootecommerce.shophappens.customer.application.port.in.ManageCu
 import com.springbootecommerce.shophappens.customer.application.port.in.OwnedAddressQuery;
 import com.springbootecommerce.shophappens.customer.domain.exception.AddressNotOwnedException;
 import com.springbootecommerce.shophappens.security.SecurityConfiguration;
+import com.springbootecommerce.shophappens.web.support.CanonicalUrlFactory;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;

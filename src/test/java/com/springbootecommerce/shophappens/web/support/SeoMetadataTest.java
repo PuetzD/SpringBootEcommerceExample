@@ -1,4 +1,4 @@
-package com.springbootecommerce.shophappens.catalog.web;
+package com.springbootecommerce.shophappens.web.support;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
