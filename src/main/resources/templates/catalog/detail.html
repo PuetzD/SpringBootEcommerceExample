@@ -32,7 +32,7 @@
           <span class="badge badge-warning badge-soft" th:unless="${product.inStock()}">Out of stock</span>
         </div>
         <p class="text-base-content/70" th:text="${product.description()}">Description</p>
-        <p class="text-2xl font-semibold" th:text="${#numbers.formatDecimal(product.price().amount(), 1, 2)}">0.00</p>
+        <p class="text-2xl font-semibold" th:text="${#numbers.formatDecimal(product.price().amount(), 1, 2) + ' EUR'}">0.00 EUR</p>
       </div>
     </div>
   </main>

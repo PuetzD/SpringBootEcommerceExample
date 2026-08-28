@@ -1,9 +1,9 @@
 # Spring Boot Ecommerce Example
 
-This is a learning project for building an ecommerce application with Java and
+This is my learning project for building an ecommerce application with Java and
 Spring Boot. It is intentionally developed in small steps to explore practical
 application structure, security, persistence, testing, and server-rendered UI
-development.
+development. I'm also learning DDD here.
 
 ## Technology
 

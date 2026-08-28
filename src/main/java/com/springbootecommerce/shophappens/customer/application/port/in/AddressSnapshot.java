@@ -1,7 +1,8 @@
-package com.springbootecommerce.shophappens.customer.application;
+package com.springbootecommerce.shophappens.customer.application.port.in;
 
 public record AddressSnapshot(
-        Long id,
+        CustomerReference customer,
+        AddressReference address,
         String recipientName,
         String companyName,
         String addressLine1,

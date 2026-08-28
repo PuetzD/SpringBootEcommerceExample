@@ -29,5 +29,5 @@ A Product eligible to appear in customer-facing Catalog results and to be purcha
 _Avoid_: Published Product, available Product
 
 **Money**:
-An amount in a specified currency. Amount and currency together determine monetary equality.
-_Avoid_: Decimal, amount without currency
+A non-negative monetary amount with two-decimal precision. Amount determines monetary equality because this shop uses one implicit currency.
+_Avoid_: Decimal, currency-specific Money
