@@ -2,7 +2,7 @@
 <html
     lang="en"
     xmlns:th="http://www.thymeleaf.org"
-    th:replace="~{index :: page(${seo}, ~{::main}, ~{::#page-scripts})}">
+    th:replace="~{fragments/layout :: page(${seo}, ~{::main}, ~{::#page-scripts})}">
 <head></head>
 <body>
   <main class="flex-grow">
