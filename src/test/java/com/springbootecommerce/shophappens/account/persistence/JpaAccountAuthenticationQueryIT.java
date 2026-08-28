@@ -37,7 +37,7 @@ class JpaAccountAuthenticationQueryIT extends AbstractIntegrationTest {
         assertThat(account.id()).isEqualTo(id);
         assertThat(account.email()).isEqualTo(email);
         assertThat(account.passwordHash()).isEqualTo(passwordHash);
-        assertThat(account.role()).isEqualTo(Role.CUSTOMER);
+        assertThat(account.authority()).isEqualTo("ROLE_CUSTOMER");
         assertThat(account.enabled()).isTrue();
     }
 

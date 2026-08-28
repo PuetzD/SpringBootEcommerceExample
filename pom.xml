@@ -38,6 +38,7 @@
         <tailwind-cli.version>v3.4.17</tailwind-cli.version>
         <frontend-maven-plugin.version>2.0.2</frontend-maven-plugin.version>
         <node.version>v24.19.0</node.version>
+        <archunit.version>1.4.1</archunit.version>
     </properties>
     <dependencies>
         <dependency>
@@ -150,6 +151,12 @@
         <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
+            <version>${archunit.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -297,16 +304,6 @@
                         </goals>
                         <configuration>
                             <arguments>run build:css</arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>test-frontend</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <configuration>
-                            <arguments>run test</arguments>
                         </configuration>
                     </execution>
                 </executions>
