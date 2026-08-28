@@ -12,10 +12,11 @@ class LegacyArchitectureDebtTest {
     private static final Set<String> LEGACY_FRAMEWORK_COUPLED_DOMAIN_TYPES =
             Set.of(
                     "com.springbootecommerce.shophappens.account.domain.Account",
-                    "com.springbootecommerce.shophappens.customer.domain.Customer",
-                    "com.springbootecommerce.shophappens.customer.domain.Address",
                     "com.springbootecommerce.shophappens.catalog.domain.Product",
                     "com.springbootecommerce.shophappens.catalog.domain.Category",
+                    "com.springbootecommerce.shophappens.cart.domain.Cart",
+                    "com.springbootecommerce.shophappens.cart.domain.CartItem",
+                    "com.springbootecommerce.shophappens.cart.domain.Quantity",
                     "com.springbootecommerce.shophappens.sharedkernel.money.Money");
 
     @Test

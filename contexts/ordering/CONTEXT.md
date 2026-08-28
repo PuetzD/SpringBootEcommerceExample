@@ -8,6 +8,10 @@ Ordering converts a Customer's Cart into an immutable record of a purchase. It c
 The all-or-nothing attempt to place an Order from a Customer's current Cart using selected shipping and billing Addresses and current Catalog facts.
 _Avoid_: Payment, Cart submission
 
+**Checkout ID**:
+The stable identifier supplied for one Checkout attempt. Reusing it returns the original outcome instead of placing a duplicate Order.
+_Avoid_: Order Number, payment token
+
 **Order**:
 The immutable record of a purchase accepted at Checkout. It belongs to one Customer and is identified by a stable Order Number.
 _Avoid_: Cart, transaction, invoice
@@ -41,5 +45,5 @@ An Order accepted after every Product and Address passes Checkout and the purcha
 _Avoid_: Confirmed Order, paid Order
 
 **Money**:
-An amount in a specified currency. Ordering uses the same stable meaning of Money as Catalog.
-_Avoid_: Decimal, amount without currency
+A non-negative monetary amount with two-decimal precision. Ordering uses the same implicit-currency meaning of Money as Catalog.
+_Avoid_: Decimal, currency-specific Money
