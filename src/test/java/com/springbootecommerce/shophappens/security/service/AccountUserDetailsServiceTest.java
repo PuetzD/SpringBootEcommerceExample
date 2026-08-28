@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 
 import com.springbootecommerce.shophappens.account.application.AccountAuthenticationQuery;
 import com.springbootecommerce.shophappens.account.application.AuthenticatedAccount;
-import com.springbootecommerce.shophappens.account.domain.Role;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -24,7 +23,11 @@ public class AccountUserDetailsServiceTest {
     void mapsCustomerToCustomerAuthority() {
         var account =
                 new AuthenticatedAccount(
-                        42L, "customer@example.com", "{bcrypt}password-hash", Role.CUSTOMER, true);
+                        42L,
+                        "customer@example.com",
+                        "{bcrypt}password-hash",
+                        "ROLE_CUSTOMER",
+                        true);
         when(accountQuery.findByEmail("customer@example.com")).thenReturn(account);
 
         var userDetails =
@@ -43,7 +46,7 @@ public class AccountUserDetailsServiceTest {
     void mapsAdminToAdminAuthority() {
         var account =
                 new AuthenticatedAccount(
-                        43L, "admin@example.com", "{bcrypt}password-hash", Role.ADMIN, true);
+                        43L, "admin@example.com", "{bcrypt}password-hash", "ROLE_ADMIN", true);
         when(accountQuery.findByEmail("admin@example.com")).thenReturn(account);
 
         var adminDetails =
@@ -61,7 +64,11 @@ public class AccountUserDetailsServiceTest {
     void preservesDisabledAccount() {
         var account =
                 new AuthenticatedAccount(
-                        44L, "disabled@example.com", "{bcrypt}password-hash", Role.CUSTOMER, false);
+                        44L,
+                        "disabled@example.com",
+                        "{bcrypt}password-hash",
+                        "ROLE_CUSTOMER",
+                        false);
         when(accountQuery.findByEmail("disabled@example.com")).thenReturn(account);
 
         var userDetails =

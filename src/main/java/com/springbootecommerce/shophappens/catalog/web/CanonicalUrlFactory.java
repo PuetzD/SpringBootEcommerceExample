@@ -1,4 +1,4 @@
-package com.springbootecommerce.shophappens.storefront.domain;
+package com.springbootecommerce.shophappens.catalog.web;
 
 import java.net.URI;
 import org.springframework.beans.factory.annotation.Value;
