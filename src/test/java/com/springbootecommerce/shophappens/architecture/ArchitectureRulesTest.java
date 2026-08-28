@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 class ArchitectureRulesTest {
     private static final String ROOT = "com.springbootecommerce.shophappens";
     private static final List<String> CONTEXTS =
-            List.of("account", "customer", "catalog", "cart", "ordering");
+            List.of("account", "customer", "catalog", "cart", "ordering", "security");
     private static JavaClasses imported;
 
     @BeforeAll
@@ -73,9 +73,22 @@ class ArchitectureRulesTest {
                                     ".." + context + ".domain..",
                                     ".." + context + ".application.service..",
                                     ".." + context + ".application.port.out..",
-                                    ".." + context + ".adapter..");
+                                    ".." + context + ".adapter..",
+                                    ".." + context + ".web..");
             rule.allowEmptyShould(true).check(imported);
         }
+    }
+
+    @Test
+    void securityInternalReachIsBlocked() {
+        noClasses()
+                .that()
+                .resideOutsideOfPackage("..security..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage("..security.web..", "..security..")
+                .allowEmptyShould(true)
+                .check(imported);
     }
 
     @Test

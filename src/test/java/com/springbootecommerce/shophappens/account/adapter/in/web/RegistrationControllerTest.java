@@ -8,8 +8,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 import com.springbootecommerce.shophappens.account.application.port.in.RegisterCustomerAccountUseCase;
-import com.springbootecommerce.shophappens.catalog.web.CanonicalUrlFactory;
 import com.springbootecommerce.shophappens.security.SecurityConfiguration;
+import com.springbootecommerce.shophappens.web.support.CanonicalUrlFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
