@@ -13,7 +13,6 @@ import com.springbootecommerce.shophappens.cart.domain.Quantity;
 import com.springbootecommerce.shophappens.cart.persistence.CartRepository;
 import com.springbootecommerce.shophappens.catalog.application.CatalogQueryService;
 import com.springbootecommerce.shophappens.catalog.application.ProductSummary;
-import com.springbootecommerce.shophappens.catalog.domain.ProductUnavailableException;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
 import java.util.List;
