@@ -70,6 +70,19 @@ Format Java sources with:
 ./mvnw spotless:apply
 ```
 
+## Demo Data
+
+The database schema is managed by Flyway migrations in `db/migration`
+(`V1__create_account_schema.sql`, `V2__create_catalog_schema.sql`) and checked
+against the JPA entities at startup via `ddl-auto: validate`.
+
+A repeatable Flyway migration in `db/demo/R_demo_catalog.sql` seeds demo catalog
+data (categories and sample products) so the storefront has something to show.
+Like all schema migrations it runs automatically on startup, since `db/demo` is
+configured in `spring.flyway.locations`. Note that repeatable migrations re-run
+whenever their content changes and the seed file is not idempotent, so editing
+it after it has already been applied can cause duplicate rows.
+
 ## Frontend CSS
 
 The Maven build installs the frontend dependencies and builds CSS
