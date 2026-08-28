@@ -1,0 +1,67 @@
+<!doctype html>
+<html
+    lang="en"
+    xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{index :: page(${seo}, ~{::main}, ~{::#page-scripts})}">
+<head></head>
+<body>
+  <main class="flex-grow py-12">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h1 class="text-2xl font-bold">Your addresses</h1>
+          <p class="text-base-content/60">Manage your delivery and billing addresses.</p>
+        </div>
+        <a th:href="@{/account/addresses/new}" class="btn btn-primary">Add address</a>
+      </div>
+
+      <ul class="flex flex-col gap-4">
+        <li
+            th:each="address : ${addresses}"
+            class="card bg-base-100 shadow-sm">
+          <div class="card-body">
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="font-semibold" th:text="${address.recipientName()}">Recipient</p>
+                <p class="text-base-content/60" th:text="${address.companyName()}" th:if="${address.companyName() != null}">Company</p>
+                <p th:text="${address.addressLine1()}">Line 1</p>
+                <p th:text="${address.addressLine2()}" th:if="${address.addressLine2() != null}">Line 2</p>
+                <p th:text="${address.postalCode() + ' ' + address.city()}">Postal City</p>
+                <p th:text="${address.countryCode()}">Country</p>
+                <span class="badge badge-secondary mt-2" th:if="${address.defaultShipping()}">Default shipping</span>
+                <span class="badge badge-secondary mt-2" th:if="${address.defaultBilling()}">Default billing</span>
+              </div>
+              <div class="flex flex-col gap-2">
+                <a th:href="@{/account/addresses/{id}/edit(id=${address.address().value()})}" class="btn btn-sm btn-ghost">Edit</a>
+                <form
+                    th:action="@{/account/addresses/{id}/default-shipping(id=${address.address().value()})}"
+                    method="post">
+                  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                  <button type="submit" class="btn btn-sm btn-ghost" th:disabled="${address.defaultShipping()}">Set default shipping</button>
+                </form>
+                <form
+                    th:action="@{/account/addresses/{id}/default-billing(id=${address.address().value()})}"
+                    method="post">
+                  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                  <button type="submit" class="btn btn-sm btn-ghost" th:disabled="${address.defaultBilling()}">Set default billing</button>
+                </form>
+                <form
+                    th:action="@{/account/addresses/{id}/delete(id=${address.address().value()})}"
+                    method="post">
+                  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                  <button type="submit" class="btn btn-sm btn-error btn-outline">Delete</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </li>
+      </ul>
+
+      <p class="text-base-content/60 mt-6" th:if="${#lists.isEmpty(addresses)}">
+        You have no saved addresses yet.
+      </p>
+    </div>
+  </main>
+  <th:block id="page-scripts"></th:block>
+</body>
+</html>

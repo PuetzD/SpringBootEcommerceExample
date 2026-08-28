@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.springbootecommerce.shophappens.customer.domain.exception.AddressNotOwnedException;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class CustomerTest {
@@ -54,5 +55,17 @@ class CustomerTest {
                 .isInstanceOf(AddressNotOwnedException.class);
         assertThatThrownBy(() -> new AddressDetails("", null, "", null, "", null, "", "DEU", null))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void removesAnOwnedAddressAndRejectsForeignRemoval() {
+        var address = Address.restore(new AddressId(11L), Testcity, true, true);
+        var customer = Customer.restore(new CustomerId(7L), new AccountId(42L), List.of(address));
+
+        customer.removeAddress(new AddressId(11L));
+
+        assertThat(customer.addresses()).isEmpty();
+        assertThatThrownBy(() -> customer.removeAddress(new AddressId(999L)))
+                .isInstanceOf(AddressNotOwnedException.class);
     }
 }
