@@ -21,7 +21,9 @@ public class JpaAccountAuthenticationQuery implements AccountAuthenticationQuery
                                         account.getId(),
                                         account.getEmail(),
                                         account.getPasswordHash(),
-                                        account.getRole(),
+                                        account.getRole() == null
+                                                ? null
+                                                : account.getRole().authority(),
                                         account.isEnabled()))
                 .orElseThrow(() -> new UsernameNotFoundException("Unknown email: " + email));
     }

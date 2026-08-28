@@ -1,4 +1,4 @@
-package com.springbootecommerce.shophappens.storefront.domain;
+package com.springbootecommerce.shophappens.catalog.web;
 
 public record SeoMetadata(String title, String description, String canonicalPath, String robots) {
 

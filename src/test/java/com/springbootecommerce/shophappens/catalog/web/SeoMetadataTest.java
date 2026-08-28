@@ -1,10 +1,8 @@
-package com.springbootecommerce.shophappens.storefront.web;
+package com.springbootecommerce.shophappens.catalog.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.springbootecommerce.shophappens.storefront.domain.CanonicalUrlFactory;
-import com.springbootecommerce.shophappens.storefront.domain.SeoMetadata;
 import org.junit.jupiter.api.Test;
 
 class SeoMetadataTest {

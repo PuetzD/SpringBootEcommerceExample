@@ -19,16 +19,10 @@ public class AccountUserDetailsService implements UserDetailsService {
     public @NonNull UserDetails loadUserByUsername(@NonNull String email)
             throws UsernameNotFoundException {
         var account = accountAuthenticationQuery.findByEmail(EmailNormalizer.normalize(email));
-        var role = account.role();
-        if (role == null) {
+        var authority = account.authority();
+        if (authority == null) {
             throw new IllegalArgumentException("Account role must not be null");
         }
-
-        var authority =
-                switch (role) {
-                    case CUSTOMER -> "ROLE_CUSTOMER";
-                    case ADMIN -> "ROLE_ADMIN";
-                };
 
         return new AuthenticatedAccountPrincipal(
                 account.id(),
