@@ -32,22 +32,23 @@ class CatalogQueryServiceTest {
 
     @Test
     void findAllActiveMapsProductsToSummaries() {
-        Product seven = restoredProduct(7L, "ELEC-007", 5);
-        Product eight = restoredProduct(8L, "ELEC-008", 5);
+        Product seven = restoredProduct(7L, "WEAP-002", "Rubber Duck of Debugging", "18.99", 5);
+        Product eight =
+                restoredProduct(8L, "MAGI-006", "Staff of Dependency Injection", "89.99", 5);
         when(productRepository.findAllActive()).thenReturn(List.of(seven, eight));
 
         List<ProductSummary> result = service.findAllActive();
 
         assertThat(result).hasSize(2);
         assertThat(result.get(0).product().value()).isEqualTo(7L);
-        assertThat(result.get(0).sku()).isEqualTo("ELEC-007");
-        assertThat(result.get(0).name()).isEqualTo("Headphones");
+        assertThat(result.get(0).sku()).isEqualTo("WEAP-002");
+        assertThat(result.get(0).name()).isEqualTo("Rubber Duck of Debugging");
         assertThat(result.get(0).description()).isEqualTo("Description");
-        assertThat(result.get(0).price()).isEqualTo(new Money(new BigDecimal("19.99")));
+        assertThat(result.get(0).price()).isEqualTo(new Money(new BigDecimal("18.99")));
         assertThat(result.get(0).stockQuantity()).isEqualTo(5);
         assertThat(result.get(0).imageUrl()).isEqualTo("/images/product-placeholder.svg");
         assertThat(result.get(1).product().value()).isEqualTo(8L);
-        assertThat(result.get(1).sku()).isEqualTo("ELEC-008");
+        assertThat(result.get(1).sku()).isEqualTo("MAGI-006");
     }
 
     @Test
@@ -61,26 +62,26 @@ class CatalogQueryServiceTest {
 
     @Test
     void findActiveByIdReturnsSummaryWhenActive() {
-        Product seven = restoredProduct(7L, "ELEC-007", 5);
+        Product seven = restoredProduct(7L, "WEAP-002", "Rubber Duck of Debugging", "18.99", 5);
         when(productRepository.findActiveById(new ProductId(7L))).thenReturn(Optional.of(seven));
 
         Optional<ProductSummary> result = service.findActiveById(new ProductReference(7L));
 
         assertThat(result).isPresent();
         assertThat(result.get().product().value()).isEqualTo(7L);
-        assertThat(result.get().sku()).isEqualTo("ELEC-007");
+        assertThat(result.get().sku()).isEqualTo("WEAP-002");
     }
 
     @Test
     void findActiveBySkuReturnsSummaryWithRightSku() {
-        Product seven = restoredProduct(7L, "ELEC-007", 5);
-        when(productRepository.findActiveBySku(new Sku("ELEC-007"))).thenReturn(Optional.of(seven));
+        Product seven = restoredProduct(7L, "WEAP-002", "Rubber Duck of Debugging", "18.99", 5);
+        when(productRepository.findActiveBySku(new Sku("WEAP-002"))).thenReturn(Optional.of(seven));
 
-        Optional<ProductSummary> result = service.findActiveBySku("ELEC-007");
+        Optional<ProductSummary> result = service.findActiveBySku("WEAP-002");
 
         assertThat(result).isPresent();
         assertThat(result.get().product().value()).isEqualTo(7L);
-        assertThat(result.get().sku()).isEqualTo("ELEC-007");
+        assertThat(result.get().sku()).isEqualTo("WEAP-002");
     }
 
     @Test
@@ -92,13 +93,13 @@ class CatalogQueryServiceTest {
         assertThat(result).isEmpty();
     }
 
-    private Product restoredProduct(long id, String sku, int stock) {
+    private Product restoredProduct(long id, String sku, String name, String price, int stock) {
         return Product.restore(
                 new ProductId(id),
                 new Sku(sku),
-                "Headphones",
+                name,
                 "Description",
-                new Money(new BigDecimal("19.99")),
+                new Money(new BigDecimal(price)),
                 stock,
                 "/images/product-placeholder.svg",
                 true,

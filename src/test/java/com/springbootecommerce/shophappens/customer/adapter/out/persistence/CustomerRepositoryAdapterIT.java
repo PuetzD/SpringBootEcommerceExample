@@ -51,7 +51,7 @@ class CustomerRepositoryAdapterIT extends AbstractIntegrationTest {
                 customerId,
                 "First",
                 "1 Main Street",
-                "Testcity",
+                "Greymoor",
                 "35037",
                 "DE");
         String insert =
@@ -69,7 +69,7 @@ class CustomerRepositoryAdapterIT extends AbstractIntegrationTest {
                                         customerId,
                                         "Second",
                                         "2 Main Street",
-                                        "Testcity",
+                                        "Greymoor",
                                         "35037",
                                         "DE"))
                 .isInstanceOf(DataIntegrityViolationException.class);
@@ -86,6 +86,14 @@ class CustomerRepositoryAdapterIT extends AbstractIntegrationTest {
 
     private AddressDetails testCityAddress() {
         return new AddressDetails(
-                "Alex Example", null, "1 Main Street", null, "Testcity", null, "35037", "DE", null);
+                "Bard the Magnificent Debugger",
+                null,
+                "1 Main Street",
+                null,
+                "Greymoor",
+                null,
+                "35037",
+                "DE",
+                null);
     }
 }
