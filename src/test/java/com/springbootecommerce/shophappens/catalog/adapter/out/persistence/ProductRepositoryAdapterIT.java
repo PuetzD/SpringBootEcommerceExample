@@ -3,6 +3,7 @@ package com.springbootecommerce.shophappens.catalog.adapter.out.persistence;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductRepository;
+import com.springbootecommerce.shophappens.catalog.domain.model.CategoryId;
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
 import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
 import com.springbootecommerce.shophappens.integration.AbstractIntegrationTest;
@@ -13,13 +14,17 @@ import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 class ProductRepositoryAdapterIT extends AbstractIntegrationTest {
     @Autowired ProductRepository products;
+    @Autowired JdbcTemplate jdbc;
 
     @Test
     void restoresMoneyCategoriesAndOptimisticVersion() {
-        Product product = products.findActiveBySku(new Sku("ELEC-001")).orElseThrow();
+        seedProduct("FIX-001", "Wireless Headphones", new Money(new BigDecimal("149.99")), 25);
+
+        Product product = products.findActiveBySku(new Sku("FIX-001")).orElseThrow();
 
         assertThat(product.price()).isEqualTo(new Money(new BigDecimal("149.99")));
         assertThat(product.categoryIds()).isNotEmpty();
@@ -28,7 +33,8 @@ class ProductRepositoryAdapterIT extends AbstractIntegrationTest {
 
     @Test
     void persistsPermanentStockDecrease() {
-        Product product = products.findActiveBySku(new Sku("ELEC-001")).orElseThrow();
+        seedProduct("FIX-002", "Smart Watch", new Money(new BigDecimal("199.99")), 15);
+        Product product = products.findActiveBySku(new Sku("FIX-002")).orElseThrow();
         int before = product.stockQuantity();
         product.purchase(1);
 
@@ -95,5 +101,24 @@ class ProductRepositoryAdapterIT extends AbstractIntegrationTest {
     private static Comparator<Product> orderByNameThenId() {
         return Comparator.comparing(Product::name)
                 .thenComparing(product -> product.id().orElseThrow().value());
+    }
+
+    private Product seedProduct(String sku, String name, Money price, int stock) {
+        Long categoryId =
+                jdbc.queryForObject(
+                        "insert into category (name, slug) values (?, ?) returning id",
+                        Long.class,
+                        name + " category",
+                        "cat-" + sku.toLowerCase());
+        Product product =
+                Product.create(
+                        new Sku(sku),
+                        name,
+                        "Fixture product",
+                        price,
+                        stock,
+                        "/images/product-placeholder.svg",
+                        Set.of(new CategoryId(categoryId)));
+        return products.save(product);
     }
 }
