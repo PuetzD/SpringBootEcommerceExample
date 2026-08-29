@@ -38,7 +38,7 @@ class CartServiceTest {
     @Test
     void validatesProductThenAddsItToCustomerCart() {
         when(catalog.findActiveById(eq(new ProductReference(7L))))
-                .thenReturn(Optional.of(product(7L, "Headphones")));
+                .thenReturn(Optional.of(product(7L, "Rubber Duck of Debugging")));
         var cart = Cart.forCustomer(42L);
         when(repository.findByCustomerId(42L)).thenReturn(Optional.of(cart));
 
@@ -71,13 +71,13 @@ class CartServiceTest {
         cart.addProduct(7L, new Quantity(2));
         when(repository.findByCustomerId(42L)).thenReturn(Optional.of(cart));
         when(catalog.findActiveById(eq(new ProductReference(7L))))
-                .thenReturn(Optional.of(product(7L, "Headphones", "99.99")));
+                .thenReturn(Optional.of(product(7L, "Rubber Duck of Debugging", "99.99")));
 
         var details = service.getDetails(42L);
 
         assertThat(details.isEmpty()).isFalse();
         assertThat(details.lines()).hasSize(1);
-        assertThat(details.lines().getFirst().sku()).isEqualTo("ELEC-001");
+        assertThat(details.lines().getFirst().sku()).isEqualTo("WEAP-002");
         assertThat(details.lines().getFirst().lineTotal().amount()).isEqualByComparingTo("199.98");
         assertThat(details.total().amount()).isEqualByComparingTo("199.98");
     }
@@ -113,10 +113,10 @@ class CartServiceTest {
     private ProductSummary product(Long id, String name) {
         return new ProductSummary(
                 new ProductReference(id),
-                "ELEC-001",
+                "WEAP-002",
                 name,
                 "Description for " + name,
-                new Money(new BigDecimal("149.99")),
+                new Money(new BigDecimal("18.99")),
                 10,
                 "/images/product-placeholder.svg");
     }
@@ -124,7 +124,7 @@ class CartServiceTest {
     private ProductSummary product(Long id, String name, String price) {
         return new ProductSummary(
                 new ProductReference(id),
-                "ELEC-001",
+                "WEAP-002",
                 name,
                 "Description for " + name,
                 new Money(new BigDecimal(price)),

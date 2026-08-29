@@ -41,8 +41,9 @@ class CatalogPurchaseServiceTest {
 
     @Test
     void purchasesInStableProductOrderAndReturnsSnapshots() {
-        Product seven = restoredProduct(7L, "ELEC-007", 5);
-        Product eight = restoredProduct(8L, "ELEC-008", 5);
+        Product seven = restoredProduct(7L, "WEAP-002", "Rubber Duck of Debugging", "18.99", 5);
+        Product eight =
+                restoredProduct(8L, "MAGI-006", "Staff of Dependency Injection", "89.99", 5);
         when(products.findById(new ProductId(7L))).thenReturn(Optional.of(seven));
         when(products.findById(new ProductId(8L))).thenReturn(Optional.of(eight));
 
@@ -62,7 +63,7 @@ class CatalogPurchaseServiceTest {
 
     @Test
     void purchaseReturnsSnapshotsWithSkuNameUnitPriceQuantityAndLineTotal() {
-        Product product = restoredProduct(7L, "ELEC-007", 10);
+        Product product = restoredProduct(7L, "WEAP-002", "Rubber Duck of Debugging", "18.99", 10);
         when(products.findById(new ProductId(7L))).thenReturn(Optional.of(product));
 
         List<PurchasedProductSnapshot> result =
@@ -71,11 +72,11 @@ class CatalogPurchaseServiceTest {
         assertThat(result).hasSize(1);
         PurchasedProductSnapshot snapshot = result.get(0);
         assertThat(snapshot.product().value()).isEqualTo(7L);
-        assertThat(snapshot.sku()).isEqualTo("ELEC-007");
-        assertThat(snapshot.name()).isEqualTo("Headphones");
-        assertThat(snapshot.unitPrice()).isEqualTo(new Money(new BigDecimal("19.99")));
+        assertThat(snapshot.sku()).isEqualTo("WEAP-002");
+        assertThat(snapshot.name()).isEqualTo("Rubber Duck of Debugging");
+        assertThat(snapshot.unitPrice()).isEqualTo(new Money(new BigDecimal("18.99")));
         assertThat(snapshot.quantity()).isEqualTo(3);
-        assertThat(snapshot.lineTotal()).isEqualTo(new Money(new BigDecimal("59.97")));
+        assertThat(snapshot.lineTotal()).isEqualTo(new Money(new BigDecimal("56.97")));
     }
 
     @Test
@@ -92,7 +93,7 @@ class CatalogPurchaseServiceTest {
 
     @Test
     void purchaseThrowsInsufficientStockWhenStockTooLow() {
-        Product product = restoredProduct(7L, "ELEC-007", 1);
+        Product product = restoredProduct(7L, "WEAP-002", "Rubber Duck of Debugging", "18.99", 1);
         when(products.findById(new ProductId(7L))).thenReturn(Optional.of(product));
 
         assertThatThrownBy(
@@ -116,13 +117,13 @@ class CatalogPurchaseServiceTest {
         verify(products, never()).save(any());
     }
 
-    private Product restoredProduct(long id, String sku, int stock) {
+    private Product restoredProduct(long id, String sku, String name, String price, int stock) {
         return Product.restore(
                 new ProductId(id),
                 new Sku(sku),
-                "Headphones",
+                name,
                 "Description",
-                new Money(new BigDecimal("19.99")),
+                new Money(new BigDecimal(price)),
                 stock,
                 "/images/product-placeholder.svg",
                 true,

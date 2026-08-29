@@ -61,9 +61,9 @@ class AddressControllerTest {
                         post("/account/addresses/new")
                                 .with(user("alex").roles("CUSTOMER"))
                                 .with(csrf())
-                                .param("recipientName", "Alex Example")
+                                .param("recipientName", "Bard the Magnificent Debugger")
                                 .param("addressLine1", "1 Main Street")
-                                .param("city", "Testcity")
+                                .param("city", "Greymoor")
                                 .param("postalCode", "35037")
                                 .param("countryCode", "DE"))
                 .andExpect(status().is3xxRedirection())
@@ -79,9 +79,9 @@ class AddressControllerTest {
                         post("/account/addresses/11/edit")
                                 .with(user("alex").roles("CUSTOMER"))
                                 .with(csrf())
-                                .param("recipientName", "Alex Example")
+                                .param("recipientName", "Bard the Magnificent Debugger")
                                 .param("addressLine1", "1 Main Street")
-                                .param("city", "Testcity")
+                                .param("city", "Greymoor")
                                 .param("postalCode", "35037")
                                 .param("countryCode", "DE"))
                 .andExpect(status().is3xxRedirection())
@@ -165,11 +165,11 @@ class AddressControllerTest {
         return new AddressSnapshot(
                 CUSTOMER,
                 new AddressReference(id),
-                "Alex Example",
+                "Bard the Magnificent Debugger",
                 null,
                 "1 Main Street",
                 null,
-                "Testcity",
+                "Greymoor",
                 null,
                 "35037",
                 "DE",
