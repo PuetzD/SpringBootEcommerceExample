@@ -19,15 +19,14 @@ class CustomerCartPersistenceMapper {
                         new CartOwner.Customer(new CustomerId(jpa.getCustomerId())),
                         jpa.getVersion());
         for (CustomerCartItemJpaEntity item : jpa.getItems()) {
-            cart.changeQuantity(new ProductId(item.getProductId()), new Quantity(item.getQuantity()));
+            cart.changeQuantity(
+                    new ProductId(item.getProductId()), new Quantity(item.getQuantity()));
         }
         return cart;
     }
 
     List<CustomerCartItemJpaEntity> toJpaItems(CustomerCartJpaEntity owner, Cart cart) {
-        return cart.items().stream()
-                .map(item -> toJpaItem(owner, item))
-                .toList();
+        return cart.items().stream().map(item -> toJpaItem(owner, item)).toList();
     }
 
     private CustomerCartItemJpaEntity toJpaItem(CustomerCartJpaEntity owner, CartItem item) {

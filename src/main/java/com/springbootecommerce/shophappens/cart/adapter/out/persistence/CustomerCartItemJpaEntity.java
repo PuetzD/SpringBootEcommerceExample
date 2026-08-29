@@ -12,8 +12,7 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "customer_cart_item")
 class CustomerCartItemJpaEntity {
-    @EmbeddedId
-    private CartItemKey key;
+    @EmbeddedId private CartItemKey key;
 
     @Column(name = "quantity", nullable = false)
     private int quantity;

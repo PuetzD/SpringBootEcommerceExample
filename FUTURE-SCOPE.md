@@ -5,6 +5,8 @@ Concepts explicitly excluded from the first draft. They may be added later but i
 ## Commerce extensions
 - Payment / PaymentMethod (payment processing, refunds)
 - Shipment / delivery tracking (separate from Order)
+- Shipping method selection and rates (checkout places no shipping charge)
+- Tax calculation / VAT (checkout currently places no tax)
 - Discount / Coupon / Promotion
 - Wishlist
 - Review / Rating
