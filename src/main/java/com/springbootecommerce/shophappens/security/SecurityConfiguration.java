@@ -1,5 +1,6 @@
 package com.springbootecommerce.shophappens.security;
 
+import com.springbootecommerce.shophappens.security.service.CartMergingAuthenticationSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -38,7 +39,9 @@ public class SecurityConfiguration {
 
     @Bean
     @Order(2)
-    SecurityFilterChain storefrontSecurityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain storefrontSecurityFilterChain(
+            HttpSecurity http, CartMergingAuthenticationSuccessHandler successHandler)
+            throws Exception {
         http.authorizeHttpRequests(
                         auth ->
                                 auth.requestMatchers(
@@ -59,7 +62,7 @@ public class SecurityConfiguration {
                                         .anyRequest()
                                         .authenticated())
                 .formLogin(
-                        form -> form.loginPage("/login").defaultSuccessUrl("/", false).permitAll())
+                        form -> form.loginPage("/login").successHandler(successHandler).permitAll())
                 .logout(
                         logout ->
                                 logout.logoutUrl("/logout")
