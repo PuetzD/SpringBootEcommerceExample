@@ -5,6 +5,8 @@ import com.springbootecommerce.shophappens.cart.domain.model.GuestCartId;
 import java.util.Optional;
 
 public interface GuestCartRepository {
+    long NEW_CART = -1L;
+
     Optional<Cart> find(GuestCartId id);
 
     Cart save(Cart cart, long expectedVersion);

@@ -50,6 +50,17 @@ class CartServiceTest {
     }
 
     @Test
+    void guestAddUsesNewCartSentinelWhenCartDoesNotExist() {
+        GuestCartId guestId = GuestCartId.random();
+        when(guests.find(guestId)).thenReturn(Optional.empty());
+
+        service.changeQuantity(
+                new GuestCartReference(guestId.value()), new ProductReference(7L), 2);
+
+        verify(guests).save(any(Cart.class), eq(GuestCartRepository.NEW_CART));
+    }
+
+    @Test
     void guestSaveConflictPropagatesConcurrentCartModification() {
         GuestCartId guestId = GuestCartId.random();
         Cart cart = cartWith(guestId, 5);
