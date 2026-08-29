@@ -3,7 +3,8 @@ package com.springbootecommerce.shophappens.cart.application;
 import com.springbootecommerce.shophappens.cart.domain.Cart;
 import com.springbootecommerce.shophappens.cart.domain.Quantity;
 import com.springbootecommerce.shophappens.cart.persistence.CartRepository;
-import com.springbootecommerce.shophappens.catalog.application.CatalogQueryService;
+import com.springbootecommerce.shophappens.catalog.application.port.in.BrowseCatalogUseCase;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,9 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class CartService {
 
     private final CartRepository repository;
-    private final CatalogQueryService catalog;
+    private final BrowseCatalogUseCase catalog;
 
-    public CartService(CartRepository repository, CatalogQueryService catalog) {
+    public CartService(CartRepository repository, BrowseCatalogUseCase catalog) {
         this.repository = repository;
         this.catalog = catalog;
     }
@@ -31,7 +32,7 @@ public class CartService {
         var lines = new ArrayList<CartLine>();
         var total = Money.zero();
         for (var item : cart.items()) {
-            var product = catalog.findActiveProductById(item.productId());
+            var product = catalog.findActiveById(new ProductReference(item.productId()));
             if (product.isEmpty()) {
                 continue;
             }
@@ -39,7 +40,7 @@ public class CartService {
             var lineTotal = summary.price().multiply(item.quantity().value());
             lines.add(
                     new CartLine(
-                            summary.id(),
+                            summary.product().value(),
                             summary.sku(),
                             summary.name(),
                             summary.price(),
@@ -52,7 +53,7 @@ public class CartService {
 
     @Transactional
     public void addProduct(Long customerId, Long productId, int quantity) {
-        if (catalog.findActiveProductById(productId).isEmpty()) {
+        if (catalog.findActiveById(new ProductReference(productId)).isEmpty()) {
             throw new ProductUnavailableException(productId);
         }
         repository.ensureExistsForCustomer(customerId);

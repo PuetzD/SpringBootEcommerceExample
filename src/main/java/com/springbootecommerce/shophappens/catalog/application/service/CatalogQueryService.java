@@ -9,10 +9,10 @@ import com.springbootecommerce.shophappens.catalog.domain.model.ProductId;
 import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-// @Service intentionally deferred to Task 4 (web adapter move) to avoid a duplicate-bean-name
-// collision with the legacy catalog.application service; legacy layer deleted in Task 4.
+@Service
 @Transactional(readOnly = true)
 public class CatalogQueryService implements BrowseCatalogUseCase {
     private final ProductRepository productRepository;
