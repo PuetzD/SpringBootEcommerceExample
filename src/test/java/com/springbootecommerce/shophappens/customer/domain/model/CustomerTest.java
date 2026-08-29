@@ -10,11 +10,11 @@ import org.junit.jupiter.api.Test;
 class CustomerTest {
     private static final AddressDetails Testcity =
             new AddressDetails(
-                    "Alex Example",
+                    "Bard the Magnificent Debugger",
                     null,
                     "1 Main Street",
                     null,
-                    "Testcity",
+                    "Greymoor",
                     null,
                     "35037",
                     "DE",
@@ -28,7 +28,7 @@ class CustomerTest {
         Address second =
                 customer.addAddress(
                         new AddressDetails(
-                                "Alex Example",
+                                "Bard the Magnificent Debugger",
                                 null,
                                 "2 Side Street",
                                 null,

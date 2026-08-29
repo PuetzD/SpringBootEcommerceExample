@@ -10,9 +10,11 @@ CREATE TABLE account
     updated_at    TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT pk_account PRIMARY KEY (id),
-    CONSTRAINT uk_account_email UNIQUE (email),
+    CONSTRAINT chk_account_email_canonical CHECK (email = lower(trim(email))),
     CONSTRAINT chk_account_role CHECK (role IN ('CUSTOMER', 'ADMIN'))
 );
+
+CREATE UNIQUE INDEX uk_account_email_canonical ON account (lower(email));
 
 CREATE TABLE customer
 (
