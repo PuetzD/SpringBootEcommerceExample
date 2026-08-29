@@ -4,7 +4,4 @@ import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.time.Instant;
 
 public record PlacedOrder(
-        OrderReference order,
-        String orderNumber,
-        Money total,
-        Instant placedAt) {}
+        OrderReference order, String orderNumber, Money total, Instant placedAt) {}
