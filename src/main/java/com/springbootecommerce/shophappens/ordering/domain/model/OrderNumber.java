@@ -11,6 +11,5 @@ public record OrderNumber(String value) {
         if (!value.matches("ORD-\\d{8}-[A-Z0-9]{12}")) {
             throw new IllegalArgumentException("Order number format is invalid");
         }
-        value = value.strip();
     }
 }
