@@ -41,21 +41,25 @@ public class CartService
     @Override
     public void changeQuantity(GuestCartReference guest, ProductReference product, int quantity) {
         GuestCartId guestId = new GuestCartId(guest.value());
+        Cart existing = guests.find(guestId).orElse(null);
         Cart cart =
-                guests.find(guestId)
-                        .orElseGet(() -> Cart.empty(CartId.random(), new CartOwner.Guest(guestId)));
+                existing != null
+                        ? existing
+                        : Cart.empty(CartId.random(), new CartOwner.Guest(guestId));
         cart.changeQuantity(new ProductId(product.value()), new Quantity(quantity));
-        guests.save(cart, cart.version());
+        guests.save(cart, existing != null ? cart.version() : GuestCartRepository.NEW_CART);
     }
 
     @Override
     public void remove(GuestCartReference guest, ProductReference product) {
         GuestCartId guestId = new GuestCartId(guest.value());
+        Cart existing = guests.find(guestId).orElse(null);
         Cart cart =
-                guests.find(guestId)
-                        .orElseGet(() -> Cart.empty(CartId.random(), new CartOwner.Guest(guestId)));
+                existing != null
+                        ? existing
+                        : Cart.empty(CartId.random(), new CartOwner.Guest(guestId));
         cart.remove(new ProductId(product.value()));
-        guests.save(cart, cart.version());
+        guests.save(cart, existing != null ? cart.version() : GuestCartRepository.NEW_CART);
     }
 
     @Override
