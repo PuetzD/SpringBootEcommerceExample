@@ -1,17 +1,11 @@
 package com.springbootecommerce.shophappens.sharedkernel.money;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Objects;
 
-@Embeddable
-public class Money {
-    @Column(name = "amount", precision = 19, scale = 2)
-    private BigDecimal amount;
-
-    protected Money() {}
+public final class Money {
+    private final BigDecimal amount;
 
     public Money(BigDecimal amount) {
         Objects.requireNonNull(amount, "amount");
