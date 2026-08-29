@@ -48,3 +48,4 @@ src/main/resources/static/css/output.css
 /docs/superpowers/
 /.codex/config.toml
 
+/.qwen/skills/
