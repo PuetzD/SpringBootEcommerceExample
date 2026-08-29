@@ -7,6 +7,12 @@
       "skillPath": "multi-agent-ba/.agent/skills/domain-knowledge/ecommerce/SKILL.md",
       "computedHash": "bb87118bd1232699d9034c86305b670ed8df7b1fe6e0bf9336fd411542314ff8"
     },
+    "accessibility": {
+      "source": "addyosmani/web-quality-skills",
+      "sourceType": "github",
+      "skillPath": "skills/accessibility/SKILL.md",
+      "computedHash": "612f913bcb03f0787b103c848cd7664b676a9aaf31f25d3270cc69cf5caaab95"
+    },
     "accessibility-commerce": {
       "source": "finsilabs/awesome-ecommerce-skills",
       "sourceType": "github",
@@ -163,6 +169,12 @@
       "skillPath": "skills/lean-build/SKILL.md",
       "computedHash": "6074721f1653e6e9d6381595b094284807b8d5d001d7d3977ec534679b16a63c"
     },
+    "lombok-patterns": {
+      "source": "emvnuel/skills",
+      "sourceType": "github",
+      "skillPath": "lombok-patterns/SKILL.md",
+      "computedHash": "b58ebd7b5776a89b14086b3959e031b849b061135266017af81229c145db4b56"
+    },
     "migration": {
       "source": "juliusbrussee/caveman",
       "sourceType": "github",
@@ -174,6 +186,12 @@
       "sourceType": "github",
       "skillPath": "skills/modern-web-guidance/SKILL.md",
       "computedHash": "647209d360295e26b6b994395743ea860e36f5d2b16d706cbb5ce4a3e5f5ec26"
+    },
+    "playwright-cli": {
+      "source": "microsoft/playwright-cli",
+      "sourceType": "github",
+      "skillPath": "skills/playwright-cli/SKILL.md",
+      "computedHash": "f602822b51bcb6d033749c60731b8f1e80f308222fcb2e4af551905a817c6e08"
     },
     "receiving-code-review": {
       "source": "obra/superpowers",
