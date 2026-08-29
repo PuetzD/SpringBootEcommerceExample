@@ -1,11 +1,7 @@
 package com.springbootecommerce.shophappens.cart.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -14,7 +10,6 @@ import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartRef
 import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartSnapshot;
 import com.springbootecommerce.shophappens.cart.application.port.out.CustomerCartRepository;
 import com.springbootecommerce.shophappens.cart.application.port.out.GuestCartRepository;
-import com.springbootecommerce.shophappens.cart.domain.exception.ConcurrentCartModificationException;
 import com.springbootecommerce.shophappens.cart.domain.model.Cart;
 import com.springbootecommerce.shophappens.cart.domain.model.CartId;
 import com.springbootecommerce.shophappens.cart.domain.model.CartOwner;
@@ -38,7 +33,7 @@ class CartServiceTest {
     @InjectMocks CartService service;
 
     @Test
-    void guestAddUsesLoadedVersionAsExpectedVersion() {
+    void guestAddSavesMutatedCart() {
         GuestCartId guestId = GuestCartId.random();
         Cart cart = cartWith(guestId, 5);
         when(guests.find(guestId)).thenReturn(Optional.of(cart));
@@ -46,35 +41,27 @@ class CartServiceTest {
         service.changeQuantity(
                 new GuestCartReference(guestId.value()), new ProductReference(7L), 2);
 
-        verify(guests).save(argThat(c -> c.id().equals(cart.id())), eq(5L));
+        verify(guests).save(cart);
     }
 
     @Test
-    void guestAddUsesNewCartSentinelWhenCartDoesNotExist() {
+    void guestAddCreatesMissingCartAndSaves() {
         GuestCartId guestId = GuestCartId.random();
         when(guests.find(guestId)).thenReturn(Optional.empty());
 
         service.changeQuantity(
                 new GuestCartReference(guestId.value()), new ProductReference(7L), 2);
 
-        verify(guests).save(any(Cart.class), eq(GuestCartRepository.NEW_CART));
-    }
-
-    @Test
-    void guestSaveConflictPropagatesConcurrentCartModification() {
-        GuestCartId guestId = GuestCartId.random();
-        Cart cart = cartWith(guestId, 5);
-        when(guests.find(guestId)).thenReturn(Optional.of(cart));
-        when(guests.save(any(Cart.class), anyLong()))
-                .thenThrow(new ConcurrentCartModificationException("conflict"));
-
-        assertThatThrownBy(
-                        () ->
-                                service.changeQuantity(
-                                        new GuestCartReference(guestId.value()),
-                                        new ProductReference(7L),
-                                        2))
-                .isInstanceOf(ConcurrentCartModificationException.class);
+        verify(guests)
+                .save(
+                        argThat(
+                                c ->
+                                        c.items().stream()
+                                                .anyMatch(
+                                                        item ->
+                                                                item.productId().value() == 7L
+                                                                        && item.quantity().value()
+                                                                                == 2)));
     }
 
     @Test
