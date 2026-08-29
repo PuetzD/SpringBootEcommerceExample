@@ -17,7 +17,7 @@ import com.springbootecommerce.shophappens.customer.application.port.in.ManageCu
 import com.springbootecommerce.shophappens.customer.application.port.in.OwnedAddressQuery;
 import com.springbootecommerce.shophappens.customer.domain.exception.AddressNotOwnedException;
 import com.springbootecommerce.shophappens.security.SecurityConfiguration;
-import com.springbootecommerce.shophappens.web.support.CanonicalUrlFactory;
+import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;

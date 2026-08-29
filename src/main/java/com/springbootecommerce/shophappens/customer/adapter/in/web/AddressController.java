@@ -8,8 +8,8 @@ import com.springbootecommerce.shophappens.customer.application.port.in.ManageCu
 import com.springbootecommerce.shophappens.customer.application.port.in.ManageCustomerAddressesUseCase.SaveAddressCommand;
 import com.springbootecommerce.shophappens.customer.application.port.in.OwnedAddressQuery;
 import com.springbootecommerce.shophappens.customer.domain.exception.AddressNotOwnedException;
-import com.springbootecommerce.shophappens.web.support.CanonicalUrlFactory;
-import com.springbootecommerce.shophappens.web.support.SeoMetadata;
+import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
+import com.springbootecommerce.shophappens.shared.web.SeoMetadata;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

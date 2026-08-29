@@ -10,8 +10,8 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.BrowseCat
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductSummary;
 import com.springbootecommerce.shophappens.security.SecurityConfiguration;
+import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
-import com.springbootecommerce.shophappens.web.support.CanonicalUrlFactory;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;

@@ -21,6 +21,19 @@ class ArchitectureRulesTest {
     private static final String ROOT = "com.springbootecommerce.shophappens";
     private static final List<String> CONTEXTS =
             List.of("account", "customer", "catalog", "cart", "ordering", "security");
+    // Extra cycle-detection slices for adapter and shared web code that is not a bounded
+    // context. "sharedkernel" precedes "shared" so the longer prefix wins in sliceOf().
+    private static final List<String> SLICES =
+            List.of(
+                    "sharedkernel",
+                    "storefront",
+                    "security",
+                    "shared",
+                    "account",
+                    "customer",
+                    "catalog",
+                    "cart",
+                    "ordering");
     private static JavaClasses imported;
 
     @BeforeAll
@@ -92,9 +105,40 @@ class ArchitectureRulesTest {
     }
 
     @Test
+    void storefrontInternalReachIsBlocked() {
+        noClasses()
+                .that()
+                .resideOutsideOfPackage("..storefront..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage("..storefront..")
+                .allowEmptyShould(true)
+                .check(imported);
+    }
+
+    @Test
+    void sharedWebSupportDoesNotDependOnContextInternals() {
+        noClasses()
+                .that()
+                .resideInAPackage("..shared.web..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage(
+                        "..account..",
+                        "..customer..",
+                        "..catalog..",
+                        "..cart..",
+                        "..ordering..",
+                        "..security..",
+                        "..storefront..")
+                .allowEmptyShould(true)
+                .check(imported);
+    }
+
+    @Test
     void featureSlicesAreFreeOfCycles() {
         Map<String, Set<String>> graph = new HashMap<>();
-        for (String context : CONTEXTS) {
+        for (String context : SLICES) {
             graph.put(context, new HashSet<>());
         }
         for (JavaClass clazz : imported) {
@@ -121,7 +165,7 @@ class ArchitectureRulesTest {
     }
 
     private static String sliceOf(JavaClass clazz) {
-        for (String context : CONTEXTS) {
+        for (String context : SLICES) {
             if (clazz.getPackageName().startsWith(ROOT + "." + context)) {
                 return context;
             }

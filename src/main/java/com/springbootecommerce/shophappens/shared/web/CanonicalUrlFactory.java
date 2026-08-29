@@ -1,4 +1,4 @@
-package com.springbootecommerce.shophappens.web.support;
+package com.springbootecommerce.shophappens.shared.web;
 
 import java.net.URI;
 import org.springframework.beans.factory.annotation.Value;
