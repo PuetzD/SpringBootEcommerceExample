@@ -1,1 +1,113 @@
-test
+<!doctype html>
+<html lang="en"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard &middot; Shop Happens</title>
+  <link rel="stylesheet" th:href="@{/css/output.css}">
+</head>
+<body class="min-h-screen flex bg-base-200 font-sans">
+  <aside class="w-64 bg-base-100 border-r border-base-300 flex flex-col flex-shrink-0">
+    <div class="p-4 border-b border-base-300">
+      <a th:href="@{/admin}" class="text-xl font-bold text-primary">Shop Happens</a>
+      <p class="text-xs text-base-content/50 mt-1">Administration</p>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto py-2">
+      <ul class="menu px-2">
+        <li>
+          <a th:href="@{/admin}"
+             class="flex items-center gap-3">
+            <span class="icon-[mdi--view-dashboard-outline] text-lg"></span>
+            Dashboard
+          </a>
+        </li>
+        <li>
+          <a th:href="@{/admin/products}"
+             class="flex items-center gap-3">
+            <span class="icon-[mdi--cube-outline] text-lg"></span>
+            Products
+          </a>
+        </li>
+        <li>
+          <a th:href="@{/admin/categories}"
+             class="flex items-center gap-3">
+            <span class="icon-[mdi--tag-outline] text-lg"></span>
+            Categories
+          </a>
+        </li>
+        <li>
+          <a th:href="@{/admin/orders}"
+             class="flex items-center gap-3">
+            <span class="icon-[mdi--cart-outline] text-lg"></span>
+            Orders
+          </a>
+        </li>
+        <li>
+          <a th:href="@{/admin/customers}"
+             class="flex items-center gap-3">
+            <span class="icon-[mdi--account-outline] text-lg"></span>
+            Customers
+          </a>
+        </li>
+        <li>
+          <a th:href="@{/admin/settings}"
+             class="flex items-center gap-3">
+            <span class="icon-[mdi--cog-outline] text-lg"></span>
+            Settings
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="p-4 border-t border-base-300">
+      <form th:action="@{/admin/logout}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <button type="submit"
+                class="btn btn-ghost w-full justify-start gap-3">
+          <span class="icon-[mdi--logout]"></span>
+          Logout
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="flex-1 overflow-y-auto">
+    <header class="bg-base-100 border-b border-base-300 px-8 py-4 flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-base-content">Dashboard</h1>
+        <p class="text-sm text-base-content/60 mt-1">
+          Signed in as <span class="font-medium" sec:authentication="name">admin</span>
+        </p>
+      </div>
+      <div class="flex items-center gap-2">
+        <a th:href="@{/admin/settings}" class="btn btn-ghost btn-circle" aria-label="Settings">
+          <span class="icon-[mdi--cog-outline] text-xl"></span>
+        </a>
+        <a th:href="@{/storefront}" class="btn btn-ghost" aria-label="Visit storefront">
+          <span class="icon-[mdi--open-in-new] text-lg"></span>
+          Storefront
+        </a>
+      </div>
+    </header>
+
+    <div class="p-8 max-w-4xl mx-auto lg:max-w-none">
+      <div class="card bg-base-100 shadow-xl mb-6">
+        <div class="card-body">
+          <h2 class="card-title text-3xl mb-2">Welcome back!</h2>
+          <p class="text-base-content/70">
+            You are signed in to the Shop Happens administration panel.
+            Use the menu on the left to navigate to the different sections.
+          </p>
+          <div class="card-actions justify-end mt-4">
+            <a th:href="@{/admin/products}" class="btn btn-primary">Manage Products</a>
+            <a th:href="@{/admin/orders}" class="btn btn-outline">View Orders</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
