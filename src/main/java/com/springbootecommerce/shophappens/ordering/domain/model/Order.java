@@ -38,10 +38,7 @@ public record Order(
             OrderAddress shippingAddress,
             OrderAddress billingAddress,
             Instant placedAt) {
-        Money total =
-                items.stream()
-                        .map(OrderItem::lineTotal)
-                        .reduce(Money.zero(), Money::add);
+        Money total = items.stream().map(OrderItem::lineTotal).reduce(Money.zero(), Money::add);
         return new Order(
                 orderId,
                 orderNumber,

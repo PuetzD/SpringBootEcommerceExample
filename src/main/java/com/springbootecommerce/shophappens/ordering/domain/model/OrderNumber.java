@@ -1,7 +1,5 @@
 package com.springbootecommerce.shophappens.ordering.domain.model;
 
-import java.util.Objects;
-
 public record OrderNumber(String value) {
     public OrderNumber {
         if (value == null || value.isBlank()) {
