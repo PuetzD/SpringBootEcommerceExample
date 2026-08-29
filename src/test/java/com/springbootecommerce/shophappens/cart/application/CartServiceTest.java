@@ -3,6 +3,7 @@ package com.springbootecommerce.shophappens.cart.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -11,8 +12,9 @@ import static org.mockito.Mockito.when;
 import com.springbootecommerce.shophappens.cart.domain.Cart;
 import com.springbootecommerce.shophappens.cart.domain.Quantity;
 import com.springbootecommerce.shophappens.cart.persistence.CartRepository;
-import com.springbootecommerce.shophappens.catalog.application.CatalogQueryService;
-import com.springbootecommerce.shophappens.catalog.application.ProductSummary;
+import com.springbootecommerce.shophappens.catalog.application.port.in.BrowseCatalogUseCase;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductSummary;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
 import java.util.List;
@@ -23,19 +25,20 @@ import org.junit.jupiter.api.Test;
 class CartServiceTest {
 
     private CartRepository repository;
-    private CatalogQueryService catalog;
+    private BrowseCatalogUseCase catalog;
     private CartService service;
 
     @BeforeEach
     void setUp() {
         repository = mock(CartRepository.class);
-        catalog = mock(CatalogQueryService.class);
+        catalog = mock(BrowseCatalogUseCase.class);
         service = new CartService(repository, catalog);
     }
 
     @Test
     void validatesProductThenAddsItToCustomerCart() {
-        when(catalog.findActiveProductById(7L)).thenReturn(Optional.of(product(7L, "Headphones")));
+        when(catalog.findActiveById(eq(new ProductReference(7L))))
+                .thenReturn(Optional.of(product(7L, "Headphones")));
         var cart = Cart.forCustomer(42L);
         when(repository.findByCustomerId(42L)).thenReturn(Optional.of(cart));
 
@@ -67,7 +70,7 @@ class CartServiceTest {
         var cart = Cart.forCustomer(42L);
         cart.addProduct(7L, new Quantity(2));
         when(repository.findByCustomerId(42L)).thenReturn(Optional.of(cart));
-        when(catalog.findActiveProductById(7L))
+        when(catalog.findActiveById(eq(new ProductReference(7L))))
                 .thenReturn(Optional.of(product(7L, "Headphones", "99.99")));
 
         var details = service.getDetails(42L);
@@ -81,7 +84,7 @@ class CartServiceTest {
 
     @Test
     void rejectsMissingProductBeforeCreatingCart() {
-        when(catalog.findActiveProductById(99L)).thenReturn(Optional.empty());
+        when(catalog.findActiveById(eq(new ProductReference(99L)))).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.addProduct(42L, 99L, 1))
                 .isInstanceOf(ProductUnavailableException.class);
@@ -109,7 +112,7 @@ class CartServiceTest {
 
     private ProductSummary product(Long id, String name) {
         return new ProductSummary(
-                id,
+                new ProductReference(id),
                 "ELEC-001",
                 name,
                 "Description for " + name,
@@ -120,7 +123,7 @@ class CartServiceTest {
 
     private ProductSummary product(Long id, String name, String price) {
         return new ProductSummary(
-                id,
+                new ProductReference(id),
                 "ELEC-001",
                 name,
                 "Description for " + name,
