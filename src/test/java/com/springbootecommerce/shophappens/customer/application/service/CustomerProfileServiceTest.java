@@ -48,7 +48,7 @@ class CustomerProfileServiceTest {
         AddressSnapshot result =
                 service.getOwned(new CustomerReference(7L), new AddressReference(11L));
 
-        assertThat(result.recipientName()).isEqualTo("Alex Example");
+        assertThat(result.recipientName()).isEqualTo("Bard the Magnificent Debugger");
         assertThat(result.customer()).isEqualTo(new CustomerReference(7L));
     }
 
@@ -69,11 +69,11 @@ class CustomerProfileServiceTest {
                 Address.restore(
                         new AddressId(addressId),
                         new AddressDetails(
-                                "Alex Example",
+                                "Bard the Magnificent Debugger",
                                 null,
                                 "1 Main Street",
                                 null,
-                                "Testcity",
+                                "Greymoor",
                                 null,
                                 "35037",
                                 "DE",

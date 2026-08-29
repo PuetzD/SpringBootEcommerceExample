@@ -9,7 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.springbootecommerce.shophappens.account.application.port.in.RegisterCustomerAccountUseCase;
 import com.springbootecommerce.shophappens.security.SecurityConfiguration;
-import com.springbootecommerce.shophappens.web.support.CanonicalUrlFactory;
+import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;

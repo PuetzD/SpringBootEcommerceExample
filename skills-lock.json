@@ -151,6 +151,12 @@
       "skillPath": "skills/finishing-a-development-branch/SKILL.md",
       "computedHash": "4f571e7befb8b0946d9d7770232c818812412e9ab1dfb811f847edfba1fc6275"
     },
+    "gdpr-data-handling": {
+      "source": "sickn33/agentic-awesome-skills",
+      "sourceType": "github",
+      "skillPath": "skills/gdpr-data-handling/SKILL.md",
+      "computedHash": "1bb0f7c432411709596053985a29bc76593384ecf98012e7144e3831d5940bee"
+    },
     "grilling": {
       "source": "mattpocock/skills",
       "sourceType": "github",

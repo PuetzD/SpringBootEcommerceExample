@@ -10,8 +10,8 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.BrowseCat
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductSummary;
 import com.springbootecommerce.shophappens.security.SecurityConfiguration;
+import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
-import com.springbootecommerce.shophappens.web.support.CanonicalUrlFactory;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -31,16 +31,16 @@ class CatalogControllerTest {
 
     @Test
     void rendersCatalogAndProductDetail() throws Exception {
-        var product = productSummary(7L, "ELEC-001", "Headphones", "149.99");
+        var product = productSummary(7L, "WEAP-002", "Rubber Duck of Debugging", "18.99");
         when(catalog.findAllActive()).thenReturn(List.of(product));
-        when(catalog.findActiveBySku("ELEC-001")).thenReturn(Optional.of(product));
+        when(catalog.findActiveBySku("WEAP-002")).thenReturn(Optional.of(product));
 
         mockMvc.perform(get("/catalog"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("catalog/list"))
                 .andExpect(model().attribute("products", List.of(product)));
 
-        mockMvc.perform(get("/catalog/products/ELEC-001"))
+        mockMvc.perform(get("/catalog/products/WEAP-002"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("catalog/detail"))
                 .andExpect(model().attribute("product", product));
