@@ -1,0 +1,67 @@
+<!doctype html>
+<html
+    lang="en"
+    xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{fragments/layout :: page(${seo}, ~{::main}, ~{::#page-scripts})}">
+<head></head>
+<body>
+  <main class="flex-grow py-12">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h1 class="text-2xl font-bold">Your cart</h1>
+          <p class="text-base-content/60">Review and update the items in your cart.</p>
+        </div>
+      </div>
+
+      <ul class="flex flex-col gap-4" th:if="${!cartEmpty}">
+        <li
+            th:each="line : ${lines}"
+            class="card bg-base-100 shadow-sm">
+          <div class="card-body">
+            <div class="flex justify-between items-start gap-4">
+              <div>
+                <p class="font-semibold" th:text="${line.product().name()}">Product</p>
+                <p class="text-base-content/70" th:text="${#numbers.formatDecimal(line.product().price().amount(), 1, 2) + ' EUR'}">0.00 EUR</p>
+                <p class="text-base-content/60">Quantity: <span th:text="${line.item().quantity()}">1</span></p>
+              </div>
+              <form th:action="@{/cart/items/{id}/remove(id=${line.product().product().value()})}" method="post" class="flex items-start">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button type="submit" class="btn btn-sm btn-error btn-outline">Remove</button>
+              </form>
+            </div>
+            <form
+                th:action="@{/cart/items}"
+                method="post"
+                class="mt-4 flex items-end gap-2">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+              <input type="hidden" name="product" th:value="${line.product().product().value()}">
+              <label class="form-control">
+                <span class="label-text text-sm">Quantity</span>
+                <input
+                    type="number"
+                    name="quantity"
+                    min="1"
+                    max="999"
+                    th:value="${line.item().quantity()}"
+                    class="input input-bordered input-sm w-24"
+                    aria-label="Quantity">
+              </label>
+              <button type="submit" class="btn btn-sm btn-primary">Update</button>
+            </form>
+          </div>
+        </li>
+      </ul>
+
+      <p class="text-base-content/60 mt-6" th:if="${cartEmpty}">
+        Your cart is empty.
+      </p>
+
+      <p class="mt-8" th:if="${!cartEmpty and customer != null}">
+        <a th:href="@{/order/checkout}" class="btn btn-primary">Checkout</a>
+      </p>
+    </div>
+  </main>
+  <th:block id="page-scripts"></th:block>
+</body>
+</html>

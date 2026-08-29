@@ -52,7 +52,7 @@ docker compose up -d
 
 By default the application logs quietly and hides SQL bindings. To opt into
 verbose local diagnostics (Spring Security trace and Hibernate SQL/binding
-logging), activate the `dev` profile:
+logging), activate the `dev` profile, this also seeds (idempotent) demo data from ``db.demo``:
 
 ```bash
 SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
@@ -75,15 +75,6 @@ Format Java sources with:
 The database schema is managed by Flyway migrations in `db/migration`
 (`V1__create_account_schema.sql`, `V2__create_catalog_schema.sql`) and checked
 against the JPA entities at startup via `ddl-auto: validate`.
-
-A repeatable Flyway migration in `db/demo/R__demo_data.sql` seeds a
-fantasy-merchant demo catalog — "Shop Happens: Buy stuff. Be happy." — with
-themed categories and products (SKUs `WEAP-`, `MAGI-`, `MONS-`, `GOOD-`) plus
-two demo accounts: `customer@shop-happens.com` / `admin@shop-happens.com`
-(password `123`). The script truncates the demo tables and re-seeds them, so
-re-running it is idempotent. Like all schema migrations it runs automatically
-on startup, since `db/demo` is configured in `spring.flyway.locations`. It is
-excluded from the `it` profile so integration tests never see demo data.
 
 ## Frontend CSS
 

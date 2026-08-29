@@ -10,6 +10,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.BrowseCat
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductSummary;
 import com.springbootecommerce.shophappens.security.SecurityConfiguration;
+import com.springbootecommerce.shophappens.security.service.CartMergingAuthenticationSuccessHandler;
 import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
@@ -28,6 +29,7 @@ class CatalogControllerTest {
     @Autowired MockMvc mockMvc;
 
     @MockitoBean BrowseCatalogUseCase catalog;
+    @MockitoBean CartMergingAuthenticationSuccessHandler successHandler;
 
     @Test
     void rendersCatalogAndProductDetail() throws Exception {

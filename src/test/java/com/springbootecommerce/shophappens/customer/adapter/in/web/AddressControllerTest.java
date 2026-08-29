@@ -17,6 +17,7 @@ import com.springbootecommerce.shophappens.customer.application.port.in.ManageCu
 import com.springbootecommerce.shophappens.customer.application.port.in.OwnedAddressQuery;
 import com.springbootecommerce.shophappens.customer.domain.exception.AddressNotOwnedException;
 import com.springbootecommerce.shophappens.security.SecurityConfiguration;
+import com.springbootecommerce.shophappens.security.service.CartMergingAuthenticationSuccessHandler;
 import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +36,7 @@ class AddressControllerTest {
     @MockitoBean AuthenticatedCustomerResolver authenticator;
     @MockitoBean OwnedAddressQuery addresses;
     @MockitoBean ManageCustomerAddressesUseCase manager;
+    @MockitoBean CartMergingAuthenticationSuccessHandler successHandler;
 
     private static final CustomerReference CUSTOMER = new CustomerReference(7L);
 

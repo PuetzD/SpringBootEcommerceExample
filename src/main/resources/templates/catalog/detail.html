@@ -33,6 +33,21 @@
         </div>
         <p class="text-base-content/70" th:text="${product.description()}">Description</p>
         <p class="text-2xl font-semibold" th:text="${#numbers.formatDecimal(product.price().amount(), 1, 2) + ' EUR'}">0.00 EUR</p>
+        <form th:action="@{/cart/items}" method="post" class="mt-4 flex items-end gap-2">
+          <input type="hidden" name="product" th:value="${product.product().value()}">
+          <label class="form-control">
+            <span class="label-text text-sm">Quantity</span>
+            <input
+                type="number"
+                name="quantity"
+                value="1"
+                min="1"
+                max="999"
+                class="input input-bordered input-sm w-24"
+                aria-label="Quantity">
+          </label>
+          <button type="submit" class="btn btn-primary" th:disabled="${!product.inStock()}">Add to cart</button>
+        </form>
       </div>
     </div>
   </main>
