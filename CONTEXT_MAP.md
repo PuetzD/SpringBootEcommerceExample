@@ -2,6 +2,8 @@
 
 This modular monolith separates the customer shopping journey into five bounded contexts. Each context owns its language and model; storefront and security code are adapters around those contexts rather than contexts themselves.
 
+Shared presentation support lives in `shared.web` (e.g. `SeoMetadata`, `CanonicalUrlFactory`). It is owned by no context and is consumed by the web adapters of any public page.
+
 ## Contexts
 
 - [Identity and Access](./contexts/account/CONTEXT.md): registers Accounts and establishes who may access the application
