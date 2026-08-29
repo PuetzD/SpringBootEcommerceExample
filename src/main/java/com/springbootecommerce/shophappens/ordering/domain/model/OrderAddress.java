@@ -15,18 +15,18 @@ public record OrderAddress(
         String phoneNumber) {
     public OrderAddress {
         role = Objects.requireNonNull(role);
-        recipientName = required(recipientName);
-        addressLine1 = required(addressLine1);
-        city = required(city);
-        postalCode = required(postalCode);
+        recipientName = required(recipientName, "Recipient name");
+        addressLine1 = required(addressLine1, "Address line 1");
+        city = required(city, "City");
+        postalCode = required(postalCode, "Postal code");
         if (countryCode == null || !countryCode.matches("[A-Z]{2}")) {
             throw new IllegalArgumentException("Country code must be two uppercase letters");
         }
     }
 
-    private static String required(String value) {
+    private static String required(String value, String label) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("Address field must not be blank");
+            throw new IllegalArgumentException(label + " must not be blank");
         }
         return value.strip();
     }

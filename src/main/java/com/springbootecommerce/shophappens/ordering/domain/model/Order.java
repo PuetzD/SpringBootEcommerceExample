@@ -3,8 +3,8 @@ package com.springbootecommerce.shophappens.ordering.domain.model;
 import com.springbootecommerce.shophappens.ordering.domain.exception.EmptyCheckoutException;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public record Order(
         OrderId orderId,
@@ -17,15 +17,24 @@ public record Order(
         Instant placedAt,
         Money total) {
     public Order {
-        items = Collections.unmodifiableList(items);
+        Objects.requireNonNull(orderId, "orderId must not be null");
+        Objects.requireNonNull(orderNumber, "orderNumber must not be null");
+        Objects.requireNonNull(checkoutId, "checkoutId must not be null");
+        Objects.requireNonNull(customerId, "customerId must not be null");
+        Objects.requireNonNull(items, "items must not be null");
+        Objects.requireNonNull(shippingAddress, "shippingAddress must not be null");
+        Objects.requireNonNull(billingAddress, "billingAddress must not be null");
+        Objects.requireNonNull(placedAt, "placedAt must not be null");
+        Objects.requireNonNull(total, "total must not be null");
+        items = List.copyOf(items);
         if (items.isEmpty()) {
             throw new EmptyCheckoutException();
         }
-        if (shippingAddress == null || shippingAddress.role() != AddressRole.SHIPPING) {
-            throw new IllegalArgumentException("Shipping address is required");
+        if (shippingAddress.role() != AddressRole.SHIPPING) {
+            throw new IllegalArgumentException("Shipping address must have role SHIPPING");
         }
-        if (billingAddress == null || billingAddress.role() != AddressRole.BILLING) {
-            throw new IllegalArgumentException("Billing address is required");
+        if (billingAddress.role() != AddressRole.BILLING) {
+            throw new IllegalArgumentException("Billing address must have role BILLING");
         }
     }
 

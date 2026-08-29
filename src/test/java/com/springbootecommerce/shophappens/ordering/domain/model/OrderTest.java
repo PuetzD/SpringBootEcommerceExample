@@ -7,6 +7,7 @@ import com.springbootecommerce.shophappens.ordering.domain.exception.EmptyChecko
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -43,6 +44,36 @@ class OrderTest {
                 .isInstanceOf(EmptyCheckoutException.class);
         assertThatThrownBy(() -> placeWithAddresses(billingAddress(), billingAddress()))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void itemsAreDefensiveCopyAgainstExternalMutation() {
+        List<OrderItem> source =
+                new ArrayList<>(
+                        List.of(
+                                new OrderItem(
+                                        new ProductId(7L),
+                                        "ELEC-001",
+                                        "Headphones",
+                                        new Money(new BigDecimal("19.99")),
+                                        2)));
+        Order order =
+                Order.place(
+                        OrderId.random(),
+                        new OrderNumber("ORD-20260828-ABC123DEF456"),
+                        new CheckoutId(UUID.randomUUID()),
+                        new CustomerId(42L),
+                        source,
+                        shippingAddress(),
+                        billingAddress(),
+                        Instant.parse("2026-08-28T08:00:00Z"));
+
+        source.clear();
+
+        assertThat(order.items()).hasSize(1);
+        OrderItem item = order.items().get(0);
+        assertThat(item.sku()).isEqualTo("ELEC-001");
+        assertThat(item.quantity()).isEqualTo(2);
     }
 
     private Order placeWithItems(List<OrderItem> items) {
