@@ -163,6 +163,12 @@
       "skillPath": "skills/lean-build/SKILL.md",
       "computedHash": "6074721f1653e6e9d6381595b094284807b8d5d001d7d3977ec534679b16a63c"
     },
+    "lombok-patterns": {
+      "source": "emvnuel/skills",
+      "sourceType": "github",
+      "skillPath": "lombok-patterns/SKILL.md",
+      "computedHash": "b58ebd7b5776a89b14086b3959e031b849b061135266017af81229c145db4b56"
+    },
     "migration": {
       "source": "juliusbrussee/caveman",
       "sourceType": "github",

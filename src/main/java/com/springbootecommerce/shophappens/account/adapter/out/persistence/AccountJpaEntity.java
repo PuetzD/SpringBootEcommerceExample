@@ -12,8 +12,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
-import java.time.OffsetDateTime;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
+import java.time.OffsetDateTime;
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "account")
 class AccountJpaEntity {
@@ -43,8 +46,6 @@ class AccountJpaEntity {
 
     @Column(name = "updated_at", insertable = false, updatable = false)
     private OffsetDateTime updatedAt;
-
-    AccountJpaEntity() {}
 
     static AccountJpaEntity create(
             Email email, PasswordHash passwordHash, Role role, boolean enabled) {
