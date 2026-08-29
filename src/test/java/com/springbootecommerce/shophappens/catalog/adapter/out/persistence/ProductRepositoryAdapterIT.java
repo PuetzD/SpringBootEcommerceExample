@@ -1,19 +1,18 @@
 package com.springbootecommerce.shophappens.catalog.adapter.out.persistence;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductRepository;
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
 import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
 import com.springbootecommerce.shophappens.integration.AbstractIntegrationTest;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
+import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.math.BigDecimal;
-
-import static org.assertj.core.api.Assertions.assertThat;
 class ProductRepositoryAdapterIT extends AbstractIntegrationTest {
-    @Autowired
-    ProductRepository products;
+    @Autowired ProductRepository products;
 
     @Test
     void restoresMoneyCategoriesAndOptimisticVersion() {

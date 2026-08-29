@@ -63,8 +63,7 @@ class ProductRepositoryAdapter implements ProductRepository {
     }
 
     private ProductJpaEntity toJpaForSave(Product product, Set<CategoryJpaEntity> categories) {
-        return product
-                .id()
+        return product.id()
                 .map(id -> mergeForUpdate(id.value(), product, categories))
                 .orElseGet(() -> mapper.toJpa(product, categories));
     }
