@@ -27,7 +27,7 @@ public class RegistrationController {
         if (!model.containsAttribute("registrationForm")) {
             model.addAttribute("registrationForm", new RegistrationForm());
         }
-        return "register";
+        return "customer/register";
     }
 
     @PostMapping("/register")
@@ -37,7 +37,7 @@ public class RegistrationController {
             Model model) {
         if (bindingResult.hasErrors()) {
             addSeo(model);
-            return "register";
+            return "customer/register";
         }
         try {
             registration.register(new RegisterCustomerAccount(form.getEmail(), form.getPassword()));
@@ -45,7 +45,7 @@ public class RegistrationController {
             bindingResult.rejectValue(
                     "email", "email.registered", "An account with this email already exists");
             addSeo(model);
-            return "register";
+            return "customer/register";
         }
         return "redirect:/login?registered";
     }

@@ -25,7 +25,7 @@ class JdbcCheckoutLockAdapter implements CheckoutLock {
             throw new IllegalStateException(
                     "Checkout already in progress for customer "
                             + customerId.value()
-                            + " checkout "
+                            + " checkout.html "
                             + checkoutId.value());
         }
     }

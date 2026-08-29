@@ -53,21 +53,25 @@ class SecurityConfigurationIT extends AbstractIntegrationTest {
     void rendersHomepageInThePublicIndexWithSeoMetadata() throws Exception {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("storefront/homepage"));
+                .andExpect(view().name("storefront/index"));
     }
 
     @Test
     void rendersLoginAndAccessDeniedInsideThePublicShell() throws Exception {
-        mockMvc.perform(get("/login")).andExpect(status().isOk()).andExpect(view().name("login"));
+        mockMvc.perform(get("/login"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("customer/login"));
 
-        mockMvc.perform(get("/403")).andExpect(status().isOk()).andExpect(view().name("403"));
+        mockMvc.perform(get("/403"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("storefront/403"));
     }
 
     @Test
     void keepsAdminLoginOutsideThePublicShell() throws Exception {
         mockMvc.perform(get("/admin/login"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("admin-login"));
+                .andExpect(view().name("admin/login"));
     }
 
     @Test

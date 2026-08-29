@@ -53,7 +53,8 @@ public class CartMergingAuthenticationSuccessHandler
                                                     customer));
                 }
             } catch (RuntimeException ex) {
-                LOG.warn("Could not merge guest cart after login; guest cart will be dropped.", ex);
+                LOG.debug(
+                        "Could not merge guest cart after login; guest cart will be dropped.", ex);
             }
             request.getSession().removeAttribute(GuestCartReference.SESSION_ATTRIBUTE);
         }
