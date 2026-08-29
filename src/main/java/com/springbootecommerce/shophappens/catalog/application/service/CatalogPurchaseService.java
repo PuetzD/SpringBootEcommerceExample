@@ -13,11 +13,11 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-// @Service intentionally deferred to Task 4 (web adapter move) to avoid a duplicate-bean-name
-// collision with the legacy catalog.application service; legacy layer deleted in Task 4.
+@Service
 public class CatalogPurchaseService implements PurchaseProductsUseCase {
     private final ProductRepository productRepository;
 

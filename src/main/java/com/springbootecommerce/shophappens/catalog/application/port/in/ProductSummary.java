@@ -9,4 +9,8 @@ public record ProductSummary(
         String description,
         Money price,
         int stockQuantity,
-        String imageUrl) {}
+        String imageUrl) {
+    public boolean inStock() {
+        return stockQuantity > 0;
+    }
+}

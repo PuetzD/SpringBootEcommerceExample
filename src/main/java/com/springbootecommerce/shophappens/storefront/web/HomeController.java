@@ -1,6 +1,6 @@
 package com.springbootecommerce.shophappens.storefront.web;
 
-import com.springbootecommerce.shophappens.catalog.application.CatalogQueryService;
+import com.springbootecommerce.shophappens.catalog.application.port.in.BrowseCatalogUseCase;
 import com.springbootecommerce.shophappens.web.support.CanonicalUrlFactory;
 import com.springbootecommerce.shophappens.web.support.SeoMetadata;
 import org.springframework.stereotype.Controller;
@@ -13,12 +13,11 @@ public class HomeController {
     private static final String HOMEPAGE_DESCRIPTION = "Buy stuff. Be happy.";
 
     private final CanonicalUrlFactory canonicalUrlFactory;
-    private final CatalogQueryService catalogQueryService;
+    private final BrowseCatalogUseCase catalog;
 
-    public HomeController(
-            CanonicalUrlFactory canonicalUrlFactory, CatalogQueryService catalogQueryService) {
+    public HomeController(CanonicalUrlFactory canonicalUrlFactory, BrowseCatalogUseCase catalog) {
         this.canonicalUrlFactory = canonicalUrlFactory;
-        this.catalogQueryService = catalogQueryService;
+        this.catalog = catalog;
     }
 
     @GetMapping("/")
@@ -29,7 +28,7 @@ public class HomeController {
         model.addAttribute("canonicalUrl", canonicalUrlFactory.forPath(seo.canonicalPath()));
         model.addAttribute(
                 "featuredProducts",
-                catalogQueryService.findAllActiveProducts().stream().limit(3).toList());
+                catalog.findAllActive().stream().limit(3).toList());
         return "storefront/homepage";
     }
 }
