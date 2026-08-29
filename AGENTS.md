@@ -3,14 +3,23 @@
 ## Project
 
 Spring Boot 4 / Java 21 ecommerce application with Thymeleaf, Spring Security,
-JPA, PostgreSQL/Flyway, Tailwind CSS 4, and daisyUI.
+JPA, PostgreSQL/Flyway, Redis, Tailwind CSS 4, and daisyUI.
 
 ## Layout
 
+- `CONTEXT_MAP.md` and `contexts/<context>/CONTEXT.md` define the bounded
+  contexts, their language, and their contracts. Read a context's document
+  before working in its source package.
 - `src/main/java/com/springbootecommerce/shophappens/`
-  - `account/`: account domain, queries, persistence
-  - `security/`: authentication, authorization, login web endpoints
+  - Each bounded context (`account/`, `customer/`, `catalog/`, `cart/`) is
+    layered `domain/` → `application/` (ports + services) → `adapter/{in,out}/`
+    and collaborates only through published `application.port.in` contracts.
+    `ordering/` is specified in `contexts/ordering/CONTEXT.md` but not yet
+    implemented.
+  - `security/`: Spring Security wiring and login/access-denied endpoints
   - `storefront/`: public storefront controllers
+  - `shared/`: context-free web presentation support (SEO metadata, canonical URLs)
+  - `sharedkernel/`: framework-free shared value objects (Money)
 - `src/main/resources/`
   - `db/migration/`: pre-release Flyway baseline; keep V1 onward clean and
     coherent by editing or renumbering migrations while local database resets
@@ -18,8 +27,8 @@ JPA, PostgreSQL/Flyway, Tailwind CSS 4, and daisyUI.
     persistent environment exists.
   - `templates/`: Thymeleaf views
   - `static/`: CSS and JavaScript assets
-- `src/test/java/`: unit and integration tests; `*IT` tests use PostgreSQL
-  Testcontainers.
+- `src/test/java/`: unit and integration tests; `*IT` tests use PostgreSQL and
+  Redis Testcontainers (`integration/AbstractIntegrationTest`).
 
 ## Commands
 
