@@ -14,7 +14,9 @@ class CustomerPersistenceMapper {
     CustomerJpaEntity toJpa(Customer customer) {
         var jpa = CustomerJpaEntity.create(customer.accountId().value());
         customer.id().ifPresent(id -> jpa.setId(id.value()));
-        customer.addresses().forEach(address -> jpa.addAddress(toJpa(address)));
+        for (Address address : customer.addresses()) {
+            jpa.addAddress(toJpa(address));
+        }
         return jpa;
     }
 
