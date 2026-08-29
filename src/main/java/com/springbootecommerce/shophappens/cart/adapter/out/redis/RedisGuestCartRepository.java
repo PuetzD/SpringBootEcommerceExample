@@ -1,7 +1,5 @@
 package com.springbootecommerce.shophappens.cart.adapter.out.redis;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 import com.springbootecommerce.shophappens.cart.application.port.out.GuestCartRepository;
 import com.springbootecommerce.shophappens.cart.domain.exception.ConcurrentCartModificationException;
 import com.springbootecommerce.shophappens.cart.domain.model.Cart;
@@ -18,6 +16,8 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Repository;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Repository
 class RedisGuestCartRepository implements GuestCartRepository {
@@ -50,10 +50,13 @@ class RedisGuestCartRepository implements GuestCartRepository {
         GuestCartDocument document = readDocument(payload.toString());
         Cart cart =
                 Cart.restore(
-                        new CartId(document.cartId()),
-                        new CartOwner.Guest(id),
-                        version(document));
-        document.items().forEach(item -> cart.changeQuantity(new ProductId(item.productId()), new Quantity(item.quantity())));
+                        new CartId(document.cartId()), new CartOwner.Guest(id), version(document));
+        document.items()
+                .forEach(
+                        item ->
+                                cart.changeQuantity(
+                                        new ProductId(item.productId()),
+                                        new Quantity(item.quantity())));
         return Optional.of(cart);
     }
 
@@ -63,10 +66,7 @@ class RedisGuestCartRepository implements GuestCartRepository {
         long nextVersion = Math.addExact(cart.version(), 1);
         GuestCartDocument document =
                 new GuestCartDocument(
-                        cart.id().value(),
-                        guestId.value(),
-                        nextVersion,
-                        itemsOf(cart));
+                        cart.id().value(), guestId.value(), nextVersion, itemsOf(cart));
         Long result =
                 redis.execute(
                         saveScript,
@@ -97,7 +97,10 @@ class RedisGuestCartRepository implements GuestCartRepository {
 
     private static List<GuestCartDocument.Item> itemsOf(Cart cart) {
         return cart.items().stream()
-                .map(item -> new GuestCartDocument.Item(item.productId().value(), item.quantity().value()))
+                .map(
+                        item ->
+                                new GuestCartDocument.Item(
+                                        item.productId().value(), item.quantity().value()))
                 .toList();
     }
 
@@ -114,7 +117,12 @@ class RedisGuestCartRepository implements GuestCartRepository {
                         new CartId(document.cartId()),
                         new CartOwner.Guest(guestId),
                         document.version());
-        document.items().forEach(item -> cart.changeQuantity(new ProductId(item.productId()), new Quantity(item.quantity())));
+        document.items()
+                .forEach(
+                        item ->
+                                cart.changeQuantity(
+                                        new ProductId(item.productId()),
+                                        new Quantity(item.quantity())));
         return cart;
     }
 
@@ -128,7 +136,8 @@ class RedisGuestCartRepository implements GuestCartRepository {
 
     private GuestCartDocument readDocument(String payload) {
         try {
-            return objectMapper.readValue(payload.getBytes(StandardCharsets.UTF_8), GuestCartDocument.class);
+            return objectMapper.readValue(
+                    payload.getBytes(StandardCharsets.UTF_8), GuestCartDocument.class);
         } catch (JacksonException e) {
             throw new IllegalStateException("Failed to deserialize Guest Cart document", e);
         }

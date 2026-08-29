@@ -37,9 +37,7 @@ class CustomerCartRepositoryAdapter implements CustomerCartRepository {
     @Override
     @Transactional(readOnly = true)
     public Optional<Cart> find(CustomerId customerId) {
-        return springData
-                .findWithItemsByCustomerId(customerId.value())
-                .map(mapper::toDomain);
+        return springData.findWithItemsByCustomerId(customerId.value()).map(mapper::toDomain);
     }
 
     @Override
@@ -49,7 +47,8 @@ class CustomerCartRepositoryAdapter implements CustomerCartRepository {
         CustomerCartJpaEntity entity =
                 springData
                         .findByCustomerId(customerId)
-                        .orElseGet(() -> CustomerCartJpaEntity.create(cart.id().value(), customerId));
+                        .orElseGet(
+                                () -> CustomerCartJpaEntity.create(cart.id().value(), customerId));
         entity.setItems(mapper.toJpaItems(entity, cart));
         return mapper.toDomain(springData.saveAndFlush(entity));
     }
