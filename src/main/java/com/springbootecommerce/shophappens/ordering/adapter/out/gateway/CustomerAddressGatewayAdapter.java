@@ -7,8 +7,8 @@ import com.springbootecommerce.shophappens.customer.application.port.in.OwnedAdd
 import com.springbootecommerce.shophappens.ordering.application.port.out.AvailableAddress;
 import com.springbootecommerce.shophappens.ordering.application.port.out.CustomerAddressGateway;
 import com.springbootecommerce.shophappens.ordering.domain.model.AddressRole;
-import com.springbootecommerce.shophappens.ordering.domain.model.CustomerId;
 import com.springbootecommerce.shophappens.ordering.domain.model.OrderAddress;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -23,12 +23,14 @@ class CustomerAddressGatewayAdapter implements CustomerAddressGateway {
     @Override
     public OrderAddress shipping(CustomerId customerId, long addressId) {
         return toOrderAddress(
+                AddressRole.SHIPPING,
                 addresses.getOwned(toCustomer(customerId), new AddressReference(addressId)));
     }
 
     @Override
     public OrderAddress billing(CustomerId customerId, long addressId) {
         return toOrderAddress(
+                AddressRole.BILLING,
                 addresses.getOwned(toCustomer(customerId), new AddressReference(addressId)));
     }
 
@@ -52,9 +54,9 @@ class CustomerAddressGatewayAdapter implements CustomerAddressGateway {
         return new CustomerReference(customerId.value());
     }
 
-    private OrderAddress toOrderAddress(AddressSnapshot snapshot) {
+    private OrderAddress toOrderAddress(AddressRole role, AddressSnapshot snapshot) {
         return new OrderAddress(
-                AddressRole.SHIPPING,
+                role,
                 snapshot.recipientName(),
                 snapshot.companyName(),
                 snapshot.addressLine1(),
