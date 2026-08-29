@@ -35,7 +35,7 @@ class ArchitectureRulesTest {
     void migratedDomainsAreFrameworkFree() {
         noClasses()
                 .that()
-                .resideInAPackage("..domain.model..")
+                .resideInAnyPackage("..domain.model..", "..sharedkernel..")
                 .should()
                 .dependOnClassesThat()
                 .resideInAnyPackage(

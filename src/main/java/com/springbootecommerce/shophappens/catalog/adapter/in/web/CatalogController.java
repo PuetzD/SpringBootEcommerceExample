@@ -20,7 +20,8 @@ public class CatalogController {
     private final BrowseCatalogUseCase catalog;
     private final CanonicalUrlFactory canonicalUrlFactory;
 
-    public CatalogController(BrowseCatalogUseCase catalog, CanonicalUrlFactory canonicalUrlFactory) {
+    public CatalogController(
+            BrowseCatalogUseCase catalog, CanonicalUrlFactory canonicalUrlFactory) {
         this.catalog = catalog;
         this.canonicalUrlFactory = canonicalUrlFactory;
     }
