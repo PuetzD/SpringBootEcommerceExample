@@ -1,6 +1,5 @@
 package com.springbootecommerce.shophappens.ordering.application.port.out;
 
-import java.util.Collections;
 import java.util.List;
 
 public record CheckoutCart(List<RequestedProduct> products) {

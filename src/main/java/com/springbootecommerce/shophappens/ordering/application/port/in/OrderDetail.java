@@ -4,7 +4,6 @@ import com.springbootecommerce.shophappens.ordering.domain.model.OrderAddress;
 import com.springbootecommerce.shophappens.ordering.domain.model.OrderItem;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.List;
 
 public record OrderDetail(
