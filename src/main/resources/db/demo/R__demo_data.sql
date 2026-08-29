@@ -2,8 +2,8 @@
 -- Fantasy merchant demo seed. Runs as a Flyway repeatable migration.
 -- Idempotent: truncates the demo tables and reseeds on every checksum change.
 
-TRUNCATE TABLE cart_item, cart, address, customer, account,
-             product_category, product, category
+TRUNCATE TABLE customer_cart_item, customer_cart, consumed_guest_cart,
+             address, customer, account, product_category, product, category
     RESTART IDENTITY CASCADE;
 
 INSERT INTO account (id, email, password_hash, role)
