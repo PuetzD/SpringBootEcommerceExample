@@ -9,8 +9,6 @@ import com.springbootecommerce.shophappens.catalog.application.port.out.ProductR
 import com.springbootecommerce.shophappens.catalog.domain.model.Category;
 import com.springbootecommerce.shophappens.catalog.domain.model.CategoryId;
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
-import com.springbootecommerce.shophappens.sharedkernel.money.Money;
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
@@ -22,7 +20,8 @@ public class CategoryQueryService implements BrowseCategoriesUseCase {
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
 
-    public CategoryQueryService(CategoryRepository categoryRepository, ProductRepository productRepository) {
+    public CategoryQueryService(
+            CategoryRepository categoryRepository, ProductRepository productRepository) {
         this.categoryRepository = categoryRepository;
         this.productRepository = productRepository;
     }
@@ -31,21 +30,23 @@ public class CategoryQueryService implements BrowseCategoriesUseCase {
     public List<CategorySummary> findAllActive() {
         List<Category> categories = categoryRepository.findAll();
         List<Product> products = productRepository.findAllActive();
-        return categories.stream()
-                .map(category -> toSummary(category, products))
-                .toList();
+        return categories.stream().map(category -> toSummary(category, products)).toList();
     }
 
     @Override
     public Optional<CategorySummary> findBySlug(String slug) {
-        return categoryRepository.findBySlug(slug)
+        return categoryRepository
+                .findBySlug(slug)
                 .map(category -> toSummary(category, productRepository.findAllActive()));
     }
 
     @Override
     public List<ProductSummary> findActiveProductsByCategorySlug(String slug) {
-        Category category = categoryRepository.findBySlug(slug)
-                .orElseThrow(() -> new IllegalArgumentException("Category not found: " + slug));
+        Category category =
+                categoryRepository
+                        .findBySlug(slug)
+                        .orElseThrow(
+                                () -> new IllegalArgumentException("Category not found: " + slug));
         CategoryId categoryId = category.id().orElseThrow();
         return productRepository.findAllActive().stream()
                 .filter(product -> product.categoryIds().contains(categoryId))
@@ -55,14 +56,11 @@ public class CategoryQueryService implements BrowseCategoriesUseCase {
 
     private CategorySummary toSummary(Category category, List<Product> products) {
         CategoryId categoryId = category.id().orElseThrow();
-        long count = products.stream()
-                .filter(product -> product.categoryIds().contains(categoryId))
-                .count();
-        return new CategorySummary(
-                categoryId,
-                category.name(),
-                category.slug(),
-                count);
+        long count =
+                products.stream()
+                        .filter(product -> product.categoryIds().contains(categoryId))
+                        .count();
+        return new CategorySummary(categoryId, category.name(), category.slug(), count);
     }
 
     private ProductSummary toSummary(Product product) {

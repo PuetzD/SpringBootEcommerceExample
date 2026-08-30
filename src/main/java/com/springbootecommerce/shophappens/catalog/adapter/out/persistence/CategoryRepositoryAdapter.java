@@ -19,9 +19,7 @@ class CategoryRepositoryAdapter implements CategoryRepository {
     @Override
     @Transactional(readOnly = true)
     public List<Category> findAll() {
-        return springData.findAllByOrderByNameAsc().stream()
-                .map(this::toDomain)
-                .toList();
+        return springData.findAllByOrderByNameAscIdAsc().stream().map(this::toDomain).toList();
     }
 
     @Override

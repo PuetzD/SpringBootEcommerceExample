@@ -1,6 +1,5 @@
 package com.springbootecommerce.shophappens.catalog.application.port.in;
 
-import com.springbootecommerce.shophappens.catalog.application.port.in.ProductSummary;
 import java.util.List;
 import java.util.Optional;
 
