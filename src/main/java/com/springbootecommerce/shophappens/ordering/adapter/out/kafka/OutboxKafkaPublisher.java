@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 public class OutboxKafkaPublisher {
     private static final int BATCH_SIZE = 100;
     private static final String TOPIC = "ordering.order-placed.v1";
+    private static final String EVENT_VERSION = "1";
 
     private final IntegrationEventOutbox outbox;
     private final KafkaTemplate<String, String> kafka;
@@ -31,6 +32,8 @@ public class OutboxKafkaPublisher {
                         new ProducerRecord<>(TOPIC, event.aggregateKey(), event.payload());
                 record.headers()
                         .add("event-type", event.eventType().getBytes(StandardCharsets.UTF_8));
+                record.headers()
+                        .add("event-version", EVENT_VERSION.getBytes(StandardCharsets.UTF_8));
                 record.headers()
                         .add(
                                 "event-id",
