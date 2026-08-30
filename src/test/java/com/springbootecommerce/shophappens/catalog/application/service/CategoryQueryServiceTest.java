@@ -4,8 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
-import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
-import com.springbootecommerce.shophappens.catalog.application.port.in.ProductSummary;
 import com.springbootecommerce.shophappens.catalog.application.port.out.CategoryRepository;
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductRepository;
 import com.springbootecommerce.shophappens.catalog.domain.model.Category;
@@ -41,8 +39,10 @@ class CategoryQueryServiceTest {
         Category cat2 = restoredCategory(2L, "Books");
         when(categoryRepository.findAll()).thenReturn(List.of(cat1, cat2));
 
-        Product prod1 = restoredProduct(1L, "ELEC-001", "Laptop", "999.99", 5, Set.of(new CategoryId(1L)));
-        Product prod2 = restoredProduct(2L, "BOOK-001", "Novel", "19.99", 10, Set.of(new CategoryId(2L)));
+        Product prod1 =
+                restoredProduct(1L, "ELEC-001", "Laptop", "999.99", 5, Set.of(new CategoryId(1L)));
+        Product prod2 =
+                restoredProduct(2L, "BOOK-001", "Novel", "19.99", 10, Set.of(new CategoryId(2L)));
         when(productRepository.findAllActive()).thenReturn(List.of(prod1, prod2));
 
         var result = service.findAllActive();
@@ -71,7 +71,8 @@ class CategoryQueryServiceTest {
     void findBySlugReturnsSummaryForKnownSlug() {
         Category cat = restoredCategory(1L, "Electronics");
         when(categoryRepository.findBySlug("electronics")).thenReturn(Optional.of(cat));
-        Product prod1 = restoredProduct(1L, "ELEC-001", "Laptop", "999.99", 5, Set.of(new CategoryId(1L)));
+        Product prod1 =
+                restoredProduct(1L, "ELEC-001", "Laptop", "999.99", 5, Set.of(new CategoryId(1L)));
         when(productRepository.findAllActive()).thenReturn(List.of(prod1));
 
         var result = service.findBySlug("electronics");
@@ -87,8 +88,10 @@ class CategoryQueryServiceTest {
     void findActiveProductsByCategorySlugReturnsProductsForKnownCategory() {
         Category cat = restoredCategory(1L, "Electronics");
         when(categoryRepository.findBySlug("electronics")).thenReturn(Optional.of(cat));
-        Product prod1 = restoredProduct(1L, "ELEC-001", "Laptop", "999.99", 5, Set.of(new CategoryId(1L)));
-        Product prod2 = restoredProduct(2L, "BOOK-001", "Novel", "19.99", 10, Set.of(new CategoryId(2L)));
+        Product prod1 =
+                restoredProduct(1L, "ELEC-001", "Laptop", "999.99", 5, Set.of(new CategoryId(1L)));
+        Product prod2 =
+                restoredProduct(2L, "BOOK-001", "Novel", "19.99", 10, Set.of(new CategoryId(2L)));
         when(productRepository.findAllActive()).thenReturn(List.of(prod1, prod2));
 
         var result = service.findActiveProductsByCategorySlug("electronics");
@@ -113,7 +116,12 @@ class CategoryQueryServiceTest {
     }
 
     private Product restoredProduct(
-            long id, String sku, String name, String price, int stock, Set<CategoryId> categoryIds) {
+            long id,
+            String sku,
+            String name,
+            String price,
+            int stock,
+            Set<CategoryId> categoryIds) {
         return Product.restore(
                 new ProductId(id),
                 new Sku(sku),
