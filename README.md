@@ -61,12 +61,27 @@ docker compose up -d
 
 By default the application logs quietly and hides SQL bindings. To opt into
 verbose local diagnostics (Spring Security trace and Hibernate SQL/binding
-logging), activate the `dev` profile. This also seeds idempotent demo data from
-`db.demo`:
+logging), activate the `dev` profile:
 
 ```bash
 SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
 ```
+
+The `dev` profile runs schema migrations only. Demo data is deliberately not a
+Flyway migration because it truncates application tables. To import it locally,
+start the application once so Flyway creates the schema, stop it, and run these
+Docker Compose commands from the repository root:
+
+```text
+docker compose up -d postgres
+docker compose exec -T postgres psql -U demo -d demo -v ON_ERROR_STOP=1 -f /seed/demo-data.sql
+```
+
+The import command is the same on Windows, WSL, macOS, and Linux. It fails if
+the schema has not been migrated and replaces the demo tables, so it is intended
+only for a disposable local database. The command above uses the default Compose
+credentials; if `POSTGRES_USER` or `POSTGRES_DB` is customized, use those values
+in the `psql` command.
 
 Run the backend test suite with:
 
@@ -96,6 +111,10 @@ checked against the JPA entities at startup via `ddl-auto: validate`:
 - `V4__create_ordering_schema.sql` — orders and checkout idempotency
 - `V5__create_integration_outbox.sql` — transactional integration events
 - `V6__add_order_query_indexes.sql` — ownership and deterministic-history indexes
+
+The optional seed is maintained in `scripts/demo-data.sql`, outside Flyway's
+migration locations. Use the Compose import command above instead of copying it
+into a database manually.
 
 Do not edit an applied migration in a shared environment. Add a new numbered
 migration instead.

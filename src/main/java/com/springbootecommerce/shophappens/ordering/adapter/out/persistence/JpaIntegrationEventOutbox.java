@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.core.JacksonException;
@@ -41,8 +42,9 @@ class JpaIntegrationEventOutbox implements IntegrationEventOutbox {
         if (batchSize < 1) {
             throw new IllegalArgumentException("batchSize must be positive");
         }
-        return repository.findTop100ByPublishedAtIsNullOrderByCreatedAtAsc().stream()
-                .limit(batchSize)
+        return repository
+                .findByPublishedAtIsNullOrderByCreatedAtAsc(PageRequest.of(0, batchSize))
+                .stream()
                 .map(
                         event ->
                                 new PendingIntegrationEvent(
