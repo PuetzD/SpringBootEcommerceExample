@@ -1,9 +1,10 @@
-import type { ApiErrorResponse, FieldErrorResponse } from './types'
-import { clearToken, getToken, refreshToken } from '../auth/CsrfProvider'
+import type {ApiErrorResponse, FieldErrorResponse} from './types'
+import {clearToken, getToken, refreshToken} from '../auth/CsrfProvider'
 
 export class ApiError extends Error {
     status: number
     fieldErrors: FieldErrorResponse[]
+
     constructor(body: ApiErrorResponse) {
         super(body.message)
         this.status = body.status
@@ -13,7 +14,7 @@ export class ApiError extends Error {
 
 function csrfHeaders(): Record<string, string> {
     const token = getToken()
-    return token ? { 'X-XSRF-TOKEN': token } : {}
+    return token ? {'X-XSRF-TOKEN': token} : {}
 }
 
 async function parseResponse<T>(response: Response): Promise<T> {
@@ -50,7 +51,7 @@ export const ApiClient = {
         const response = await fetch(url.toString(), {
             method: 'GET',
             credentials: 'same-origin',
-            headers: { Accept: 'application/json', ...csrfHeaders() },
+            headers: {Accept: 'application/json', ...csrfHeaders()},
         })
         return handleResponse<T>(response)
     },
@@ -87,7 +88,7 @@ export const ApiClient = {
         const response = await fetch(path, {
             method: 'DELETE',
             credentials: 'same-origin',
-            headers: { Accept: 'application/json', ...csrfHeaders() },
+            headers: {Accept: 'application/json', ...csrfHeaders()},
         })
         await handleResponse<void>(response)
     },
