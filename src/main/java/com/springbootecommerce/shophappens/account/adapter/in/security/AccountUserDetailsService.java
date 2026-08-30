@@ -5,6 +5,7 @@ import com.springbootecommerce.shophappens.account.application.port.in.Authentic
 import com.springbootecommerce.shophappens.account.application.port.in.AuthenticationRole;
 import com.springbootecommerce.shophappens.account.domain.model.Email;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,7 +19,9 @@ public class AccountUserDetailsService implements UserDetailsService {
     private final AuthenticateAccountQuery accounts;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    @NonNull
+    public UserDetails loadUserByUsername(@NonNull String username)
+            throws UsernameNotFoundException {
         Email email = new Email(username);
         AuthenticationAccount account =
                 accounts.findByEmail(email.value())

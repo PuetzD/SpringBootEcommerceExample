@@ -5,6 +5,7 @@ import com.springbootecommerce.shophappens.account.application.port.in.Authentic
 import java.io.Serializable;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -23,6 +24,7 @@ public final class AccountPrincipal
     }
 
     @Override
+    @NonNull
     public List<? extends GrantedAuthority> getAuthorities() {
         return List.of(authority);
     }
@@ -33,6 +35,7 @@ public final class AccountPrincipal
     }
 
     @Override
+    @NonNull
     public String getUsername() {
         return email;
     }
