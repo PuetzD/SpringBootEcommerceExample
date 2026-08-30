@@ -19,15 +19,16 @@ import org.junit.jupiter.api.Test;
 
 class ArchitectureRulesTest {
     private static final String ROOT = "com.springbootecommerce.shophappens";
-    private static final List<String> CONTEXTS =
-            List.of("account", "customer", "catalog", "cart", "ordering", "security");
+    private static final List<String> BOUNDED_CONTEXTS =
+            List.of("account", "customer", "catalog", "cart", "ordering");
     // Extra cycle-detection slices for adapter and shared web code that is not a bounded
     // context. "sharedkernel" precedes "shared" so the longer prefix wins in sliceOf().
-    private static final List<String> SLICES =
+    private static final List<String> PROTECTED_SLICES =
             List.of(
                     "sharedkernel",
                     "storefront",
                     "security",
+                    "administration",
                     "shared",
                     "account",
                     "customer",
@@ -56,7 +57,6 @@ class ArchitectureRulesTest {
                         "jakarta.persistence..",
                         "org.hibernate..",
                         "org.springframework.data.redis..")
-                .allowEmptyShould(true)
                 .check(imported);
     }
 
@@ -69,17 +69,16 @@ class ArchitectureRulesTest {
                 .dependOnClassesThat()
                 .resideInAnyPackage(
                         "org.springframework..", "jakarta.persistence..", "org.hibernate..")
-                .allowEmptyShould(true)
                 .check(imported);
     }
 
     @Test
     void contextsCannotReachAnotherContextsInternals() {
-        for (String context : CONTEXTS) {
+        for (String context : BOUNDED_CONTEXTS) {
             ArchRule rule =
                     noClasses()
                             .that()
-                            .resideOutsideOfPackage(".." + context + "..")
+                            .resideOutsideOfPackage(ROOT + "." + context + "..")
                             .should()
                             .dependOnClassesThat()
                             .resideInAnyPackage(
@@ -88,7 +87,7 @@ class ArchitectureRulesTest {
                                     ".." + context + ".application.port.out..",
                                     ".." + context + ".adapter..",
                                     ".." + context + ".web..");
-            rule.allowEmptyShould(true).check(imported);
+            rule.check(imported);
         }
     }
 
@@ -100,7 +99,6 @@ class ArchitectureRulesTest {
                 .should()
                 .dependOnClassesThat()
                 .resideInAnyPackage("..security.web..", "..security..")
-                .allowEmptyShould(true)
                 .check(imported);
     }
 
@@ -112,7 +110,17 @@ class ArchitectureRulesTest {
                 .should()
                 .dependOnClassesThat()
                 .resideInAnyPackage("..storefront..")
-                .allowEmptyShould(true)
+                .check(imported);
+    }
+
+    @Test
+    void administrationInternalReachIsBlocked() {
+        noClasses()
+                .that()
+                .resideOutsideOfPackage("..administration..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage("..administration..")
                 .check(imported);
     }
 
@@ -131,14 +139,13 @@ class ArchitectureRulesTest {
                         "..ordering..",
                         "..security..",
                         "..storefront..")
-                .allowEmptyShould(true)
                 .check(imported);
     }
 
     @Test
-    void featureSlicesAreFreeOfCycles() {
+    void crossContextDependenciesDoNotFormCycles() {
         Map<String, Set<String>> graph = new HashMap<>();
-        for (String context : SLICES) {
+        for (String context : PROTECTED_SLICES) {
             graph.put(context, new HashSet<>());
         }
         for (JavaClass clazz : imported) {
@@ -164,8 +171,41 @@ class ArchitectureRulesTest {
         assertThatNoCycles(graph);
     }
 
+    @Test
+    void domainDoesNotDependOnAdapters() {
+        noClasses()
+                .that()
+                .resideInAnyPackage("..domain..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage("..adapter..")
+                .check(imported);
+    }
+
+    @Test
+    void applicationDoesNotDependOnInfrastructure() {
+        noClasses()
+                .that()
+                .resideInAnyPackage("..application..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage("..adapter..", "..web..")
+                .check(imported);
+    }
+
+    @Test
+    void webAndAdaptersUseApplicationPorts() {
+        noClasses()
+                .that()
+                .resideInAnyPackage("..web..", "..adapter..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage("..application.service..")
+                .check(imported);
+    }
+
     private static String sliceOf(JavaClass clazz) {
-        for (String context : SLICES) {
+        for (String context : PROTECTED_SLICES) {
             if (clazz.getPackageName().startsWith(ROOT + "." + context)) {
                 return context;
             }
