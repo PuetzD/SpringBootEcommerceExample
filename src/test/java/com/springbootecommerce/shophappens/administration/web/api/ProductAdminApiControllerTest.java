@@ -1,0 +1,151 @@
+package com.springbootecommerce.shophappens.administration.web.api;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.springbootecommerce.shophappens.administration.application.port.in.ProductAdminQuery;
+import com.springbootecommerce.shophappens.administration.application.port.in.ProductAdminView;
+import com.springbootecommerce.shophappens.administration.application.port.in.ProductCategorySummary;
+import com.springbootecommerce.shophappens.catalog.application.command.CreateProductCommand;
+import com.springbootecommerce.shophappens.catalog.application.command.DeleteProductCommand;
+import com.springbootecommerce.shophappens.catalog.application.command.UpdateProductCommand;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdministrationUseCase;
+import com.springbootecommerce.shophappens.security.SecurityConfiguration;
+import com.springbootecommerce.shophappens.security.service.CartMergingAuthenticationSuccessHandler;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+@WebMvcTest(ProductAdminApiController.class)
+@Import(SecurityConfiguration.class)
+class ProductAdminApiControllerTest {
+    @Autowired MockMvc mockMvc;
+
+    @MockitoBean ProductAdminQuery productAdminQuery;
+    @MockitoBean ProductAdministrationUseCase productAdministrationUseCase;
+    @MockitoBean CartMergingAuthenticationSuccessHandler successHandler;
+
+    @Test
+    void adminCanListProducts() throws Exception {
+        ProductAdminView product =
+                new ProductAdminView(
+                        1L,
+                        "SKU-1",
+                        "Widget",
+                        "Useful widget",
+                        BigDecimal.valueOf(19.99),
+                        7,
+                        "https://example.com/widget.png",
+                        true,
+                        List.of(new ProductCategorySummary(10L, "Tools", "tools")));
+        when(productAdminQuery.findAll()).thenReturn(List.of(product));
+
+        mockMvc.perform(get("/api/admin/products").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(1))
+                .andExpect(jsonPath("$.content[0].sku").value("SKU-1"));
+    }
+
+    @Test
+    void customerReceivesForbiddenForProducts() throws Exception {
+        mockMvc.perform(get("/api/admin/products").with(user("customer").roles("CUSTOMER")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void invalidProductPayloadReturnsBadRequest() throws Exception {
+        mockMvc.perform(
+                        post("/api/admin/products")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"sku\":\"\",\"name\":\"\",\"price\":-1}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createProductReturnsCreatedLocation() throws Exception {
+        when(productAdministrationUseCase.createProduct(any(CreateProductCommand.class)))
+                .thenReturn(1L);
+        when(productAdminQuery.findById(1L))
+                .thenReturn(
+                        Optional.of(
+                                new ProductAdminView(
+                                        1L,
+                                        "SKU-1",
+                                        "Widget",
+                                        "Useful widget",
+                                        BigDecimal.valueOf(19.99),
+                                        7,
+                                        "https://example.com/widget.png",
+                                        true,
+                                        List.of())));
+
+        mockMvc.perform(
+                        post("/api/admin/products")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"sku\":\"SKU-1\",\"name\":\"Widget\",\"description\":\"Useful widget\",\"price\":19.99,\"stockQuantity\":7,\"imageUrl\":\"https://example.com/widget.png\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.sku").value("SKU-1"));
+    }
+
+    @Test
+    void updateProductReturnsUpdatedProduct() throws Exception {
+        when(productAdministrationUseCase.updateProduct(eq(1L), any(UpdateProductCommand.class)))
+                .thenReturn(1L);
+        when(productAdminQuery.findById(1L))
+                .thenReturn(
+                        Optional.of(
+                                new ProductAdminView(
+                                        1L,
+                                        "SKU-2",
+                                        "Updated widget",
+                                        "Updated description",
+                                        BigDecimal.valueOf(29.99),
+                                        10,
+                                        "https://example.com/updated.png",
+                                        true,
+                                        List.of())));
+
+        mockMvc.perform(
+                        put("/api/admin/products/1")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"sku\":\"SKU-2\",\"name\":\"Updated widget\",\"description\":\"Updated description\",\"price\":29.99,\"stockQuantity\":10,\"imageUrl\":\"https://example.com/updated.png\",\"active\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Updated widget"));
+    }
+
+    @Test
+    void deleteProductReturnsNoContent() throws Exception {
+        when(productAdministrationUseCase.deleteProduct(any(DeleteProductCommand.class)))
+                .thenReturn(true);
+
+        mockMvc.perform(
+                        delete("/api/admin/products/1")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf()))
+                .andExpect(status().isNoContent());
+    }
+}

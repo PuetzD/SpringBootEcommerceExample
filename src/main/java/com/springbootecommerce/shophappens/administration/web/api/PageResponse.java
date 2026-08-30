@@ -1,9 +1,16 @@
 package com.springbootecommerce.shophappens.administration.web.api;
 
+import java.util.List;
+import org.springframework.data.domain.Page;
+
 public record PageResponse<T>(
-        T content,
-        int page,
-        int size,
-        long totalElements,
-        int totalPages) {
+        List<T> content, int page, int size, long totalElements, int totalPages) {
+    public static <T> PageResponse<T> from(Page<T> page) {
+        return new PageResponse<>(
+                page.getContent(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages());
+    }
 }

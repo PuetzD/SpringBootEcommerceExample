@@ -43,20 +43,29 @@ work.
 - Java 21
 - Docker and Docker Compose
 
-The application uses PostgreSQL and Redis. Spring Boot starts the services in
-`docker-compose.yml` automatically when Docker is available.
+To run PostgreSQL, Redis, and the Java application in containers:
 
 ```bash
+docker compose up --build
+```
+
+Open <http://localhost:8080> after the application starts. Stop the stack with
+`docker compose down`.
+
+The application uses PostgreSQL and Redis. When running the application directly
+on the host, start those services first with Docker Compose:
+
+```bash
+docker compose up -d postgres redis
 ./mvnw spring-boot:run
 ```
 
 Open <http://localhost:8080> after the application starts.
 
-To manage the supporting services manually instead:
+To run the containerized application with verbose development diagnostics:
 
 ```bash
-docker compose up -d
-./mvnw spring-boot:run
+SPRING_PROFILES_ACTIVE=dev docker compose up --build
 ```
 
 By default the application logs quietly and hides SQL bindings. To opt into
@@ -90,9 +99,10 @@ Run the backend test suite with:
 ```
 
 `./mvnw verify` runs the complete lifecycle, including CSS generation,
-formatting, Checkstyle, PMD, unit tests, architecture tests, and Testcontainers
-integration tests. The integration tests start disposable PostgreSQL and Redis
-containers; Docker must be available for those tests.
+formatting, Checkstyle, PMD, unit tests, architecture tests, and integration
+tests. The integration tests start disposable PostgreSQL and Redis
+containers; Docker must be available for those tests. It also generates the JaCoCo coverage report at
+`target/site/jacoco/index.html`.
 
 Format Java sources with:
 
@@ -108,9 +118,8 @@ checked against the JPA entities at startup via `ddl-auto: validate`:
 - `V1__create_account_schema.sql` — accounts
 - `V2__create_catalog_schema.sql` — categories and products
 - `V3__create_cart_schema.sql` — customer carts
-- `V4__create_ordering_schema.sql` — orders and checkout idempotency
+- `V4__create_ordering_schema.sql` — orders, checkout idempotency, and order query indexes
 - `V5__create_integration_outbox.sql` — transactional integration events
-- `V6__add_order_query_indexes.sql` — ownership and deterministic-history indexes
 
 The optional seed is maintained in `scripts/demo-data.sql`, outside Flyway's
 migration locations. Use the Compose import command above instead of copying it

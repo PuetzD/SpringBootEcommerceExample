@@ -27,13 +27,6 @@ spring:
       properties:
         enable.idempotence: ${SPRING_KAFKA_PRODUCER_ENABLE_IDEMPOTENCE:true}
         acks: all
-  docker:
-    compose:
-      enabled: true
-      lifecycle-management: start-and-stop
-      wait:
-        timeout: 60s
-        for: healthy
 server:
   port: 8080
 storefront:

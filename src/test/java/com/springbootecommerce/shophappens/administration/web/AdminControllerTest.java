@@ -48,14 +48,12 @@ class AdminControllerTest {
 
     @Test
     void loginPageRemainsReachable() throws Exception {
-        mockMvc.perform(get("/admin/login"))
-                .andExpect(status().isOk());
+        mockMvc.perform(get("/admin/login")).andExpect(status().isOk());
     }
 
     @Test
     void apiRoutesNotHandledByFallback() throws Exception {
-        mockMvc.perform(get("/api/admin/products"))
-                .andExpect(status().is3xxRedirection());
+        mockMvc.perform(get("/api/admin/products")).andExpect(status().is3xxRedirection());
     }
 
     @Test

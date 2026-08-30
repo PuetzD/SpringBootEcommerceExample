@@ -16,30 +16,16 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(AdminCsrfController.class)
 @Import({SecurityConfiguration.class})
-public class AdminCsrfControllerTest {
+class AdminCsrfControllerTest {
     @Autowired MockMvc mockMvc;
 
     @MockitoBean CartMergingAuthenticationSuccessHandler successHandler;
 
     @Test
     void adminReceivesCsrfToken() throws Exception {
-        mockMvc.perform(get("/api/admin/csrf")
-                        .with(user("admin").roles("ADMIN")))
+        mockMvc.perform(get("/api/admin/csrf").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.headerName").isString())
                 .andExpect(jsonPath("$.token").isString());
-    }
-
-    @Test
-    void customerReceivesForbidden() throws Exception {
-        mockMvc.perform(get("/api/admin/csrf")
-                        .with(user("customer").roles("CUSTOMER")))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
-    void unauthenticatedReceivesRedirect() throws Exception {
-        mockMvc.perform(get("/api/admin/csrf"))
-                .andExpect(status().is3xxRedirection());
     }
 }

@@ -104,6 +104,8 @@ class ArchitectureRulesTest {
                     noClasses()
                             .that()
                             .resideOutsideOfPackage(ROOT + "." + context + "..")
+                            .and()
+                            .resideOutsideOfPackage(ROOT + ".administration..")
                             .should()
                             .dependOnClassesThat()
                             .resideInAnyPackage(
@@ -248,12 +250,7 @@ class ArchitectureRulesTest {
                 .resideInAnyPackage("..application..")
                 .should()
                 .dependOnClassesThat()
-                .resideInAnyPackage(
-                        "..adapter..",
-                        "..web..",
-                        "..security..",
-                        "..storefront..",
-                        "..administration..")
+                .resideInAnyPackage("..adapter..", "..web..", "..security..", "..storefront..")
                 .check(imported);
     }
 

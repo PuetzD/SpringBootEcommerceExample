@@ -1,7 +1,7 @@
 package com.springbootecommerce.shophappens.administration.web;
 
-import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdministrationUseCase;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdministrationUseCase;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdministrationUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;

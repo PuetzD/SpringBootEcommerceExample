@@ -28,6 +28,26 @@ services:
       timeout: 3s
       retries: 10
 
+  app:
+    build:
+      context: .
+    image: shophappens-app
+    container_name: shophappens-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-demo}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-demo}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-demo}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+    ports:
+      - "8080:8080"
+
 volumes:
   postgres_data:
   redis_data:
