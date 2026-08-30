@@ -44,16 +44,6 @@ public class AdminController {
         return "forward:/admin/index.html";
     }
 
-    @GetMapping("/login")
-    public String getLogin() {
-        return "admin/login";
-    }
-
-    @GetMapping("/logout")
-    public String getLogout() {
-        return "admin/login";
-    }
-
     @GetMapping("/{*path}")
     public String fallback(@PathVariable String path) {
         if (path.contains(".")) {

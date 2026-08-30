@@ -14,7 +14,7 @@ public class SecurityConfiguration {
     @Bean
     @Order(1)
     SecurityFilterChain adminSecurityFilterChain(HttpSecurity http) throws Exception {
-        http.securityMatcher("/admin/**")
+        http.securityMatcher("/admin/**", "/api/admin/**")
                 .authorizeHttpRequests(
                         auth ->
                                 auth.requestMatchers("/admin/login")
