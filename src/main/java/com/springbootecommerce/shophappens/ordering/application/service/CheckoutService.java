@@ -9,10 +9,12 @@ import com.springbootecommerce.shophappens.ordering.application.port.out.Checkou
 import com.springbootecommerce.shophappens.ordering.application.port.out.CheckoutLock;
 import com.springbootecommerce.shophappens.ordering.application.port.out.CustomerAddressGateway;
 import com.springbootecommerce.shophappens.ordering.application.port.out.CustomerCartGateway;
+import com.springbootecommerce.shophappens.ordering.application.port.out.IntegrationEventOutbox;
 import com.springbootecommerce.shophappens.ordering.application.port.out.OrderNumberGenerator;
 import com.springbootecommerce.shophappens.ordering.application.port.out.OrderRepository;
 import com.springbootecommerce.shophappens.ordering.application.port.out.PurchasedProduct;
 import com.springbootecommerce.shophappens.ordering.application.port.out.RequestedProduct;
+import com.springbootecommerce.shophappens.ordering.domain.event.OrderPlaced;
 import com.springbootecommerce.shophappens.ordering.domain.exception.EmptyCheckoutException;
 import com.springbootecommerce.shophappens.ordering.domain.model.CheckoutId;
 import com.springbootecommerce.shophappens.ordering.domain.model.Order;
@@ -38,6 +40,7 @@ public class CheckoutService implements PlaceOrderUseCase {
     private final CatalogPurchaseGateway catalog;
     private final OrderNumberGenerator numbers;
     private final CheckoutLock checkoutLock;
+    private final IntegrationEventOutbox outbox;
     private Clock clock = Clock.systemUTC();
 
     public void setClock(Clock clock) {
@@ -90,6 +93,7 @@ public class CheckoutService implements PlaceOrderUseCase {
                 Order.place(
                         OrderId.random(), number, ckid, cid, items, shipping, billing, placedAt);
         Order saved = orders.save(order);
+        outbox.append(OrderPlaced.from(saved));
         carts.clear(cid);
 
         return toPlacedOrder(saved);

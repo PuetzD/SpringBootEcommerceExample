@@ -12,9 +12,11 @@ public class CheckoutForm {
     @NotNull(message = "Checkout reference is required")
     private UUID checkoutId;
 
+    @NotNull(message = "Select a shipping address")
     @Positive(message = "Select a shipping address")
     private Long shippingAddressId;
 
+    @NotNull(message = "Select a billing address")
     @Positive(message = "Select a billing address")
     private Long billingAddressId;
 }

@@ -57,9 +57,7 @@ public class OrderQueryService implements PrepareCheckoutUseCase, OrderQuery {
 
     @Override
     public Optional<OrderDetail> findOwned(CustomerReference customer, String orderNumber) {
-        return orders.findAllByCustomer(new CustomerId(customer.value())).stream()
-                .filter(o -> o.orderNumber().value().equals(orderNumber))
-                .findFirst()
+        return orders.findOwnedByOrderNumber(new CustomerId(customer.value()), orderNumber)
                 .map(
                         o ->
                                 new OrderDetail(

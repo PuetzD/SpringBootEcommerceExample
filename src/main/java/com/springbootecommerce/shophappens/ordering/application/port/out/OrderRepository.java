@@ -12,6 +12,8 @@ public interface OrderRepository {
 
     Optional<Order> findById(OrderId orderId);
 
+    Optional<Order> findOwnedByOrderNumber(CustomerId customerId, String orderNumber);
+
     List<Order> findAllByCustomer(CustomerId customerId);
 
     Order save(Order order);

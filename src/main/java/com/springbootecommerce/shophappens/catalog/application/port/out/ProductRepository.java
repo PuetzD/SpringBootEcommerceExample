@@ -1,5 +1,6 @@
 package com.springbootecommerce.shophappens.catalog.application.port.out;
 
+import com.springbootecommerce.shophappens.catalog.domain.model.CategoryId;
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
 import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
@@ -14,6 +15,10 @@ public interface ProductRepository {
     Optional<Product> findActiveBySku(Sku sku);
 
     List<Product> findAllActive();
+
+    long countActiveByCategoryId(CategoryId categoryId);
+
+    List<Product> findActiveByCategoryId(CategoryId categoryId);
 
     Product save(Product product);
 }

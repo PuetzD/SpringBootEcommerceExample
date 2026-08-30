@@ -41,6 +41,20 @@ class ProductRepositoryAdapter implements ProductRepository {
 
     @Override
     @Transactional(readOnly = true)
+    public long countActiveByCategoryId(CategoryId categoryId) {
+        return springData.countActiveByCategoryId(categoryId.value());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Product> findActiveByCategoryId(CategoryId categoryId) {
+        return springData.findActiveByCategoryId(categoryId.value()).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Product> findAllActive() {
         return springData.findByActiveTrueOrderByNameAscIdAsc().stream()
                 .map(mapper::toDomain)

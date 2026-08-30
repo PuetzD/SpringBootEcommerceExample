@@ -15,6 +15,7 @@ import com.springbootecommerce.shophappens.ordering.application.port.out.Checkou
 import com.springbootecommerce.shophappens.ordering.application.port.out.CheckoutLock;
 import com.springbootecommerce.shophappens.ordering.application.port.out.CustomerAddressGateway;
 import com.springbootecommerce.shophappens.ordering.application.port.out.CustomerCartGateway;
+import com.springbootecommerce.shophappens.ordering.application.port.out.IntegrationEventOutbox;
 import com.springbootecommerce.shophappens.ordering.application.port.out.OrderNumberGenerator;
 import com.springbootecommerce.shophappens.ordering.application.port.out.OrderRepository;
 import com.springbootecommerce.shophappens.ordering.application.port.out.PurchasedProduct;
@@ -48,6 +49,7 @@ class CheckoutServiceTest {
     @Mock CatalogPurchaseGateway catalog;
     @Mock OrderNumberGenerator numbers;
     @Mock CheckoutLock checkoutLock;
+    @Mock IntegrationEventOutbox outbox;
     @InjectMocks CheckoutService service;
 
     private static final UUID CHECKOUT_ID = UUID.randomUUID();
