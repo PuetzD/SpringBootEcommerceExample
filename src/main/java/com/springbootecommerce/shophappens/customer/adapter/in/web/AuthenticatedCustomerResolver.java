@@ -5,19 +5,15 @@ import com.springbootecommerce.shophappens.customer.application.port.in.Customer
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReferenceQuery;
 import com.springbootecommerce.shophappens.customer.application.port.in.ExternalAccountId;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public final class AuthenticatedCustomerResolver {
 
     private final AuthenticatedAccountIdentity authenticatedAccount;
     private final CustomerReferenceQuery customers;
-
-    public AuthenticatedCustomerResolver(
-            AuthenticatedAccountIdentity authenticatedAccount, CustomerReferenceQuery customers) {
-        this.authenticatedAccount = authenticatedAccount;
-        this.customers = customers;
-    }
 
     public Optional<CustomerReference> resolve() {
         var accountId = new ExternalAccountId(authenticatedAccount.account().value());

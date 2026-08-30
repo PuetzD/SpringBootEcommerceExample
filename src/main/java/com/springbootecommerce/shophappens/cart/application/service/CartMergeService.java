@@ -11,26 +11,17 @@ import com.springbootecommerce.shophappens.cart.domain.model.GuestCartId;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@RequiredArgsConstructor
 @Service
 public class CartMergeService implements MergeGuestCartUseCase {
     private final GuestCartRepository guests;
     private final CustomerCartRepository customers;
     private final CartMergeLedger ledger;
     private final AfterCommitExecutor afterCommit;
-
-    public CartMergeService(
-            GuestCartRepository guests,
-            CustomerCartRepository customers,
-            CartMergeLedger ledger,
-            AfterCommitExecutor afterCommit) {
-        this.guests = guests;
-        this.customers = customers;
-        this.ledger = ledger;
-        this.afterCommit = afterCommit;
-    }
 
     @Override
     @Transactional

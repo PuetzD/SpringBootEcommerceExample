@@ -16,22 +16,17 @@ import com.springbootecommerce.shophappens.ordering.application.port.out.OrderRe
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import java.util.List;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class OrderQueryService implements PrepareCheckoutUseCase, OrderQuery {
     private final CustomerCartGateway carts;
     private final CustomerAddressGateway addresses;
     private final OrderRepository orders;
-
-    public OrderQueryService(
-            CustomerCartGateway carts, CustomerAddressGateway addresses, OrderRepository orders) {
-        this.carts = carts;
-        this.addresses = addresses;
-        this.orders = orders;
-    }
 
     @Override
     public CheckoutPreparation prepare(CustomerReference customer) {

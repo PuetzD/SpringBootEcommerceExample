@@ -5,18 +5,14 @@ import com.springbootecommerce.shophappens.customer.domain.model.Customer;
 import com.springbootecommerce.shophappens.sharedkernel.identity.AccountId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 @Repository
+@RequiredArgsConstructor
 class CustomerRepositoryAdapter implements CustomerRepository {
     private final SpringDataCustomerRepository springData;
     private final CustomerPersistenceMapper mapper;
-
-    CustomerRepositoryAdapter(
-            SpringDataCustomerRepository springData, CustomerPersistenceMapper mapper) {
-        this.springData = springData;
-        this.mapper = mapper;
-    }
 
     @Override
     public Optional<Customer> findById(CustomerId id) {

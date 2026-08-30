@@ -4,18 +4,14 @@ import com.springbootecommerce.shophappens.account.application.port.out.AccountR
 import com.springbootecommerce.shophappens.account.domain.model.Account;
 import com.springbootecommerce.shophappens.account.domain.model.Email;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 @Repository
+@RequiredArgsConstructor
 class AccountRepositoryAdapter implements AccountRepository {
     private final SpringDataAccountRepository springData;
     private final AccountPersistenceMapper mapper;
-
-    AccountRepositoryAdapter(
-            SpringDataAccountRepository springData, AccountPersistenceMapper mapper) {
-        this.springData = springData;
-        this.mapper = mapper;
-    }
 
     @Override
     public boolean existsByEmail(Email email) {

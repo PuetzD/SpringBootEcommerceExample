@@ -10,15 +10,13 @@ import com.springbootecommerce.shophappens.ordering.domain.model.AddressRole;
 import com.springbootecommerce.shophappens.ordering.domain.model.OrderAddress;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class CustomerAddressGatewayAdapter implements CustomerAddressGateway {
     private final OwnedAddressQuery addresses;
-
-    public CustomerAddressGatewayAdapter(OwnedAddressQuery addresses) {
-        this.addresses = addresses;
-    }
 
     @Override
     public OrderAddress shipping(CustomerId customerId, long addressId) {

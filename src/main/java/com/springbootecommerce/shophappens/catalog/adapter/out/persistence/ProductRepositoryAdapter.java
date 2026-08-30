@@ -10,23 +10,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
+@RequiredArgsConstructor
 class ProductRepositoryAdapter implements ProductRepository {
     private final SpringDataProductRepository springData;
     private final SpringDataCategoryRepository categories;
     private final CatalogPersistenceMapper mapper;
-
-    ProductRepositoryAdapter(
-            SpringDataProductRepository springData,
-            SpringDataCategoryRepository categories,
-            CatalogPersistenceMapper mapper) {
-        this.springData = springData;
-        this.categories = categories;
-        this.mapper = mapper;
-    }
 
     @Override
     @Transactional(readOnly = true)

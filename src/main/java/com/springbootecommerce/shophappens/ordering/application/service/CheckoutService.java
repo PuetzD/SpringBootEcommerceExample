@@ -25,33 +25,20 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class CheckoutService implements PlaceOrderUseCase {
     private final OrderRepository orders;
-    private final CheckoutLock lock;
     private final CustomerAddressGateway addresses;
     private final CustomerCartGateway carts;
     private final CatalogPurchaseGateway catalog;
     private final OrderNumberGenerator numbers;
+    private final CheckoutLock checkoutLock;
     private Clock clock = Clock.systemUTC();
-
-    public CheckoutService(
-            OrderRepository orders,
-            CheckoutLock lock,
-            CustomerAddressGateway addresses,
-            CustomerCartGateway carts,
-            CatalogPurchaseGateway catalog,
-            OrderNumberGenerator numbers) {
-        this.orders = orders;
-        this.lock = lock;
-        this.addresses = addresses;
-        this.carts = carts;
-        this.catalog = catalog;
-        this.numbers = numbers;
-    }
 
     public void setClock(Clock clock) {
         this.clock = clock;
@@ -63,12 +50,13 @@ public class CheckoutService implements PlaceOrderUseCase {
         CustomerId cid = new CustomerId(command.customer().value());
         CheckoutId ckid = new CheckoutId(command.checkout().value());
 
+        checkoutLock.acquire(cid, ckid);
+
         Optional<Order> existing = orders.findByCheckout(cid, ckid);
         if (existing.isPresent()) {
             return toPlacedOrder(existing.get());
         }
 
-        lock.acquire(cid, ckid);
         CheckoutCart cart = carts.load(cid);
         if (cart.empty()) {
             throw new EmptyCheckoutException();

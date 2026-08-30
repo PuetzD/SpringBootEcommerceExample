@@ -46,10 +46,15 @@ class ArchitectureRulesTest {
     }
 
     @Test
-    void migratedDomainsAreFrameworkFree() {
+    void importedClassesArePresent() {
+        assertThat(imported).isNotEmpty();
+    }
+
+    @Test
+    void domainAndSharedKernelAreFrameworkFree() {
         noClasses()
                 .that()
-                .resideInAnyPackage("..domain.model..", "..sharedkernel..")
+                .resideInAnyPackage("..domain..", "..sharedkernel..")
                 .should()
                 .dependOnClassesThat()
                 .resideInAnyPackage(
@@ -159,16 +164,44 @@ class ArchitectureRulesTest {
                 if (to == null || from.equals(to)) {
                     continue;
                 }
-                // Cross-context published-contract usage (another context's application.port.in)
-                // is the spec-sanctioned collaboration channel and is excluded from the cycle
-                // check.
-                if (dependency.getPackageName().endsWith(".application.port.in")) {
-                    continue;
-                }
+
                 graph.get(from).add(to);
             }
         }
         assertThatNoCycles(graph);
+    }
+
+    @Test
+    void crossContextDependenciesUseOnlyPublishedContractsOrSharedKernel() {
+        List<String> violations = new java.util.ArrayList<>();
+        for (JavaClass clazz : imported) {
+            String from = sliceOf(clazz);
+            if (from == null || !BOUNDED_CONTEXTS.contains(from)) {
+                continue;
+            }
+            for (var dependency : clazz.getDirectDependenciesFromSelf()) {
+                JavaClass target = dependency.getTargetClass();
+                String to = sliceOf(target);
+                if (to == null
+                        || to.equals(from)
+                        || to.equals("sharedkernel")
+                        || !BOUNDED_CONTEXTS.contains(to)) {
+                    continue;
+                }
+                if (!target.getPackageName().endsWith(".application.port.in")) {
+                    violations.add(
+                            clazz.getName()
+                                    + " -> "
+                                    + target.getName()
+                                    + " (slice "
+                                    + from
+                                    + " -> "
+                                    + to
+                                    + ", not application.port.in)");
+                }
+            }
+        }
+        assertThat(violations).isEmpty();
     }
 
     @Test
@@ -189,12 +222,17 @@ class ArchitectureRulesTest {
                 .resideInAnyPackage("..application..")
                 .should()
                 .dependOnClassesThat()
-                .resideInAnyPackage("..adapter..", "..web..")
+                .resideInAnyPackage(
+                        "..adapter..",
+                        "..web..",
+                        "..security..",
+                        "..storefront..",
+                        "..administration..")
                 .check(imported);
     }
 
     @Test
-    void webAndAdaptersUseApplicationPorts() {
+    void webAndAdaptersDoNotDependOnApplicationServices() {
         noClasses()
                 .that()
                 .resideInAnyPackage("..web..", "..adapter..")
@@ -206,7 +244,7 @@ class ArchitectureRulesTest {
 
     private static String sliceOf(JavaClass clazz) {
         for (String context : PROTECTED_SLICES) {
-            if (clazz.getPackageName().startsWith(ROOT + "." + context)) {
+            if (clazz.getPackageName().startsWith(ROOT + "." + context + ".")) {
                 return context;
             }
         }
@@ -239,6 +277,8 @@ class ArchitectureRulesTest {
                 }
             }
         }
-        assertThat(processed).isEqualTo(graph.size());
+        assertThat(processed)
+                .withFailMessage("Architectural dependency cycle detected: %s", graph)
+                .isEqualTo(graph.size());
     }
 }

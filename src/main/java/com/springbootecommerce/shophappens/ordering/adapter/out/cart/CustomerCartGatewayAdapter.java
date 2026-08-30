@@ -10,18 +10,14 @@ import com.springbootecommerce.shophappens.ordering.application.port.out.Request
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class CustomerCartGatewayAdapter implements CustomerCartGateway {
     private final CustomerCartQuery cartQuery;
     private final ClearCustomerCartUseCase cartClear;
-
-    public CustomerCartGatewayAdapter(
-            CustomerCartQuery cartQuery, ClearCustomerCartUseCase cartClear) {
-        this.cartQuery = cartQuery;
-        this.cartClear = cartClear;
-    }
 
     @Override
     public CheckoutCart load(CustomerId customerId) {

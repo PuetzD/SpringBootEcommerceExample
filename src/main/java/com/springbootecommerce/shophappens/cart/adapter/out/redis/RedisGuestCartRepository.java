@@ -11,22 +11,19 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
+@RequiredArgsConstructor
 @Repository
 class RedisGuestCartRepository implements GuestCartRepository {
     private static final long GUEST_CART_TTL_SECONDS = 1800;
 
     private final StringRedisTemplate redis;
     private final ObjectMapper objectMapper;
-
-    RedisGuestCartRepository(StringRedisTemplate redis, ObjectMapper objectMapper) {
-        this.redis = redis;
-        this.objectMapper = objectMapper;
-    }
 
     @Override
     public Optional<Cart> find(GuestCartId id) {

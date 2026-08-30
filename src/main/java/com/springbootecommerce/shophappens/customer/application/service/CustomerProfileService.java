@@ -20,10 +20,12 @@ import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class CustomerProfileService
         implements CreateCustomerProfileUseCase,
                 ManageCustomerAddressesUseCase,
@@ -31,10 +33,6 @@ public class CustomerProfileService
                 CustomerReferenceQuery {
 
     private final CustomerRepository customers;
-
-    public CustomerProfileService(CustomerRepository customers) {
-        this.customers = customers;
-    }
 
     @Override
     @Transactional

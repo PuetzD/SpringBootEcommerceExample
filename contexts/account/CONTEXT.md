@@ -10,6 +10,7 @@ _Avoid_: User, login, customer Account
 
 **Email**:
 The canonical, case-insensitive sign-in identifier for an Account. Leading and trailing whitespace and letter case do not distinguish Accounts.
+At the security adapter boundary, framework surface terms (Spring Security's `UserDetails`, `username`) appear without denoting a domain concept; the model always calls it Email.
 _Avoid_: Username, login name
 
 **Role**:
