@@ -6,10 +6,16 @@ import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import java.io.Serializable;
-import java.util.Objects;
 import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @Embeddable
+@EqualsAndHashCode
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 class OrderAddressKey implements Serializable {
     @Column(name = "order_id")
     private UUID orderId;
@@ -17,23 +23,4 @@ class OrderAddressKey implements Serializable {
     @Enumerated(EnumType.STRING)
     @Column(name = "address_role")
     private AddressRole addressRole;
-
-    protected OrderAddressKey() {}
-
-    OrderAddressKey(UUID orderId, AddressRole addressRole) {
-        this.orderId = orderId;
-        this.addressRole = addressRole;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        return other instanceof OrderAddressKey key
-                && Objects.equals(orderId, key.orderId)
-                && addressRole == key.addressRole;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(orderId, addressRole);
-    }
 }
