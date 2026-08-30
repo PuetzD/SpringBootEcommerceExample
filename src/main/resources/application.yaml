@@ -23,6 +23,10 @@ spring:
     timeout: 30m
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      properties:
+        enable.idempotence: ${SPRING_KAFKA_PRODUCER_ENABLE_IDEMPOTENCE:true}
+        acks: all
   docker:
     compose:
       enabled: true
