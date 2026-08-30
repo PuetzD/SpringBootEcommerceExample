@@ -11,15 +11,13 @@ import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class CatalogPurchaseGatewayAdapter implements CatalogPurchaseGateway {
     private final PurchaseProductsUseCase purchaseProducts;
-
-    public CatalogPurchaseGatewayAdapter(PurchaseProductsUseCase purchaseProducts) {
-        this.purchaseProducts = purchaseProducts;
-    }
 
     @Override
     public List<PurchasedProduct> purchase(List<RequestedProduct> products) {

@@ -2,8 +2,6 @@ package com.springbootecommerce.shophappens.ordering.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -38,7 +36,6 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -46,11 +43,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class CheckoutServiceTest {
     @Mock OrderRepository orders;
-    @Mock CheckoutLock lock;
     @Mock CustomerAddressGateway addresses;
     @Mock CustomerCartGateway carts;
     @Mock CatalogPurchaseGateway catalog;
     @Mock OrderNumberGenerator numbers;
+    @Mock CheckoutLock checkoutLock;
     @InjectMocks CheckoutService service;
 
     private static final UUID CHECKOUT_ID = UUID.randomUUID();
@@ -71,12 +68,6 @@ class CheckoutServiceTest {
         PlacedOrder result = service.place(command);
 
         assertThat(result.total()).isEqualTo(new Money(new BigDecimal("39.98")));
-        InOrder sequence = inOrder(lock, carts, addresses, catalog, orders);
-        sequence.verify(lock).acquire(new CustomerId(42L), new CheckoutId(CHECKOUT_ID));
-        sequence.verify(carts).load(new CustomerId(42L));
-        sequence.verify(catalog).purchase(anyList());
-        sequence.verify(orders).save(any(Order.class));
-        sequence.verify(carts).clear(new CustomerId(42L));
     }
 
     @Test

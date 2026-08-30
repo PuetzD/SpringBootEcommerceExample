@@ -7,18 +7,15 @@ import com.springbootecommerce.shophappens.ordering.domain.model.OrderId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import java.util.List;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
+@RequiredArgsConstructor
 class JpaOrderRepositoryAdapter implements OrderRepository {
     private final SpringDataOrderRepository springData;
     private final OrderPersistenceMapper mapper;
-
-    JpaOrderRepositoryAdapter(SpringDataOrderRepository springData, OrderPersistenceMapper mapper) {
-        this.springData = springData;
-        this.mapper = mapper;
-    }
 
     @Override
     @Transactional(readOnly = true)

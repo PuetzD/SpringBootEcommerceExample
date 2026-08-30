@@ -12,24 +12,17 @@ import com.springbootecommerce.shophappens.account.domain.model.Account;
 import com.springbootecommerce.shophappens.account.domain.model.Email;
 import com.springbootecommerce.shophappens.account.domain.model.PasswordHash;
 import com.springbootecommerce.shophappens.sharedkernel.identity.AccountId;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class AccountRegistrationService implements RegisterCustomerAccountUseCase {
 
     private final AccountRepository accounts;
     private final PasswordHasher passwordHasher;
     private final CreateCustomerProfilePort profiles;
-
-    public AccountRegistrationService(
-            AccountRepository accounts,
-            PasswordHasher passwordHasher,
-            CreateCustomerProfilePort profiles) {
-        this.accounts = accounts;
-        this.passwordHasher = passwordHasher;
-        this.profiles = profiles;
-    }
 
     @Override
     @Transactional

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(${seo}, ~{::main}, ~{::#page-scripts})}">
+<head></head>
+<body>
+<main class="flex-grow py-12">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h1 class="text-2xl font-bold" th:text="${'Order ' + order.orderNumber()}">Order</h1>
+    <p class="text-base-content/60 mb-8" th:text="${#temporals.format(order.placedAt(), 'yyyy-MM-dd HH:mm')}">2026-08-30</p>
+    <section class="mb-8">
+      <h2 class="text-lg font-semibold mb-3">Items</h2>
+      <ul class="list bg-base-100 rounded-box shadow-sm">
+        <li th:each="item : ${order.items()}" class="list-row flex justify-between">
+          <span th:text="${item.productName() + ' (' + item.sku() + ')'}">Product</span>
+          <span th:text="${item.quantity() + ' × ' + item.unitPrice().amount()}">1 × 0.00</span>
+        </li>
+      </ul>
+      <p class="text-right font-bold mt-4">Total: <span th:text="${order.total().amount()}">0.00</span></p>
+    </section>
+    <section class="grid md:grid-cols-2 gap-6">
+      <div th:each="address : ${order.addresses()}" class="card bg-base-100 shadow-sm">
+        <div class="card-body">
+          <h2 class="card-title" th:text="${address.role().name()}">SHIPPING</h2>
+          <p th:text="${address.recipientName()}">Recipient</p>
+          <p th:text="${address.addressLine1()}">Address</p>
+          <p th:if="${address.addressLine2() != null}" th:text="${address.addressLine2()}">Address line 2</p>
+          <p th:text="${address.postalCode() + ' ' + address.city()}">Postal City</p>
+          <p th:text="${address.countryCode()}">US</p>
+        </div>
+      </div>
+    </section>
+    <a class="btn btn-ghost mt-8" th:href="@{/orders}">Back to orders</a>
+  </div>
+</main>
+<th:block id="page-scripts"></th:block>
+</body>
+</html>
+

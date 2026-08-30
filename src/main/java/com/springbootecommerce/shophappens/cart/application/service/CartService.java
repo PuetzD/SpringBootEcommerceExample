@@ -20,10 +20,12 @@ import com.springbootecommerce.shophappens.customer.application.port.in.Customer
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+@RequiredArgsConstructor
 @Service
 public class CartService
         implements GuestCartUseCase,
@@ -32,11 +34,6 @@ public class CartService
                 ClearCustomerCartUseCase {
     private final GuestCartRepository guests;
     private final CustomerCartRepository customers;
-
-    public CartService(GuestCartRepository guests, CustomerCartRepository customers) {
-        this.guests = guests;
-        this.customers = customers;
-    }
 
     @Override
     public void changeQuantity(GuestCartReference guest, ProductReference product, int quantity) {

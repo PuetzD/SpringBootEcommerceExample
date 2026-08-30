@@ -8,9 +8,16 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "customer_cart_item")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 class CustomerCartItemJpaEntity {
     @EmbeddedId private CartItemKey key;
 
@@ -21,8 +28,6 @@ class CustomerCartItemJpaEntity {
     @MapsId("cartId")
     @JoinColumn(name = "cart_id")
     private CustomerCartJpaEntity cart;
-
-    CustomerCartItemJpaEntity() {}
 
     static CustomerCartItemJpaEntity create(
             CustomerCartJpaEntity cart, long productId, int quantity) {
@@ -35,9 +40,5 @@ class CustomerCartItemJpaEntity {
 
     long getProductId() {
         return key.getProductId();
-    }
-
-    int getQuantity() {
-        return quantity;
     }
 }

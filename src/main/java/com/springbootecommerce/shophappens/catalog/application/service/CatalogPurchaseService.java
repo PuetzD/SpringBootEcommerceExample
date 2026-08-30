@@ -13,17 +13,15 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class CatalogPurchaseService implements PurchaseProductsUseCase {
     private final ProductRepository productRepository;
-
-    public CatalogPurchaseService(ProductRepository productRepository) {
-        this.productRepository = productRepository;
-    }
 
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
