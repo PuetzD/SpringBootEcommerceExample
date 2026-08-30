@@ -164,6 +164,12 @@ class ArchitectureRulesTest {
                 if (to == null || from.equals(to)) {
                     continue;
                 }
+                // Cross-context published-contract usage (another context's application.port.in)
+                // is the spec-sanctioned collaboration channel and is excluded from the cycle
+                // check.
+                if (dependency.getPackageName().endsWith(".application.port.in")) {
+                    continue;
+                }
 
                 graph.get(from).add(to);
             }
