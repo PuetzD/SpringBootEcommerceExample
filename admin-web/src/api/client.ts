@@ -1,4 +1,4 @@
-import type { ApiErrorResponse, FieldErrorResponse, PageResponse } from './types'
+import type { ApiErrorResponse, FieldErrorResponse } from './types'
 import { clearToken, getToken, refreshToken } from '../auth/CsrfProvider'
 
 export class ApiError extends Error {
