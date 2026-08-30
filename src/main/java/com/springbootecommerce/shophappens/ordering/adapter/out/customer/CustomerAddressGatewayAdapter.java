@@ -1,4 +1,4 @@
-package com.springbootecommerce.shophappens.ordering.adapter.out.gateway;
+package com.springbootecommerce.shophappens.ordering.adapter.out.customer;
 
 import com.springbootecommerce.shophappens.customer.application.port.in.AddressReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.AddressSnapshot;
@@ -13,10 +13,10 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
-class CustomerAddressGatewayAdapter implements CustomerAddressGateway {
+public class CustomerAddressGatewayAdapter implements CustomerAddressGateway {
     private final OwnedAddressQuery addresses;
 
-    CustomerAddressGatewayAdapter(OwnedAddressQuery addresses) {
+    public CustomerAddressGatewayAdapter(OwnedAddressQuery addresses) {
         this.addresses = addresses;
     }
 

@@ -1,4 +1,4 @@
-package com.springbootecommerce.shophappens.ordering.adapter.out.gateway;
+package com.springbootecommerce.shophappens.ordering.adapter.out.cart;
 
 import com.springbootecommerce.shophappens.cart.application.port.in.ClearCustomerCartUseCase;
 import com.springbootecommerce.shophappens.cart.application.port.in.CustomerCartQuery;
@@ -7,17 +7,18 @@ import com.springbootecommerce.shophappens.customer.application.port.in.Customer
 import com.springbootecommerce.shophappens.ordering.application.port.out.CheckoutCart;
 import com.springbootecommerce.shophappens.ordering.application.port.out.CustomerCartGateway;
 import com.springbootecommerce.shophappens.ordering.application.port.out.RequestedProduct;
-import com.springbootecommerce.shophappens.ordering.domain.model.CustomerId;
-import com.springbootecommerce.shophappens.ordering.domain.model.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
-class CustomerCartGatewayAdapter implements CustomerCartGateway {
+public class CustomerCartGatewayAdapter implements CustomerCartGateway {
     private final CustomerCartQuery cartQuery;
     private final ClearCustomerCartUseCase cartClear;
 
-    CustomerCartGatewayAdapter(CustomerCartQuery cartQuery, ClearCustomerCartUseCase cartClear) {
+    public CustomerCartGatewayAdapter(
+            CustomerCartQuery cartQuery, ClearCustomerCartUseCase cartClear) {
         this.cartQuery = cartQuery;
         this.cartClear = cartClear;
     }
