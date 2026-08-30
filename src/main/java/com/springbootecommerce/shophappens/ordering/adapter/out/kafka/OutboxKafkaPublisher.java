@@ -39,10 +39,11 @@ public class OutboxKafkaPublisher {
                                 "event-id",
                                 event.eventId().toString().getBytes(StandardCharsets.UTF_8));
                 kafka.send(record).get();
-                outbox.markPublished(event.eventId(), Instant.now(clock));
             } catch (Exception exception) {
                 outbox.markFailed(event.eventId(), exception.getMessage());
+                continue;
             }
+            outbox.markPublished(event.eventId(), Instant.now(clock));
         }
     }
 }
