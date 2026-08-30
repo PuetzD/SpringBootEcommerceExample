@@ -15,12 +15,12 @@ import com.springbootecommerce.shophappens.ordering.application.port.out.Purchas
 import com.springbootecommerce.shophappens.ordering.application.port.out.RequestedProduct;
 import com.springbootecommerce.shophappens.ordering.domain.exception.EmptyCheckoutException;
 import com.springbootecommerce.shophappens.ordering.domain.model.CheckoutId;
-import com.springbootecommerce.shophappens.ordering.domain.model.CustomerId;
 import com.springbootecommerce.shophappens.ordering.domain.model.Order;
 import com.springbootecommerce.shophappens.ordering.domain.model.OrderAddress;
 import com.springbootecommerce.shophappens.ordering.domain.model.OrderId;
 import com.springbootecommerce.shophappens.ordering.domain.model.OrderItem;
 import com.springbootecommerce.shophappens.ordering.domain.model.OrderNumber;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;

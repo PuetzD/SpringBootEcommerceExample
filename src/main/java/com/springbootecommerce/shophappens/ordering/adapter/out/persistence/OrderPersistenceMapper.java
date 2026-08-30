@@ -2,13 +2,13 @@ package com.springbootecommerce.shophappens.ordering.adapter.out.persistence;
 
 import com.springbootecommerce.shophappens.ordering.domain.model.AddressRole;
 import com.springbootecommerce.shophappens.ordering.domain.model.CheckoutId;
-import com.springbootecommerce.shophappens.ordering.domain.model.CustomerId;
 import com.springbootecommerce.shophappens.ordering.domain.model.Order;
 import com.springbootecommerce.shophappens.ordering.domain.model.OrderAddress;
 import com.springbootecommerce.shophappens.ordering.domain.model.OrderId;
 import com.springbootecommerce.shophappens.ordering.domain.model.OrderItem;
 import com.springbootecommerce.shophappens.ordering.domain.model.OrderNumber;
-import com.springbootecommerce.shophappens.ordering.domain.model.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.util.List;
 import org.springframework.stereotype.Component;

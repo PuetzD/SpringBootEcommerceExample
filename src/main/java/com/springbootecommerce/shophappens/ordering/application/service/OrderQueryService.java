@@ -13,7 +13,7 @@ import com.springbootecommerce.shophappens.ordering.application.port.in.PrepareC
 import com.springbootecommerce.shophappens.ordering.application.port.out.CustomerAddressGateway;
 import com.springbootecommerce.shophappens.ordering.application.port.out.CustomerCartGateway;
 import com.springbootecommerce.shophappens.ordering.application.port.out.OrderRepository;
-import com.springbootecommerce.shophappens.ordering.domain.model.CustomerId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;

@@ -7,8 +7,8 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.Purchased
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductRepository;
 import com.springbootecommerce.shophappens.catalog.domain.exception.ProductUnavailableException;
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
-import com.springbootecommerce.shophappens.catalog.domain.model.ProductId;
 import com.springbootecommerce.shophappens.catalog.domain.model.PurchasedFacts;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;

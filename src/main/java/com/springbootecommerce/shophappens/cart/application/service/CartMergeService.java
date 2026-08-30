@@ -7,9 +7,9 @@ import com.springbootecommerce.shophappens.cart.application.port.out.CartMergeLe
 import com.springbootecommerce.shophappens.cart.application.port.out.CustomerCartRepository;
 import com.springbootecommerce.shophappens.cart.application.port.out.GuestCartRepository;
 import com.springbootecommerce.shophappens.cart.domain.model.Cart;
-import com.springbootecommerce.shophappens.cart.domain.model.CustomerId;
 import com.springbootecommerce.shophappens.cart.domain.model.GuestCartId;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

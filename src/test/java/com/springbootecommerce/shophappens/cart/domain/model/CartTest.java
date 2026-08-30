@@ -2,6 +2,8 @@ package com.springbootecommerce.shophappens.cart.domain.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import org.junit.jupiter.api.Test;
 
 class CartTest {

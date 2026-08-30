@@ -8,10 +8,10 @@ import com.springbootecommerce.shophappens.account.application.port.in.Authentic
 import com.springbootecommerce.shophappens.account.application.port.in.AuthenticationRole;
 import com.springbootecommerce.shophappens.account.application.port.out.AccountRepository;
 import com.springbootecommerce.shophappens.account.domain.model.Account;
-import com.springbootecommerce.shophappens.account.domain.model.AccountId;
 import com.springbootecommerce.shophappens.account.domain.model.Email;
 import com.springbootecommerce.shophappens.account.domain.model.PasswordHash;
 import com.springbootecommerce.shophappens.account.domain.model.Role;
+import com.springbootecommerce.shophappens.sharedkernel.identity.AccountId;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

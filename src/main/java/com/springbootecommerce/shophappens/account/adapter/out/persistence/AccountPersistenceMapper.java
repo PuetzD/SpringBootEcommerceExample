@@ -1,9 +1,9 @@
 package com.springbootecommerce.shophappens.account.adapter.out.persistence;
 
 import com.springbootecommerce.shophappens.account.domain.model.Account;
-import com.springbootecommerce.shophappens.account.domain.model.AccountId;
 import com.springbootecommerce.shophappens.account.domain.model.Email;
 import com.springbootecommerce.shophappens.account.domain.model.PasswordHash;
+import com.springbootecommerce.shophappens.sharedkernel.identity.AccountId;
 import org.springframework.stereotype.Component;
 
 @Component
