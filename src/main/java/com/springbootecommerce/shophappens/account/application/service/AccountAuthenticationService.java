@@ -6,21 +6,19 @@ import com.springbootecommerce.shophappens.account.application.port.in.Authentic
 import com.springbootecommerce.shophappens.account.application.port.in.AuthenticationRole;
 import com.springbootecommerce.shophappens.account.application.port.out.AccountRepository;
 import com.springbootecommerce.shophappens.account.domain.model.Account;
-import com.springbootecommerce.shophappens.account.domain.model.AccountId;
 import com.springbootecommerce.shophappens.account.domain.model.Email;
 import com.springbootecommerce.shophappens.account.domain.model.Role;
+import com.springbootecommerce.shophappens.sharedkernel.identity.AccountId;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class AccountAuthenticationService implements AuthenticateAccountQuery {
 
     private final AccountRepository accounts;
-
-    public AccountAuthenticationService(AccountRepository accounts) {
-        this.accounts = accounts;
-    }
 
     @Override
     @Transactional(readOnly = true)

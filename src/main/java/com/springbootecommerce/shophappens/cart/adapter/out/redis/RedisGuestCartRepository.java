@@ -5,28 +5,25 @@ import com.springbootecommerce.shophappens.cart.domain.model.Cart;
 import com.springbootecommerce.shophappens.cart.domain.model.CartId;
 import com.springbootecommerce.shophappens.cart.domain.model.CartOwner;
 import com.springbootecommerce.shophappens.cart.domain.model.GuestCartId;
-import com.springbootecommerce.shophappens.cart.domain.model.ProductId;
 import com.springbootecommerce.shophappens.cart.domain.model.Quantity;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
+@RequiredArgsConstructor
 @Repository
 class RedisGuestCartRepository implements GuestCartRepository {
     private static final long GUEST_CART_TTL_SECONDS = 1800;
 
     private final StringRedisTemplate redis;
     private final ObjectMapper objectMapper;
-
-    RedisGuestCartRepository(StringRedisTemplate redis, ObjectMapper objectMapper) {
-        this.redis = redis;
-        this.objectMapper = objectMapper;
-    }
 
     @Override
     public Optional<Cart> find(GuestCartId id) {

@@ -7,10 +7,10 @@ import com.springbootecommerce.shophappens.cart.domain.model.Cart;
 import com.springbootecommerce.shophappens.cart.domain.model.CartId;
 import com.springbootecommerce.shophappens.cart.domain.model.CartItem;
 import com.springbootecommerce.shophappens.cart.domain.model.CartOwner;
-import com.springbootecommerce.shophappens.cart.domain.model.CustomerId;
-import com.springbootecommerce.shophappens.cart.domain.model.ProductId;
 import com.springbootecommerce.shophappens.cart.domain.model.Quantity;
 import com.springbootecommerce.shophappens.integration.AbstractIntegrationTest;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 

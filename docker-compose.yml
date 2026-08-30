@@ -1,24 +1,23 @@
 services:
   postgres:
-    image: postgres:latest
-    container_name: postgres
+    image: postgres:16.4
     environment:
-      POSTGRES_DB: demo
-      POSTGRES_USER: demo
-      POSTGRES_PASSWORD: demo
+      POSTGRES_DB: ${POSTGRES_DB:-demo}
+      POSTGRES_USER: ${POSTGRES_USER:-demo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-demo}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
+      - ./scripts/demo-data.sql:/seed/demo-data.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U demo -d demo"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-demo} -d $${POSTGRES_DB:-demo}"]
       interval: 5s
       timeout: 3s
       retries: 10
 
   redis:
     image: redis:7
-    container_name: redis
     ports:
       - "6379:6379"
     volumes:

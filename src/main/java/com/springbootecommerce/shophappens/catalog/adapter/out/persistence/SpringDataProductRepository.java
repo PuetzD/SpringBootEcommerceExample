@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 interface SpringDataProductRepository extends JpaRepository<ProductJpaEntity, Long> {
     @EntityGraph(attributePaths = "categories")
@@ -17,4 +18,12 @@ interface SpringDataProductRepository extends JpaRepository<ProductJpaEntity, Lo
 
     @EntityGraph(attributePaths = "categories")
     List<ProductJpaEntity> findByActiveTrueOrderByNameAscIdAsc();
+
+    @Query(
+            "select count(distinct p) from ProductJpaEntity p join p.categories c where c.id = :categoryId and p.active = true")
+    long countActiveByCategoryId(Long categoryId);
+
+    @Query(
+            "select distinct p from ProductJpaEntity p join p.categories c where c.id = :categoryId and p.active = true order by p.name asc, p.id asc")
+    List<ProductJpaEntity> findActiveByCategoryId(Long categoryId);
 }

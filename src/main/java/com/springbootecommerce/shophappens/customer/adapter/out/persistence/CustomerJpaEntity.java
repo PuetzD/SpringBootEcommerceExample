@@ -11,7 +11,14 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "customer")
 class CustomerJpaEntity {
@@ -30,28 +37,10 @@ class CustomerJpaEntity {
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AddressJpaEntity> addresses = new ArrayList<>();
 
-    CustomerJpaEntity() {}
-
     static CustomerJpaEntity create(Long accountId) {
         var entity = new CustomerJpaEntity();
         entity.accountId = accountId;
         return entity;
-    }
-
-    Long getId() {
-        return id;
-    }
-
-    void setId(Long id) {
-        this.id = id;
-    }
-
-    Long getAccountId() {
-        return accountId;
-    }
-
-    List<AddressJpaEntity> getAddresses() {
-        return addresses;
     }
 
     void addAddress(AddressJpaEntity address) {

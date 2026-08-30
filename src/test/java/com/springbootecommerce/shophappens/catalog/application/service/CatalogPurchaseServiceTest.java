@@ -15,8 +15,8 @@ import com.springbootecommerce.shophappens.catalog.application.port.out.ProductR
 import com.springbootecommerce.shophappens.catalog.domain.exception.InsufficientStockException;
 import com.springbootecommerce.shophappens.catalog.domain.exception.ProductUnavailableException;
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
-import com.springbootecommerce.shophappens.catalog.domain.model.ProductId;
 import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
 import java.util.List;

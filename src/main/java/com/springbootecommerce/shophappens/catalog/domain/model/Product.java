@@ -2,6 +2,7 @@ package com.springbootecommerce.shophappens.catalog.domain.model;
 
 import com.springbootecommerce.shophappens.catalog.domain.exception.InsufficientStockException;
 import com.springbootecommerce.shophappens.catalog.domain.exception.ProductUnavailableException;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.util.Objects;
 import java.util.Optional;

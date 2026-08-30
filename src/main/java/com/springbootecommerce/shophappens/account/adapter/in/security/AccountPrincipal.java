@@ -4,9 +4,11 @@ import com.springbootecommerce.shophappens.account.application.port.in.AccountRe
 import com.springbootecommerce.shophappens.account.application.port.in.AuthenticatedAccountIdentity;
 import java.io.Serializable;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+@RequiredArgsConstructor
 public final class AccountPrincipal
         implements UserDetails, AuthenticatedAccountIdentity, Serializable {
     private final AccountReference account;
@@ -14,19 +16,6 @@ public final class AccountPrincipal
     private final String passwordHash;
     private final boolean enabled;
     private final GrantedAuthority authority;
-
-    public AccountPrincipal(
-            AccountReference account,
-            String email,
-            String passwordHash,
-            boolean enabled,
-            GrantedAuthority authority) {
-        this.account = account;
-        this.email = email;
-        this.passwordHash = passwordHash;
-        this.enabled = enabled;
-        this.authority = authority;
-    }
 
     @Override
     public AccountReference account() {

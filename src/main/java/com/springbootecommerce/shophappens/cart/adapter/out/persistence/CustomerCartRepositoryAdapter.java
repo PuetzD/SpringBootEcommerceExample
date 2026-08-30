@@ -4,21 +4,17 @@ import com.springbootecommerce.shophappens.cart.application.port.out.CustomerCar
 import com.springbootecommerce.shophappens.cart.domain.model.Cart;
 import com.springbootecommerce.shophappens.cart.domain.model.CartId;
 import com.springbootecommerce.shophappens.cart.domain.model.CartOwner;
-import com.springbootecommerce.shophappens.cart.domain.model.CustomerId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+@RequiredArgsConstructor
 @Repository
 class CustomerCartRepositoryAdapter implements CustomerCartRepository {
     private final SpringDataCustomerCartRepository springData;
     private final CustomerCartPersistenceMapper mapper;
-
-    CustomerCartRepositoryAdapter(
-            SpringDataCustomerCartRepository springData, CustomerCartPersistenceMapper mapper) {
-        this.springData = springData;
-        this.mapper = mapper;
-    }
 
     @Override
     @Transactional

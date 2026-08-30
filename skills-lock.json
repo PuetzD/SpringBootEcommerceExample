@@ -169,6 +169,12 @@
       "skillPath": "skills/investigate-first/SKILL.md",
       "computedHash": "59b581b5abfc0e19b7dd5a7c3bb2b16621ab5e94e085065c7b724a9c86cc3d4d"
     },
+    "kafka-development": {
+      "source": "mindrally/skills",
+      "sourceType": "github",
+      "skillPath": "kafka-development/SKILL.md",
+      "computedHash": "402a2cf2292175618fc82709ab526b477ade35cf4aa7c6ed88c906d87c778ec4"
+    },
     "lean-build": {
       "source": "juliusbrussee/caveman",
       "sourceType": "github",

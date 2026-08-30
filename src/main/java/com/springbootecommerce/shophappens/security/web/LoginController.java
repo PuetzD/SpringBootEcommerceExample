@@ -20,6 +20,6 @@ public class LoginController {
 
         model.addAttribute("seo", seo);
         model.addAttribute("canonicalUrl", canonicalUrlFactory.forPath(seo.canonicalPath()));
-        return "login";
+        return "customer/login";
     }
 }

@@ -28,7 +28,9 @@ class RegistrationControllerTest {
 
     @Test
     void rendersRegistrationAndSubmitsValidForm() throws Exception {
-        mvc.perform(get("/register")).andExpect(status().isOk()).andExpect(view().name("register"));
+        mvc.perform(get("/register"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("customer/register"));
 
         mvc.perform(
                         post("/register")

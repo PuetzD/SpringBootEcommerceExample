@@ -13,17 +13,19 @@ import com.springbootecommerce.shophappens.cart.application.port.out.GuestCartRe
 import com.springbootecommerce.shophappens.cart.domain.model.Cart;
 import com.springbootecommerce.shophappens.cart.domain.model.CartId;
 import com.springbootecommerce.shophappens.cart.domain.model.CartOwner;
-import com.springbootecommerce.shophappens.cart.domain.model.CustomerId;
 import com.springbootecommerce.shophappens.cart.domain.model.GuestCartId;
-import com.springbootecommerce.shophappens.cart.domain.model.ProductId;
 import com.springbootecommerce.shophappens.cart.domain.model.Quantity;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+@RequiredArgsConstructor
 @Service
 public class CartService
         implements GuestCartUseCase,
@@ -32,11 +34,6 @@ public class CartService
                 ClearCustomerCartUseCase {
     private final GuestCartRepository guests;
     private final CustomerCartRepository customers;
-
-    public CartService(GuestCartRepository guests, CustomerCartRepository customers) {
-        this.guests = guests;
-        this.customers = customers;
-    }
 
     @Override
     public void changeQuantity(GuestCartReference guest, ProductReference product, int quantity) {

@@ -10,20 +10,23 @@ import com.springbootecommerce.shophappens.customer.application.port.in.Customer
 import com.springbootecommerce.shophappens.customer.application.port.in.ExternalAccountId;
 import com.springbootecommerce.shophappens.customer.application.port.in.ManageCustomerAddressesUseCase;
 import com.springbootecommerce.shophappens.customer.application.port.in.OwnedAddressQuery;
+import com.springbootecommerce.shophappens.customer.application.port.in.OwnedAddressUnavailableException;
 import com.springbootecommerce.shophappens.customer.application.port.out.CustomerRepository;
-import com.springbootecommerce.shophappens.customer.domain.model.AccountId;
 import com.springbootecommerce.shophappens.customer.domain.model.Address;
 import com.springbootecommerce.shophappens.customer.domain.model.AddressDetails;
 import com.springbootecommerce.shophappens.customer.domain.model.AddressId;
 import com.springbootecommerce.shophappens.customer.domain.model.Customer;
-import com.springbootecommerce.shophappens.customer.domain.model.CustomerId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.AccountId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class CustomerProfileService
         implements CreateCustomerProfileUseCase,
                 ManageCustomerAddressesUseCase,
@@ -31,10 +34,6 @@ public class CustomerProfileService
                 CustomerReferenceQuery {
 
     private final CustomerRepository customers;
-
-    public CustomerProfileService(CustomerRepository customers) {
-        this.customers = customers;
-    }
 
     @Override
     @Transactional
@@ -103,7 +102,14 @@ public class CustomerProfileService
     @Transactional(readOnly = true)
     public AddressSnapshot getOwned(CustomerReference customer, AddressReference address) {
         var aggregate = requireCustomer(customer);
-        return snapshot(customer, aggregate.address(new AddressId(address.value())));
+        try {
+            return snapshot(customer, aggregate.address(new AddressId(address.value())));
+        } catch (
+                com.springbootecommerce.shophappens.customer.domain.exception
+                                .AddressNotOwnedException
+                        exception) {
+            throw new OwnedAddressUnavailableException(exception.getMessage());
+        }
     }
 
     @Override

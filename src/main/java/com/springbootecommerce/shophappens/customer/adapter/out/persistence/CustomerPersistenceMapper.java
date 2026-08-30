@@ -1,11 +1,11 @@
 package com.springbootecommerce.shophappens.customer.adapter.out.persistence;
 
-import com.springbootecommerce.shophappens.customer.domain.model.AccountId;
 import com.springbootecommerce.shophappens.customer.domain.model.Address;
 import com.springbootecommerce.shophappens.customer.domain.model.AddressDetails;
 import com.springbootecommerce.shophappens.customer.domain.model.AddressId;
 import com.springbootecommerce.shophappens.customer.domain.model.Customer;
-import com.springbootecommerce.shophappens.customer.domain.model.CustomerId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.AccountId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import java.util.List;
 import org.springframework.stereotype.Component;
 

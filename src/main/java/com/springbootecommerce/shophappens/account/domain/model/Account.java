@@ -1,5 +1,6 @@
 package com.springbootecommerce.shophappens.account.domain.model;
 
+import com.springbootecommerce.shophappens.sharedkernel.identity.AccountId;
 import java.util.Objects;
 import java.util.Optional;
 

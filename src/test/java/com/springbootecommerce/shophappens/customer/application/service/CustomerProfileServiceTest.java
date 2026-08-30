@@ -9,12 +9,12 @@ import com.springbootecommerce.shophappens.customer.application.port.in.AddressS
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.ExternalAccountId;
 import com.springbootecommerce.shophappens.customer.application.port.out.CustomerRepository;
-import com.springbootecommerce.shophappens.customer.domain.model.AccountId;
 import com.springbootecommerce.shophappens.customer.domain.model.Address;
 import com.springbootecommerce.shophappens.customer.domain.model.AddressDetails;
 import com.springbootecommerce.shophappens.customer.domain.model.AddressId;
 import com.springbootecommerce.shophappens.customer.domain.model.Customer;
-import com.springbootecommerce.shophappens.customer.domain.model.CustomerId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.AccountId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;

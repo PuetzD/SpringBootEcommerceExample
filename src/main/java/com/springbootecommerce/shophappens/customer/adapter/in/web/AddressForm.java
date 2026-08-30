@@ -4,7 +4,11 @@ import com.springbootecommerce.shophappens.customer.application.port.in.AddressS
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public class AddressForm {
 
     @NotBlank(message = "Recipient name is required")
@@ -56,93 +60,5 @@ public class AddressForm {
         form.defaultShipping = snapshot.defaultShipping();
         form.defaultBilling = snapshot.defaultBilling();
         return form;
-    }
-
-    public String getRecipientName() {
-        return recipientName;
-    }
-
-    public void setRecipientName(String recipientName) {
-        this.recipientName = recipientName;
-    }
-
-    public String getCompanyName() {
-        return companyName;
-    }
-
-    public void setCompanyName(String companyName) {
-        this.companyName = companyName;
-    }
-
-    public String getAddressLine1() {
-        return addressLine1;
-    }
-
-    public void setAddressLine1(String addressLine1) {
-        this.addressLine1 = addressLine1;
-    }
-
-    public String getAddressLine2() {
-        return addressLine2;
-    }
-
-    public void setAddressLine2(String addressLine2) {
-        this.addressLine2 = addressLine2;
-    }
-
-    public String getCity() {
-        return city;
-    }
-
-    public void setCity(String city) {
-        this.city = city;
-    }
-
-    public String getRegion() {
-        return region;
-    }
-
-    public void setRegion(String region) {
-        this.region = region;
-    }
-
-    public String getPostalCode() {
-        return postalCode;
-    }
-
-    public void setPostalCode(String postalCode) {
-        this.postalCode = postalCode;
-    }
-
-    public String getCountryCode() {
-        return countryCode;
-    }
-
-    public void setCountryCode(String countryCode) {
-        this.countryCode = countryCode;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    public boolean isDefaultShipping() {
-        return defaultShipping;
-    }
-
-    public void setDefaultShipping(boolean defaultShipping) {
-        this.defaultShipping = defaultShipping;
-    }
-
-    public boolean isDefaultBilling() {
-        return defaultBilling;
-    }
-
-    public void setDefaultBilling(boolean defaultBilling) {
-        this.defaultBilling = defaultBilling;
     }
 }

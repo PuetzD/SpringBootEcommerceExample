@@ -1,7 +1,7 @@
 package com.springbootecommerce.shophappens.cart.application.port.out;
 
 import com.springbootecommerce.shophappens.cart.domain.model.Cart;
-import com.springbootecommerce.shophappens.cart.domain.model.CustomerId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import java.util.Optional;
 
 public interface CustomerCartRepository {

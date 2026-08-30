@@ -1,6 +1,8 @@
 package com.springbootecommerce.shophappens.customer.domain.model;
 
 import com.springbootecommerce.shophappens.customer.domain.exception.AddressNotOwnedException;
+import com.springbootecommerce.shophappens.sharedkernel.identity.AccountId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
