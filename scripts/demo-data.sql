@@ -1,6 +1,7 @@
--- R__demo_data.sql
--- Fantasy merchant demo seed. Runs as a Flyway repeatable migration.
--- Idempotent: truncates the demo tables and reseeds on every checksum change.
+-- Fantasy merchant demo seed.
+-- WARNING: truncates the demo tables before reseeding. Use only against a local database.
+
+BEGIN;
 
 TRUNCATE TABLE customer_cart_item, customer_cart, consumed_guest_cart,
              address, customer, account, product_category, product, category
@@ -114,3 +115,5 @@ JOIN category c
        WHEN p.sku LIKE 'GOOD-%' THEN c.slug = 'everyday-goods'
        ELSE FALSE
      END;
+
+COMMIT;
