@@ -7,7 +7,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public final class InsufficientStockException extends RuntimeException {
+public class InsufficientStockException extends RuntimeException {
     private final ProductId productId;
     private final Sku sku;
     private final int requestedQuantity;

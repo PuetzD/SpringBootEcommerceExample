@@ -29,15 +29,12 @@ public class CategoryQueryService implements BrowseCategoriesUseCase {
     @Override
     public List<CategorySummary> findAllActive() {
         List<Category> categories = categoryRepository.findAll();
-        List<Product> products = productRepository.findAllActive();
-        return categories.stream().map(category -> toSummary(category, products)).toList();
+        return categories.stream().map(this::toSummary).toList();
     }
 
     @Override
     public Optional<CategorySummary> findBySlug(String slug) {
-        return categoryRepository
-                .findBySlug(slug)
-                .map(category -> toSummary(category, productRepository.findAllActive()));
+        return categoryRepository.findBySlug(slug).map(this::toSummary);
     }
 
     @Override
@@ -48,18 +45,14 @@ public class CategoryQueryService implements BrowseCategoriesUseCase {
                         .orElseThrow(
                                 () -> new IllegalArgumentException("Category not found: " + slug));
         CategoryId categoryId = category.id().orElseThrow();
-        return productRepository.findAllActive().stream()
-                .filter(product -> product.categoryIds().contains(categoryId))
+        return productRepository.findActiveByCategoryId(categoryId).stream()
                 .map(this::toSummary)
                 .toList();
     }
 
-    private CategorySummary toSummary(Category category, List<Product> products) {
+    private CategorySummary toSummary(Category category) {
         CategoryId categoryId = category.id().orElseThrow();
-        long count =
-                products.stream()
-                        .filter(product -> product.categoryIds().contains(categoryId))
-                        .count();
+        long count = productRepository.countActiveByCategoryId(categoryId);
         return new CategorySummary(categoryId, category.name(), category.slug(), count);
     }
 

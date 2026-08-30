@@ -1,9 +1,12 @@
 package com.springbootecommerce.shophappens.ordering.adapter.in.web;
 
 import com.springbootecommerce.shophappens.account.application.port.in.AuthenticatedAccountIdentity;
+import com.springbootecommerce.shophappens.catalog.application.port.in.PublishedInsufficientStockException;
+import com.springbootecommerce.shophappens.catalog.application.port.in.PublishedProductUnavailableException;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReferenceQuery;
 import com.springbootecommerce.shophappens.customer.application.port.in.ExternalAccountId;
+import com.springbootecommerce.shophappens.customer.application.port.in.OwnedAddressUnavailableException;
 import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutPreparation;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderCommand;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderUseCase;
@@ -65,17 +68,17 @@ public class CheckoutController {
         return "redirect:/orders/" + result.orderNumber();
     }
 
-    @ExceptionHandler(RuntimeException.class)
-    public String checkoutFailure(RuntimeException exception, Model model) {
-        String exceptionName = exception.getClass().getSimpleName();
-        if ("AddressNotOwnedException".equals(exceptionName)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Address is not owned");
-        }
-        if (!(exception instanceof EmptyCheckoutException)
-                && !"ProductUnavailableException".equals(exceptionName)
-                && !"InsufficientStockException".equals(exceptionName)) {
-            throw exception;
-        }
+    @ExceptionHandler(OwnedAddressUnavailableException.class)
+    public String addressNotOwned(OwnedAddressUnavailableException exception) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Address is not owned", exception);
+    }
+
+    @ExceptionHandler({
+        EmptyCheckoutException.class,
+        PublishedProductUnavailableException.class,
+        PublishedInsufficientStockException.class
+    })
+    public String checkoutFailure(Model model) {
         CustomerReference customer = currentCustomer();
         addModel(model, customer, new CheckoutForm());
         model.addAttribute("checkoutError", "Some items are no longer available.");

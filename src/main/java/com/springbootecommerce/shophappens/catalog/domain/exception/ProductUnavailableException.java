@@ -7,7 +7,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public final class ProductUnavailableException extends RuntimeException {
+public class ProductUnavailableException extends RuntimeException {
     private final ProductId productId;
     private final Sku sku;
 }

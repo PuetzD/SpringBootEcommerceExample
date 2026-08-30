@@ -62,6 +62,8 @@ class CheckoutRollbackIT extends AbstractIntegrationTest {
                                 seed.customerId(),
                                 checkoutId.value()))
                 .isZero();
+        assertThat(jdbc.queryForObject("select count(*) from integration_outbox", Long.class))
+                .isZero();
         assertThat(
                         jdbc.queryForObject(
                                 "select stock_quantity from product where id = ?",

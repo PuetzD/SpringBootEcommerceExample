@@ -39,11 +39,8 @@ class CategoryQueryServiceTest {
         Category cat2 = restoredCategory(2L, "Books");
         when(categoryRepository.findAll()).thenReturn(List.of(cat1, cat2));
 
-        Product prod1 =
-                restoredProduct(1L, "ELEC-001", "Laptop", "999.99", 5, Set.of(new CategoryId(1L)));
-        Product prod2 =
-                restoredProduct(2L, "BOOK-001", "Novel", "19.99", 10, Set.of(new CategoryId(2L)));
-        when(productRepository.findAllActive()).thenReturn(List.of(prod1, prod2));
+        when(productRepository.countActiveByCategoryId(new CategoryId(1L))).thenReturn(1L);
+        when(productRepository.countActiveByCategoryId(new CategoryId(2L))).thenReturn(1L);
 
         var result = service.findAllActive();
 
@@ -71,9 +68,7 @@ class CategoryQueryServiceTest {
     void findBySlugReturnsSummaryForKnownSlug() {
         Category cat = restoredCategory(1L, "Electronics");
         when(categoryRepository.findBySlug("electronics")).thenReturn(Optional.of(cat));
-        Product prod1 =
-                restoredProduct(1L, "ELEC-001", "Laptop", "999.99", 5, Set.of(new CategoryId(1L)));
-        when(productRepository.findAllActive()).thenReturn(List.of(prod1));
+        when(productRepository.countActiveByCategoryId(new CategoryId(1L))).thenReturn(1L);
 
         var result = service.findBySlug("electronics");
 
@@ -92,7 +87,8 @@ class CategoryQueryServiceTest {
                 restoredProduct(1L, "ELEC-001", "Laptop", "999.99", 5, Set.of(new CategoryId(1L)));
         Product prod2 =
                 restoredProduct(2L, "BOOK-001", "Novel", "19.99", 10, Set.of(new CategoryId(2L)));
-        when(productRepository.findAllActive()).thenReturn(List.of(prod1, prod2));
+        when(productRepository.findActiveByCategoryId(new CategoryId(1L)))
+                .thenReturn(List.of(prod1));
 
         var result = service.findActiveProductsByCategorySlug("electronics");
 

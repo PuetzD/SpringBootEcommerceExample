@@ -33,8 +33,16 @@ class JpaOrderRepositoryAdapter implements OrderRepository {
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<Order> findOwnedByOrderNumber(CustomerId customerId, String orderNumber) {
+        return springData
+                .findByCustomerIdAndOrderNumber(customerId.value(), orderNumber)
+                .map(mapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Order> findAllByCustomer(CustomerId customerId) {
-        return springData.findByCustomerId(customerId.value()).stream()
+        return springData.findByCustomerIdOrderByPlacedAtDescIdDesc(customerId.value()).stream()
                 .map(mapper::toDomain)
                 .toList();
     }

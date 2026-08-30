@@ -9,5 +9,7 @@ interface SpringDataOrderRepository extends JpaRepository<OrderJpaEntity, UUID> 
 
     Optional<OrderJpaEntity> findByCheckoutIdAndCustomerId(UUID checkoutId, long customerId);
 
-    List<OrderJpaEntity> findByCustomerId(long customerId);
+    Optional<OrderJpaEntity> findByCustomerIdAndOrderNumber(long customerId, String orderNumber);
+
+    List<OrderJpaEntity> findByCustomerIdOrderByPlacedAtDescIdDesc(long customerId);
 }

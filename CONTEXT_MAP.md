@@ -21,6 +21,7 @@ Shared presentation support lives in `shared.web` (e.g. `SeoMetadata`, `Canonica
 - **Customer Profile + Catalog + Cart → Ordering**: Ordering obtains customer-owned Address details, the current Cart selection, and current purchasable Product details through context contracts. It stores snapshots rather than foreign aggregates.
 - **Catalog ↔ Ordering**: Catalog and Ordering share the stable meaning of Money. Ordering snapshots the current Catalog price when an Order is placed.
 - **Ordering → Catalog + Cart**: Successful checkout decreases Catalog stock and clears the Cart atomically with Order creation.
+- **Ordering → Integration platform**: Ordering records versioned immutable integration events in its transactional outbox. Kafka publication is asynchronous and post-commit; events expose identifiers and snapshots, never aggregates or persistence entities.
 
 No context shares a persistence entity with another context. Cross-context collaboration uses identifiers, immutable contracts, and application operations.
 

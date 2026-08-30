@@ -70,6 +70,10 @@ class CheckoutIdempotencyIT extends AbstractIntegrationTest {
                                 Integer.class,
                                 seed.productId()))
                 .isEqualTo(CheckoutSeeds.INITIAL_STOCK - CheckoutSeeds.QUANTITY);
+        assertThat(jdbc.queryForObject("select count(*) from integration_outbox", Long.class))
+                .isOne();
+        assertThat(jdbc.queryForObject("select published_at from integration_outbox", Object.class))
+                .isNull();
         assertThat(
                         jdbc.queryForObject(
                                 "select count(*) from customer_cart_item where cart_id = ?",
