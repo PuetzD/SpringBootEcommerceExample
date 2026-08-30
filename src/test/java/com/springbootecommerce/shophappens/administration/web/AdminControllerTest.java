@@ -57,4 +57,10 @@ class AdminControllerTest {
         mockMvc.perform(get("/api/admin/products"))
                 .andExpect(status().is3xxRedirection());
     }
+
+    @Test
+    void fallbackRejectsPathsWithFileExtension() throws Exception {
+        mockMvc.perform(get("/admin/missing-font.woff").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isNotFound());
+    }
 }

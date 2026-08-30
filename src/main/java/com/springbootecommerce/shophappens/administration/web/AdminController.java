@@ -3,9 +3,12 @@ package com.springbootecommerce.shophappens.administration.web;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdministrationUseCase;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdministrationUseCase;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.server.ResponseStatusException;
 
 @RequiredArgsConstructor
 @Controller
@@ -52,7 +55,10 @@ public class AdminController {
     }
 
     @GetMapping("/{*path}")
-    public String fallback() {
+    public String fallback(@PathVariable String path) {
+        if (path.contains(".")) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
         return "forward:/admin/index.html";
     }
 }
