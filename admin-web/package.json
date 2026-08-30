@@ -7,7 +7,7 @@
     "build": "tsc && vite build",
     "dev": "vite",
     "preview": "vite preview",
-    "test": "echo \"No admin tests configured\""
+    "test": "vitest run"
   },
   "dependencies": {
     "react": "^19.1.0",
@@ -15,10 +15,13 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.8",
+    "@testing-library/react": "^16.0.0",
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.5.2",
+    "jsdom": "^25.0.0",
     "typescript": "~5.8.3",
-    "vite": "^6.3.5"
+    "vite": "^6.3.5",
+    "vitest": "^3.0.0"
   }
 }
