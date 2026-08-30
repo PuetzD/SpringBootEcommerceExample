@@ -5,8 +5,8 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.ProductRe
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductSummary;
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductRepository;
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
-import com.springbootecommerce.shophappens.catalog.domain.model.ProductId;
 import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;

@@ -1,7 +1,7 @@
 package com.springbootecommerce.shophappens.catalog.domain.exception;
 
-import com.springbootecommerce.shophappens.catalog.domain.model.ProductId;
 import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 
 public final class ProductUnavailableException extends RuntimeException {
     private final ProductId productId;

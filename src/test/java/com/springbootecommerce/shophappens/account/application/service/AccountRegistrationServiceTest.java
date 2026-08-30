@@ -12,11 +12,11 @@ import com.springbootecommerce.shophappens.account.application.port.out.AccountR
 import com.springbootecommerce.shophappens.account.application.port.out.CreateCustomerProfilePort;
 import com.springbootecommerce.shophappens.account.application.port.out.PasswordHasher;
 import com.springbootecommerce.shophappens.account.domain.model.Account;
-import com.springbootecommerce.shophappens.account.domain.model.AccountId;
 import com.springbootecommerce.shophappens.account.domain.model.Email;
 import com.springbootecommerce.shophappens.account.domain.model.PasswordHash;
 import com.springbootecommerce.shophappens.account.domain.model.Role;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
+import com.springbootecommerce.shophappens.sharedkernel.identity.AccountId;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;

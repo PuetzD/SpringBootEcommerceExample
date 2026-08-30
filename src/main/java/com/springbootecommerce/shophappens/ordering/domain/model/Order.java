@@ -1,6 +1,7 @@
 package com.springbootecommerce.shophappens.ordering.domain.model;
 
 import com.springbootecommerce.shophappens.ordering.domain.exception.EmptyCheckoutException;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.time.Instant;
 import java.util.List;

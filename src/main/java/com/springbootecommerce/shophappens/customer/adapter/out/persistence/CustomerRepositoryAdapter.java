@@ -1,9 +1,9 @@
 package com.springbootecommerce.shophappens.customer.adapter.out.persistence;
 
 import com.springbootecommerce.shophappens.customer.application.port.out.CustomerRepository;
-import com.springbootecommerce.shophappens.customer.domain.model.AccountId;
 import com.springbootecommerce.shophappens.customer.domain.model.Customer;
-import com.springbootecommerce.shophappens.customer.domain.model.CustomerId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.AccountId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import java.util.Optional;
 import org.springframework.stereotype.Repository;
 

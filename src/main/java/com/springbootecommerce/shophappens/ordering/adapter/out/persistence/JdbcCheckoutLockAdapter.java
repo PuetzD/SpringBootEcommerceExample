@@ -2,7 +2,7 @@ package com.springbootecommerce.shophappens.ordering.adapter.out.persistence;
 
 import com.springbootecommerce.shophappens.ordering.application.port.out.CheckoutLock;
 import com.springbootecommerce.shophappens.ordering.domain.model.CheckoutId;
-import com.springbootecommerce.shophappens.ordering.domain.model.CustomerId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 

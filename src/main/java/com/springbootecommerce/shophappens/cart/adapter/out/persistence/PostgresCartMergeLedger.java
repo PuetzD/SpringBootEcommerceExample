@@ -1,8 +1,8 @@
 package com.springbootecommerce.shophappens.cart.adapter.out.persistence;
 
 import com.springbootecommerce.shophappens.cart.application.port.out.CartMergeLedger;
-import com.springbootecommerce.shophappens.cart.domain.model.CustomerId;
 import com.springbootecommerce.shophappens.cart.domain.model.GuestCartId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 

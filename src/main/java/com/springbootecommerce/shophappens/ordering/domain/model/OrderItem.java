@@ -1,5 +1,6 @@
 package com.springbootecommerce.shophappens.ordering.domain.model;
 
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.util.Objects;
 

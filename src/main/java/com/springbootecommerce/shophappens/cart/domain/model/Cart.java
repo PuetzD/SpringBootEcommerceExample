@@ -1,6 +1,7 @@
 package com.springbootecommerce.shophappens.cart.domain.model;
 
 import com.springbootecommerce.shophappens.cart.domain.exception.CartItemNotFoundException;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import java.util.List;
 import java.util.TreeMap;
 
