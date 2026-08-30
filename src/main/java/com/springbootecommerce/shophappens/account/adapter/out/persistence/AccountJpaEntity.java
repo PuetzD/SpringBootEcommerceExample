@@ -14,8 +14,12 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.time.OffsetDateTime;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "account")
@@ -55,29 +59,5 @@ class AccountJpaEntity {
         entity.role = role;
         entity.enabled = enabled;
         return entity;
-    }
-
-    Long getId() {
-        return id;
-    }
-
-    void setId(Long id) {
-        this.id = id;
-    }
-
-    String getEmail() {
-        return email;
-    }
-
-    String getPasswordHash() {
-        return passwordHash;
-    }
-
-    Role getRole() {
-        return role;
-    }
-
-    boolean isEnabled() {
-        return enabled;
     }
 }

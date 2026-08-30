@@ -23,6 +23,6 @@ public class AccessDeniedController {
 
         model.addAttribute("seo", seo);
         model.addAttribute("canonicalUrl", canonicalUrlFactory.forPath(seo.canonicalPath()));
-        return "403";
+        return "storefront/403";
     }
 }

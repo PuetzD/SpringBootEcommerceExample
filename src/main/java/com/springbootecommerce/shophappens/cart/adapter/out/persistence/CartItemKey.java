@@ -4,25 +4,20 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Embeddable
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
 class CartItemKey {
     @Column(name = "cart_id")
     private UUID cartId;
 
     @Column(name = "product_id")
     private long productId;
-
-    CartItemKey() {}
-
-    CartItemKey(UUID cartId, long productId) {
-        this.cartId = cartId;
-        this.productId = productId;
-    }
-
-    long getProductId() {
-        return productId;
-    }
 
     @Override
     public boolean equals(Object o) {

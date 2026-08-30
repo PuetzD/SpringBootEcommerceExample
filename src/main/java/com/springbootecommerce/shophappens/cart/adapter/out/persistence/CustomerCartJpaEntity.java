@@ -10,9 +10,16 @@ import jakarta.persistence.Version;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "customer_cart")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 class CustomerCartJpaEntity {
     @Id
     @Column(name = "id")
@@ -28,25 +35,11 @@ class CustomerCartJpaEntity {
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CustomerCartItemJpaEntity> items = new ArrayList<>();
 
-    CustomerCartJpaEntity() {}
-
     static CustomerCartJpaEntity create(UUID id, long customerId) {
         var entity = new CustomerCartJpaEntity();
         entity.id = id;
         entity.customerId = customerId;
         return entity;
-    }
-
-    UUID getId() {
-        return id;
-    }
-
-    long getCustomerId() {
-        return customerId;
-    }
-
-    long getVersion() {
-        return version;
     }
 
     List<CustomerCartItemJpaEntity> getItems() {

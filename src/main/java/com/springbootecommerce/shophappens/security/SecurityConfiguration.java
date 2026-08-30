@@ -57,7 +57,11 @@ public class SecurityConfiguration {
                                                 "/images/**",
                                                 "/favicon.ico")
                                         .permitAll()
-                                        .requestMatchers("/account/**", "/profile/**", "/order/**")
+                                        .requestMatchers(
+                                                "/account/**",
+                                                "/profile/**",
+                                                "/checkout/**",
+                                                "/orders/**")
                                         .hasRole("CUSTOMER")
                                         .anyRequest()
                                         .authenticated())

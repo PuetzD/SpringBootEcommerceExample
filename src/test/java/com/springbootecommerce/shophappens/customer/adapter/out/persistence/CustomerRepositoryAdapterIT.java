@@ -4,10 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.springbootecommerce.shophappens.customer.application.port.out.CustomerRepository;
-import com.springbootecommerce.shophappens.customer.domain.model.AccountId;
 import com.springbootecommerce.shophappens.customer.domain.model.AddressDetails;
 import com.springbootecommerce.shophappens.customer.domain.model.Customer;
 import com.springbootecommerce.shophappens.integration.AbstractIntegrationTest;
+import com.springbootecommerce.shophappens.sharedkernel.identity.AccountId;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;

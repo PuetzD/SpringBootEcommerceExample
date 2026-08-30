@@ -10,18 +10,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.UUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class CartMergingAuthenticationSuccessHandler
         extends SavedRequestAwareAuthenticationSuccessHandler {
-
-    private static final Logger LOG =
-            LoggerFactory.getLogger(CartMergingAuthenticationSuccessHandler.class);
 
     private final MergeGuestCartUseCase mergeGuestCart;
     private final CustomerReferenceQuery customers;
@@ -53,7 +50,7 @@ public class CartMergingAuthenticationSuccessHandler
                                                     customer));
                 }
             } catch (RuntimeException ex) {
-                LOG.warn("Could not merge guest cart after login; guest cart will be dropped.", ex);
+                log.warn("Could not merge guest cart after login; guest cart will be dropped.", ex);
             }
             request.getSession().removeAttribute(GuestCartReference.SESSION_ATTRIBUTE);
         }

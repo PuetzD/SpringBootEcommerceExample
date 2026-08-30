@@ -10,11 +10,18 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "address")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 class AddressJpaEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -63,8 +70,6 @@ class AddressJpaEntity {
     @Column(name = "version")
     private long version;
 
-    AddressJpaEntity() {}
-
     static AddressJpaEntity create(
             String recipientName,
             String companyName,
@@ -90,61 +95,5 @@ class AddressJpaEntity {
         entity.defaultShipping = defaultShipping;
         entity.defaultBilling = defaultBilling;
         return entity;
-    }
-
-    void setId(Long id) {
-        this.id = id;
-    }
-
-    void setCustomer(CustomerJpaEntity customer) {
-        this.customer = customer;
-    }
-
-    Long getId() {
-        return id;
-    }
-
-    String getRecipientName() {
-        return recipientName;
-    }
-
-    String getCompanyName() {
-        return companyName;
-    }
-
-    String getAddressLine1() {
-        return addressLine1;
-    }
-
-    String getAddressLine2() {
-        return addressLine2;
-    }
-
-    String getCity() {
-        return city;
-    }
-
-    String getRegion() {
-        return region;
-    }
-
-    String getPostalCode() {
-        return postalCode;
-    }
-
-    String getCountryCode() {
-        return countryCode;
-    }
-
-    String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    boolean isDefaultShipping() {
-        return defaultShipping;
-    }
-
-    boolean isDefaultBilling() {
-        return defaultBilling;
     }
 }

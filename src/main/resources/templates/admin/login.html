@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin sign in</title>
+  <link rel="stylesheet" th:href="@{/css/output.css}">
+</head>
+<body class="min-h-screen flex items-center justify-center bg-base-200">
+  <div class="w-full max-w-sm px-4">
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <div class="flex justify-center mb-2">
+          <div class="w-12 h-12 rounded-full bg-primary text-primary-content flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+        </div>
+        <h2 class="card-title justify-center text-2xl font-bold mb-1">Admin sign in</h2>
+        <p class="text-center text-base-content/60 text-sm mb-4">Sign in to access the administration panel</p>
+
+        <p th:if="${param.error}" class="text-error text-sm text-center mb-2">Invalid email or password.</p>
+        <p th:if="${param.logout}" class="text-success text-sm text-center mb-2">You have been signed out.</p>
+
+        <form th:action="@{/admin/login}" method="post">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+          <fieldset class="fieldset">
+            <label class="fieldset-legend">Email</label>
+            <input type="email" name="username" class="input" placeholder="admin@example.com" autocomplete="email" required />
+            <label class="fieldset-legend mt-4">Password</label>
+            <input type="password" name="password" class="input" placeholder="Enter your password" autocomplete="current-password" required />
+            <button type="submit" class="btn btn-primary mt-6 w-full">Sign in</button>
+          </fieldset>
+        </form>
+      </div>
+    </div>
+    <p class="text-center text-base-content/50 text-xs mt-4">&copy; 2026 Shop Happens</p>
+  </div>
+</body>
+</html>

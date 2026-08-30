@@ -3,6 +3,7 @@ package com.springbootecommerce.shophappens.catalog.adapter.in.web;
 import com.springbootecommerce.shophappens.catalog.application.port.in.BrowseCatalogUseCase;
 import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
 import com.springbootecommerce.shophappens.shared.web.SeoMetadata;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,18 +14,13 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Controller
 @RequestMapping("/catalog")
+@RequiredArgsConstructor
 public class CatalogController {
     private static final String LIST_TITLE = "Products";
     private static final String LIST_DESCRIPTION = "Browse the E-Shop catalog.";
 
     private final BrowseCatalogUseCase catalog;
     private final CanonicalUrlFactory canonicalUrlFactory;
-
-    public CatalogController(
-            BrowseCatalogUseCase catalog, CanonicalUrlFactory canonicalUrlFactory) {
-        this.catalog = catalog;
-        this.canonicalUrlFactory = canonicalUrlFactory;
-    }
 
     @GetMapping
     public String list(Model model) {

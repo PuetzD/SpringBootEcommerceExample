@@ -3,30 +3,23 @@ package com.springbootecommerce.shophappens.catalog.adapter.out.persistence;
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductRepository;
 import com.springbootecommerce.shophappens.catalog.domain.model.CategoryId;
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
-import com.springbootecommerce.shophappens.catalog.domain.model.ProductId;
 import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
+@RequiredArgsConstructor
 class ProductRepositoryAdapter implements ProductRepository {
     private final SpringDataProductRepository springData;
     private final SpringDataCategoryRepository categories;
     private final CatalogPersistenceMapper mapper;
-
-    ProductRepositoryAdapter(
-            SpringDataProductRepository springData,
-            SpringDataCategoryRepository categories,
-            CatalogPersistenceMapper mapper) {
-        this.springData = springData;
-        this.categories = categories;
-        this.mapper = mapper;
-    }
 
     @Override
     @Transactional(readOnly = true)
@@ -44,6 +37,20 @@ class ProductRepositoryAdapter implements ProductRepository {
     @Transactional(readOnly = true)
     public Optional<Product> findActiveBySku(Sku sku) {
         return springData.findBySkuAndActiveTrue(sku.value()).map(mapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countActiveByCategoryId(CategoryId categoryId) {
+        return springData.countActiveByCategoryId(categoryId.value());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Product> findActiveByCategoryId(CategoryId categoryId) {
+        return springData.findActiveByCategoryId(categoryId.value()).stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 
     @Override

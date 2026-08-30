@@ -11,11 +11,12 @@ JPA, PostgreSQL/Flyway, Redis, Tailwind CSS 4, and daisyUI.
   contexts, their language, and their contracts. Read a context's document
   before working in its source package.
 - `src/main/java/com/springbootecommerce/shophappens/`
-  - Each bounded context (`account/`, `customer/`, `catalog/`, `cart/`) is
-    layered `domain/` → `application/` (ports + services) → `adapter/{in,out}/`
-    and collaborates only through published `application.port.in` contracts.
-    `ordering/` is specified in `contexts/ordering/CONTEXT.md` but not yet
-    implemented.
+  - Each bounded context (`account/`, `customer/`, `catalog/`, `cart/`,
+    `ordering/`) is layered `domain/` → `application/` (ports + services) →
+    `adapter/{in,out}/` and collaborates only through published
+    `application.port.in` contracts. `ordering/` is implemented at the domain,
+    application, and adapter layers; the end-user checkout web flow (controller
+    and templates) is not yet wired.
   - `security/`: Spring Security wiring and login/access-denied endpoints
   - `storefront/`: public storefront controllers
   - `shared/`: context-free web presentation support (SEO metadata, canonical URLs)

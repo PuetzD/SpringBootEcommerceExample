@@ -4,6 +4,7 @@ import com.springbootecommerce.shophappens.account.application.port.in.Authentic
 import com.springbootecommerce.shophappens.account.application.port.in.AuthenticationAccount;
 import com.springbootecommerce.shophappens.account.application.port.in.AuthenticationRole;
 import com.springbootecommerce.shophappens.account.domain.model.Email;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,12 +13,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class AccountUserDetailsService implements UserDetailsService {
     private final AuthenticateAccountQuery accounts;
-
-    public AccountUserDetailsService(AuthenticateAccountQuery accounts) {
-        this.accounts = accounts;
-    }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

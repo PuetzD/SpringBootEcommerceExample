@@ -57,9 +57,9 @@
         Your cart is empty.
       </p>
 
-      <p class="mt-8" th:if="${!cartEmpty and customer != null}">
-        <a th:href="@{/order/checkout}" class="btn btn-primary">Checkout</a>
-      </p>
+        <p class="mt-8" th:if="${!cartEmpty and customer != null}">
+          <a th:href="@{/checkout}" class="btn btn-primary">Checkout</a>
+        </p>
     </div>
   </main>
   <th:block id="page-scripts"></th:block>

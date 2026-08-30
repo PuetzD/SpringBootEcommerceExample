@@ -45,7 +45,8 @@ src/main/resources/static/css/output.css
 ### ai
 /.agents/
 .worktrees/
+.superpowers/
 /docs/superpowers/
-/.codex/config.toml
-
-/.qwen/skills/
+.codex/config.toml
+.qwen/skills/
+.kilo/
