@@ -51,6 +51,26 @@ class ArchitectureRulesTest {
     }
 
     @Test
+    void applicationClassesBelongToKnownArchitecturalSlices() {
+        List<String> violations = new java.util.ArrayList<>();
+        for (JavaClass clazz : imported) {
+            if (!clazz.getPackageName().startsWith(ROOT)) {
+                continue;
+            }
+            boolean isKnownTopLevelSlice =
+                    PROTECTED_SLICES.stream()
+                            .map(context -> ROOT + "." + context)
+                            .anyMatch(clazz.getPackageName()::equals);
+            if (sliceOf(clazz) == null
+                    && !clazz.getPackageName().equals(ROOT)
+                    && !isKnownTopLevelSlice) {
+                violations.add(clazz.getName() + " is outside all known architectural slices");
+            }
+        }
+        assertThat(violations).isEmpty();
+    }
+
+    @Test
     void domainAndSharedKernelAreFrameworkFree() {
         noClasses()
                 .that()
