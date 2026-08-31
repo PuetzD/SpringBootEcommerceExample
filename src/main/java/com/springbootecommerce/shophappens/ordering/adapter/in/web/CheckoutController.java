@@ -1,10 +1,9 @@
 package com.springbootecommerce.shophappens.ordering.adapter.in.web;
 
-import com.springbootecommerce.shophappens.catalog.application.port.in.PublishedInsufficientStockException;
-import com.springbootecommerce.shophappens.catalog.application.port.in.PublishedProductUnavailableException;
 import com.springbootecommerce.shophappens.customer.application.port.in.CurrentCustomerIdentity;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
-import com.springbootecommerce.shophappens.customer.application.port.in.OwnedAddressUnavailableException;
+import com.springbootecommerce.shophappens.ordering.application.exception.CheckoutAddressUnavailableException;
+import com.springbootecommerce.shophappens.ordering.application.exception.CheckoutItemUnavailableException;
 import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutPreparation;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderCommand;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderUseCase;
@@ -16,6 +15,7 @@ import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -65,16 +65,12 @@ public class CheckoutController {
         return "redirect:/orders/" + result.orderNumber();
     }
 
-    @ExceptionHandler(OwnedAddressUnavailableException.class)
-    public String addressNotOwned(OwnedAddressUnavailableException exception) {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Address is not owned", exception);
+    @ExceptionHandler(CheckoutAddressUnavailableException.class)
+    public ResponseEntity<Void> addressNotOwned() {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
-    @ExceptionHandler({
-        EmptyCheckoutException.class,
-        PublishedProductUnavailableException.class,
-        PublishedInsufficientStockException.class
-    })
+    @ExceptionHandler({EmptyCheckoutException.class, CheckoutItemUnavailableException.class})
     public String checkoutFailure(Model model) {
         CustomerReference customer = currentCustomerOrThrow();
         addModel(model, customer, new CheckoutForm());

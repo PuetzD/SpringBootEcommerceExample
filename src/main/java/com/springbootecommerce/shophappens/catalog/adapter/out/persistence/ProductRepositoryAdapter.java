@@ -28,6 +28,12 @@ class ProductRepositoryAdapter implements ProductRepository {
     }
 
     @Override
+    @Transactional
+    public Optional<Product> findForPurchase(ProductId id) {
+        return springData.findForPurchaseById(id.value()).map(mapper::toDomain);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Optional<Product> findActiveById(ProductId id) {
         return springData.findByIdAndActiveTrue(id.value()).map(mapper::toDomain);

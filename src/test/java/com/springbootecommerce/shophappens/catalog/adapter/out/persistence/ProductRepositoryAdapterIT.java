@@ -7,6 +7,7 @@ import com.springbootecommerce.shophappens.catalog.domain.model.CategoryId;
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
 import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
 import com.springbootecommerce.shophappens.integration.AbstractIntegrationTest;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
 import java.util.Comparator;
@@ -42,6 +43,18 @@ class ProductRepositoryAdapterIT extends AbstractIntegrationTest {
 
         assertThat(products.findById(product.id().orElseThrow()).orElseThrow().stockQuantity())
                 .isEqualTo(before - 1);
+    }
+
+    @Test
+    void findForPurchaseLocksAndRestoresDetailedAggregateWithinAdapterTransaction() {
+        Product seeded =
+                seedProduct("FIX-LOCK", "Concurrency Staff", new Money(new BigDecimal("79.99")), 1);
+
+        Product product = products.findForPurchase(seeded.id().orElseThrow()).orElseThrow();
+
+        assertThat(product.id()).contains(new ProductId(seeded.id().orElseThrow().value()));
+        assertThat(product.categoryIds()).containsExactlyElementsOf(seeded.categoryIds());
+        assertThat(product.stockQuantity()).isOne();
     }
 
     @Test

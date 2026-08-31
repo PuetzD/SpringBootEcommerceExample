@@ -6,12 +6,15 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 import com.springbootecommerce.shophappens.customer.application.port.in.CurrentCustomerIdentity;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
+import com.springbootecommerce.shophappens.ordering.application.exception.CheckoutAddressUnavailableException;
+import com.springbootecommerce.shophappens.ordering.application.exception.CheckoutItemUnavailableException;
 import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutPreparation;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderReference;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderUseCase;
@@ -81,5 +84,40 @@ class CheckoutControllerTest {
                                 .param("billingAddressId", "12"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/orders/ORD-20260830-ABCDEF123456"));
+    }
+
+    @Test
+    void orderingAddressFailureReturnsForbidden() throws Exception {
+        when(orders.place(any()))
+                .thenThrow(
+                        new CheckoutAddressUnavailableException(
+                                "Address is unavailable", new IllegalStateException("customer")));
+
+        submitValidCheckout().andExpect(status().isForbidden());
+    }
+
+    @Test
+    void orderingItemFailureRendersCheckoutAvailabilityMessage() throws Exception {
+        when(orders.place(any()))
+                .thenThrow(
+                        new CheckoutItemUnavailableException(
+                                "Item is unavailable", new IllegalStateException("catalog")));
+
+        submitValidCheckout()
+                .andExpect(status().isOk())
+                .andExpect(view().name("ordering/checkout"))
+                .andExpect(
+                        model().attribute("checkoutError", "Some items are no longer available."));
+    }
+
+    private org.springframework.test.web.servlet.ResultActions submitValidCheckout()
+            throws Exception {
+        return mvc.perform(
+                post("/checkout")
+                        .with(user("customer").roles("CUSTOMER"))
+                        .with(csrf())
+                        .param("checkoutId", UUID.randomUUID().toString())
+                        .param("shippingAddressId", "11")
+                        .param("billingAddressId", "12"));
     }
 }

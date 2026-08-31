@@ -95,9 +95,7 @@ class ArchitectureRulesTest {
                     .should()
                     .onlyDependOnClassesThat()
                     .resideInAnyPackage(
-                            ROOT + "." + context + ".domain..",
-                            ROOT + ".sharedkernel..",
-                            "java..")
+                            ROOT + "." + context + ".domain..", ROOT + ".sharedkernel..", "java..")
                     .check(imported);
         }
     }
@@ -259,6 +257,31 @@ class ArchitectureRulesTest {
                                     + " -> "
                                     + to
                                     + ", not application.port.in)");
+                }
+            }
+        }
+        assertThat(violations).isEmpty();
+    }
+
+    @Test
+    void inboundWebAdaptersDoNotUseAnotherContextsDomainOrExceptionTypes() {
+        List<String> violations = new java.util.ArrayList<>();
+        for (JavaClass clazz : imported) {
+            String from = sliceOf(clazz);
+            if (from == null
+                    || !BOUNDED_CONTEXTS.contains(from)
+                    || !clazz.getPackageName().contains(".adapter.in.web")) {
+                continue;
+            }
+            for (var dependency : clazz.getDirectDependenciesFromSelf()) {
+                JavaClass target = dependency.getTargetClass();
+                String to = sliceOf(target);
+                if (to == null || from.equals(to) || !BOUNDED_CONTEXTS.contains(to)) {
+                    continue;
+                }
+                if (target.getPackageName().contains(".domain.")
+                        || target.getSimpleName().endsWith("Exception")) {
+                    violations.add(clazz.getName() + " -> " + target.getName());
                 }
             }
         }

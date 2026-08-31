@@ -4,6 +4,8 @@ import com.springbootecommerce.shophappens.customer.application.port.in.AddressR
 import com.springbootecommerce.shophappens.customer.application.port.in.AddressSnapshot;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.OwnedAddressQuery;
+import com.springbootecommerce.shophappens.customer.application.port.in.OwnedAddressUnavailableException;
+import com.springbootecommerce.shophappens.ordering.application.exception.CheckoutAddressUnavailableException;
 import com.springbootecommerce.shophappens.ordering.application.port.out.AvailableAddress;
 import com.springbootecommerce.shophappens.ordering.application.port.out.CustomerAddressGateway;
 import com.springbootecommerce.shophappens.ordering.domain.model.AddressRole;
@@ -20,16 +22,12 @@ public class CustomerAddressGatewayAdapter implements CustomerAddressGateway {
 
     @Override
     public OrderAddress shipping(CustomerId customerId, long addressId) {
-        return toOrderAddress(
-                AddressRole.SHIPPING,
-                addresses.getOwned(toCustomer(customerId), new AddressReference(addressId)));
+        return toOrderAddress(AddressRole.SHIPPING, owned(customerId, addressId));
     }
 
     @Override
     public OrderAddress billing(CustomerId customerId, long addressId) {
-        return toOrderAddress(
-                AddressRole.BILLING,
-                addresses.getOwned(toCustomer(customerId), new AddressReference(addressId)));
+        return toOrderAddress(AddressRole.BILLING, owned(customerId, addressId));
     }
 
     @Override
@@ -50,6 +48,15 @@ public class CustomerAddressGatewayAdapter implements CustomerAddressGateway {
 
     private CustomerReference toCustomer(CustomerId customerId) {
         return new CustomerReference(customerId.value());
+    }
+
+    private AddressSnapshot owned(CustomerId customerId, long addressId) {
+        try {
+            return addresses.getOwned(toCustomer(customerId), new AddressReference(addressId));
+        } catch (OwnedAddressUnavailableException exception) {
+            throw new CheckoutAddressUnavailableException(
+                    "A checkout address is unavailable", exception);
+        }
     }
 
     private OrderAddress toOrderAddress(AddressRole role, AddressSnapshot snapshot) {

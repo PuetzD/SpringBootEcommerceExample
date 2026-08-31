@@ -38,7 +38,7 @@ public class CatalogPurchaseService implements PurchaseProductsUseCase {
                         line -> {
                             Product product =
                                     productRepository
-                                            .findById(new ProductId(line.product().value()))
+                                            .findForPurchase(new ProductId(line.product().value()))
                                             .orElseThrow(
                                                     () ->
                                                             new PublishedProductUnavailableException(

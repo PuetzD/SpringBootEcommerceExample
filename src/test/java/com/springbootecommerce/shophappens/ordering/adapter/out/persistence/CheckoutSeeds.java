@@ -14,6 +14,9 @@ class CheckoutSeeds {
             UUID cartId,
             int initialStock) {}
 
+    record CustomerCartSeed(
+            long customerId, long shippingAddressId, long billingAddressId, UUID cartId) {}
+
     static final BigDecimal PRODUCT_PRICE = new BigDecimal("19.99");
     static final int INITIAL_STOCK = 10;
     static final int QUANTITY = 3;
@@ -21,6 +24,32 @@ class CheckoutSeeds {
     private CheckoutSeeds() {}
 
     static Seed seed(JdbcTemplate jdbc) {
+        long productId = seedProduct(jdbc, INITIAL_STOCK);
+        CustomerCartSeed customer = seedCustomerCart(jdbc, productId, QUANTITY);
+        return new Seed(
+                customer.customerId(),
+                customer.shippingAddressId(),
+                customer.billingAddressId(),
+                productId,
+                customer.cartId(),
+                INITIAL_STOCK);
+    }
+
+    static long seedProduct(JdbcTemplate jdbc, int initialStock) {
+        UUID skuTag = UUID.randomUUID();
+        return jdbc.queryForObject(
+                """
+                insert into product (sku, name, price, stock_quantity, active)
+                values (?, ?, ?, ?, true) returning id
+                """,
+                Long.class,
+                "ELEC-001-" + skuTag.toString().substring(0, 8),
+                "Headphones",
+                PRODUCT_PRICE,
+                initialStock);
+    }
+
+    static CustomerCartSeed seedCustomerCart(JdbcTemplate jdbc, long productId, int quantity) {
         UUID emailTag = UUID.randomUUID();
         Long accountId =
                 jdbc.queryForObject(
@@ -66,17 +95,6 @@ class CheckoutSeeds {
                         "Metropolis",
                         "10001",
                         "US");
-        Long productId =
-                jdbc.queryForObject(
-                        """
-                        insert into product (sku, name, price, stock_quantity, active)
-                        values (?, ?, ?, ?, true) returning id
-                        """,
-                        Long.class,
-                        "ELEC-001-" + emailTag.toString().substring(0, 8),
-                        "Headphones",
-                        PRODUCT_PRICE,
-                        INITIAL_STOCK);
         UUID cartId = UUID.randomUUID();
         jdbc.update(
                 "insert into customer_cart (id, customer_id) values (?, ?)", cartId, customerId);
@@ -84,8 +102,7 @@ class CheckoutSeeds {
                 "insert into customer_cart_item (cart_id, product_id, quantity) values (?, ?, ?)",
                 cartId,
                 productId,
-                QUANTITY);
-        return new Seed(
-                customerId, shippingAddressId, billingAddressId, productId, cartId, INITIAL_STOCK);
+                quantity);
+        return new CustomerCartSeed(customerId, shippingAddressId, billingAddressId, cartId);
     }
 }

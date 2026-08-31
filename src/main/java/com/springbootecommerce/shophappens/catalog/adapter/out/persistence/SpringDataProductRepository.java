@@ -1,14 +1,21 @@
 package com.springbootecommerce.shophappens.catalog.adapter.out.persistence;
 
+import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 interface SpringDataProductRepository extends JpaRepository<ProductJpaEntity, Long> {
     @EntityGraph(attributePaths = "categories")
     Optional<ProductJpaEntity> findDetailedById(Long id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from ProductJpaEntity p where p.id = :id")
+    Optional<ProductJpaEntity> findForPurchaseById(@Param("id") Long id);
 
     @EntityGraph(attributePaths = "categories")
     Optional<ProductJpaEntity> findByIdAndActiveTrue(Long id);

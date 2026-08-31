@@ -1,9 +1,12 @@
 package com.springbootecommerce.shophappens.ordering.adapter.out.catalog;
 
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
+import com.springbootecommerce.shophappens.catalog.application.port.in.PublishedInsufficientStockException;
+import com.springbootecommerce.shophappens.catalog.application.port.in.PublishedProductUnavailableException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PurchaseLine;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PurchaseProductsUseCase;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PurchasedProductSnapshot;
+import com.springbootecommerce.shophappens.ordering.application.exception.CheckoutItemUnavailableException;
 import com.springbootecommerce.shophappens.ordering.application.port.out.CatalogPurchaseGateway;
 import com.springbootecommerce.shophappens.ordering.application.port.out.PurchasedProduct;
 import com.springbootecommerce.shophappens.ordering.application.port.out.RequestedProduct;
@@ -29,7 +32,13 @@ public class CatalogPurchaseGatewayAdapter implements CatalogPurchaseGateway {
                                                 new ProductReference(p.productId().value()),
                                                 p.quantity()))
                         .toList();
-        List<PurchasedProductSnapshot> snapshots = purchaseProducts.purchase(lines);
+        List<PurchasedProductSnapshot> snapshots;
+        try {
+            snapshots = purchaseProducts.purchase(lines);
+        } catch (PublishedProductUnavailableException
+                | PublishedInsufficientStockException exception) {
+            throw new CheckoutItemUnavailableException("A checkout item is unavailable", exception);
+        }
         validateMatchesRequested(products, snapshots);
         return snapshots.stream()
                 .map(
