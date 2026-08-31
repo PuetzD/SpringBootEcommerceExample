@@ -127,4 +127,15 @@ class CartMergingAuthenticationSuccessHandlerTest {
         assertThat(session.getAttribute(GuestCartReference.SESSION_ATTRIBUTE)).isNull();
         assertThat(response.getRedirectedUrl()).isEqualTo("/");
     }
+
+    @Test
+    void malformedNonStringGuestCartIdentifierIsRemovedWithoutCallingMerge() throws Exception {
+        session.setAttribute(GuestCartReference.SESSION_ATTRIBUTE, Integer.valueOf(7));
+
+        handler.onAuthenticationSuccess(request, response, authentication);
+
+        verify(mergeGuestCart, never()).merge(any(), any());
+        assertThat(session.getAttribute(GuestCartReference.SESSION_ATTRIBUTE)).isNull();
+        assertThat(response.getRedirectedUrl()).isEqualTo("/");
+    }
 }

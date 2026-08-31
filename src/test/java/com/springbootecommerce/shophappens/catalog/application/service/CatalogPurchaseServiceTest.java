@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
+import com.springbootecommerce.shophappens.catalog.application.port.in.PublishedProductUnavailableException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PurchaseLine;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PurchasedProductSnapshot;
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductRepository;
@@ -89,6 +90,20 @@ class CatalogPurchaseServiceTest {
                                 service.purchase(
                                         List.of(new PurchaseLine(new ProductReference(7L), 1))))
                 .isInstanceOf(ProductUnavailableException.class);
+        verify(products, never()).save(any());
+    }
+
+    @Test
+    void purchaseThrowsPublishedProductUnavailableWhenProductInactive() {
+        Product product = restoredProduct(7L, "WEAP-002", "Rubber Duck of Debugging", "18.99", 5);
+        product.deactivate();
+        when(products.findForPurchase(new ProductId(7L))).thenReturn(Optional.of(product));
+
+        assertThatThrownBy(
+                        () ->
+                                service.purchase(
+                                        List.of(new PurchaseLine(new ProductReference(7L), 1))))
+                .isInstanceOf(PublishedProductUnavailableException.class);
         verify(products, never()).save(any());
     }
 

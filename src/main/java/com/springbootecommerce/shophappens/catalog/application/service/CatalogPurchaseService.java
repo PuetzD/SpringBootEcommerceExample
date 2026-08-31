@@ -7,6 +7,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.PurchaseL
 import com.springbootecommerce.shophappens.catalog.application.port.in.PurchaseProductsUseCase;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PurchasedProductSnapshot;
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductRepository;
+import com.springbootecommerce.shophappens.catalog.domain.exception.ProductUnavailableException;
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
 import com.springbootecommerce.shophappens.catalog.domain.model.PurchasedFacts;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
@@ -49,6 +50,9 @@ public class CatalogPurchaseService implements PurchaseProductsUseCase {
                                 PurchasedFacts facts = product.purchase(line.quantity());
                                 productRepository.save(product);
                                 return toSnapshot(facts);
+                            } catch (ProductUnavailableException exception) {
+                                throw new PublishedProductUnavailableException(
+                                        exception.getProductId(), exception.getSku());
                             } catch (
                                     com.springbootecommerce.shophappens.catalog.domain.exception
                                                     .InsufficientStockException

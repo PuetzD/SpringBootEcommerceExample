@@ -38,7 +38,16 @@ public class CartMergingAuthenticationSuccessHandler
             @NonNull Authentication authentication)
             throws IOException, ServletException {
         Object stored = request.getSession().getAttribute(GuestCartReference.SESSION_ATTRIBUTE);
-        if (stored instanceof String guestUuid) {
+        if (stored == null) {
+            super.onAuthenticationSuccess(request, response, authentication);
+            return;
+        }
+        if (!(stored instanceof String guestUuid)) {
+            request.getSession().removeAttribute(GuestCartReference.SESSION_ATTRIBUTE);
+            super.onAuthenticationSuccess(request, response, authentication);
+            return;
+        }
+        {
             GuestCartReference guest;
             try {
                 guest = new GuestCartReference(UUID.fromString(guestUuid));
