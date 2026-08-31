@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   base: './',
   build: {
-    outDir: '../../src/main/resources/static/admin',
+    outDir: '../src/main/resources/static/admin',
     emptyOutDir: true,
   },
   resolve: {
