@@ -52,7 +52,7 @@ class CartMergingAuthenticationSuccessHandlerTest {
     }
 
     @Test
-    void invokesMergeWhenSessionHoldsAGuestUuid() throws Exception {
+    void successfulMergeRemovesGuestCartSessionAttribute() throws Exception {
         session.setAttribute(GuestCartReference.SESSION_ATTRIBUTE, GUEST_UUID.toString());
         when(customers.findByExternalAccountId(new ExternalAccountId(5L)))
                 .thenReturn(Optional.of(CUSTOMER));
@@ -88,7 +88,7 @@ class CartMergingAuthenticationSuccessHandlerTest {
     }
 
     @Test
-    void swallowsMergeFailureAndStillRedirectsAndClears() throws Exception {
+    void mergeFailurePreservesGuestCartSessionAttributeAndStillRedirects() throws Exception {
         session.setAttribute(GuestCartReference.SESSION_ATTRIBUTE, GUEST_UUID.toString());
         when(customers.findByExternalAccountId(new ExternalAccountId(5L)))
                 .thenReturn(Optional.of(CUSTOMER));
@@ -98,15 +98,28 @@ class CartMergingAuthenticationSuccessHandlerTest {
 
         handler.onAuthenticationSuccess(request, response, authentication);
 
-        assertThat(session.getAttribute(GuestCartReference.SESSION_ATTRIBUTE)).isNull();
+        assertThat(session.getAttribute(GuestCartReference.SESSION_ATTRIBUTE))
+                .isEqualTo(GUEST_UUID.toString());
         assertThat(response.getRedirectedUrl()).isEqualTo("/");
     }
 
     @Test
-    void skipsMergeWhenCustomerProfileIsAbsentButClearsTheAttribute() throws Exception {
+    void absentCustomerPreservesGuestCartIdentifierForLaterRetry() throws Exception {
         session.setAttribute(GuestCartReference.SESSION_ATTRIBUTE, GUEST_UUID.toString());
         when(customers.findByExternalAccountId(new ExternalAccountId(5L)))
                 .thenReturn(Optional.empty());
+
+        handler.onAuthenticationSuccess(request, response, authentication);
+
+        verify(mergeGuestCart, never()).merge(any(), any());
+        assertThat(session.getAttribute(GuestCartReference.SESSION_ATTRIBUTE))
+                .isEqualTo(GUEST_UUID.toString());
+        assertThat(response.getRedirectedUrl()).isEqualTo("/");
+    }
+
+    @Test
+    void malformedGuestCartIdentifierIsRemovedWithoutCallingMerge() throws Exception {
+        session.setAttribute(GuestCartReference.SESSION_ATTRIBUTE, "not-a-uuid");
 
         handler.onAuthenticationSuccess(request, response, authentication);
 

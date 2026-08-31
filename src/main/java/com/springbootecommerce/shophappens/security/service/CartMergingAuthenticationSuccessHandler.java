@@ -39,6 +39,14 @@ public class CartMergingAuthenticationSuccessHandler
             throws IOException, ServletException {
         Object stored = request.getSession().getAttribute(GuestCartReference.SESSION_ATTRIBUTE);
         if (stored instanceof String guestUuid) {
+            GuestCartReference guest;
+            try {
+                guest = new GuestCartReference(UUID.fromString(guestUuid));
+            } catch (IllegalArgumentException malformed) {
+                request.getSession().removeAttribute(GuestCartReference.SESSION_ATTRIBUTE);
+                super.onAuthenticationSuccess(request, response, authentication);
+                return;
+            }
             try {
                 if (authentication.getPrincipal()
                         instanceof AuthenticatedAccountIdentity identity) {
@@ -46,16 +54,16 @@ public class CartMergingAuthenticationSuccessHandler
                             .findByExternalAccountId(
                                     new ExternalAccountId(identity.account().value()))
                             .ifPresent(
-                                    customer ->
-                                            mergeGuestCart.merge(
-                                                    new GuestCartReference(
-                                                            UUID.fromString(guestUuid)),
-                                                    customer));
+                                    customer -> {
+                                        mergeGuestCart.merge(guest, customer);
+                                        request.getSession()
+                                                .removeAttribute(
+                                                        GuestCartReference.SESSION_ATTRIBUTE);
+                                    });
                 }
             } catch (RuntimeException ex) {
                 log.warn("Could not merge guest cart after login; guest cart will be dropped.", ex);
             }
-            request.getSession().removeAttribute(GuestCartReference.SESSION_ATTRIBUTE);
         }
         super.onAuthenticationSuccess(request, response, authentication);
     }

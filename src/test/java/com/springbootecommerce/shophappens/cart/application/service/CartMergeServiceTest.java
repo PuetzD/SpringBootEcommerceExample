@@ -1,6 +1,9 @@
 package com.springbootecommerce.shophappens.cart.application.service;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -49,14 +52,23 @@ class CartMergeServiceTest {
     }
 
     @Test
-    void repeatedConsumedGuestCartIsANoOp() {
+    void claimedGuestCartDeletesStaleGuestCartAfterCommitWithoutLoadingOrMerging() {
         GuestCartId guestId = GuestCartId.random();
-        when(guests.find(guestId)).thenReturn(Optional.of(guestCart(guestId, 7L, 3)));
         when(ledger.claim(guestId, new CustomerId(42L))).thenReturn(false);
+        doAnswer(
+                        invocation -> {
+                            invocation.<Runnable>getArgument(0).run();
+                            return null;
+                        })
+                .when(afterCommit)
+                .execute(any(Runnable.class));
 
         service.merge(new GuestCartReference(guestId.value()), new CustomerReference(42L));
 
-        verifyNoInteractions(customers, afterCommit);
+        verify(guests, never()).find(guestId);
+        verify(guests).delete(guestId);
+        verifyNoInteractions(customers);
+        verify(afterCommit).execute(any(Runnable.class));
     }
 
     private static Cart guestCart(GuestCartId guestId, long product, int quantity) {

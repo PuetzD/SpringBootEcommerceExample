@@ -27,12 +27,13 @@ public class CartMergeService implements MergeGuestCartUseCase {
     @Transactional
     public void merge(GuestCartReference guest, CustomerReference customer) {
         GuestCartId guestId = new GuestCartId(guest.value());
-        Optional<Cart> guestCart = guests.find(guestId);
-        if (guestCart.isEmpty()) {
-            return;
-        }
         CustomerId customerId = new CustomerId(customer.value());
         if (!ledger.claim(guestId, customerId)) {
+            afterCommit.execute(() -> guests.delete(guestId));
+            return;
+        }
+        Optional<Cart> guestCart = guests.find(guestId);
+        if (guestCart.isEmpty()) {
             return;
         }
         Cart customerCart = customers.findOrCreate(customerId);
