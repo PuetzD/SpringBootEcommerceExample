@@ -1,9 +1,6 @@
 package com.springbootecommerce.shophappens.ordering.adapter.in.web;
-
-import com.springbootecommerce.shophappens.account.application.port.in.AuthenticatedAccountIdentity;
+import com.springbootecommerce.shophappens.customer.application.port.in.CurrentCustomerIdentity;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
-import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReferenceQuery;
-import com.springbootecommerce.shophappens.customer.application.port.in.ExternalAccountId;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderDetail;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderQuery;
 import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
@@ -16,27 +13,23 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
-
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/orders")
 public class OrderController {
     private final OrderQuery orders;
-    private final AuthenticatedAccountIdentity authenticatedAccount;
-    private final CustomerReferenceQuery customers;
+    private final CurrentCustomerIdentity currentCustomer;
     private final CanonicalUrlFactory canonicalUrlFactory;
-
     @GetMapping
     public String list(Model model) {
-        CustomerReference customer = currentCustomer();
+        CustomerReference customer = currentCustomerOrThrow();
         model.addAttribute("orders", orders.findAll(customer));
         addSeo(model, "Your orders", "/orders");
         return "ordering/order-list";
     }
-
     @GetMapping("/{orderNumber}")
     public String detail(@PathVariable String orderNumber, Model model) {
-        CustomerReference customer = currentCustomer();
+        CustomerReference customer = currentCustomerOrThrow();
         OrderDetail order =
                 orders.findOwned(customer, orderNumber)
                         .orElseThrow(
@@ -47,17 +40,13 @@ public class OrderController {
         addSeo(model, "Order " + order.orderNumber(), "/orders/" + order.orderNumber());
         return "ordering/order-detail";
     }
-
-    private CustomerReference currentCustomer() {
-        return customers
-                .findByExternalAccountId(
-                        new ExternalAccountId(authenticatedAccount.account().value()))
+    private CustomerReference currentCustomerOrThrow() {
+        return currentCustomer.current()
                 .orElseThrow(
                         () ->
                                 new ResponseStatusException(
                                         HttpStatus.NOT_FOUND, "Customer not found"));
     }
-
     private void addSeo(Model model, String title, String path) {
         var seo =
                 new SeoMetadata(title, "View your Shop Happens orders.", path, "noindex,nofollow");

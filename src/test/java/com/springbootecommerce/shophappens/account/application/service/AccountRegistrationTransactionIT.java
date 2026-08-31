@@ -3,7 +3,7 @@ package com.springbootecommerce.shophappens.account.application.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doThrow;
 
 import com.springbootecommerce.shophappens.account.application.port.in.RegisterCustomerAccount;
 import com.springbootecommerce.shophappens.account.application.port.in.RegisterCustomerAccountUseCase;
@@ -23,8 +23,9 @@ class AccountRegistrationTransactionIT extends AbstractIntegrationTest {
     @Test
     void profileFailureRollsBackNewAccount() {
         String email = "rollback-profile@example.com";
-        when(profiles.create(any(AccountId.class)))
-                .thenThrow(new IllegalStateException("profile unavailable"));
+        doThrow(new IllegalStateException("profile unavailable"))
+                .when(profiles)
+                .create(any(AccountId.class));
 
         assertThatThrownBy(
                         () ->

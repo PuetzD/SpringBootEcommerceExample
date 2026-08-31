@@ -3,6 +3,7 @@ package com.springbootecommerce.shophappens.customer.adapter.in.web;
 import com.springbootecommerce.shophappens.customer.application.CustomerNotFoundException;
 import com.springbootecommerce.shophappens.customer.application.port.in.AddressReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.AddressSnapshot;
+import com.springbootecommerce.shophappens.customer.application.port.in.CurrentCustomerIdentity;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.ManageCustomerAddressesUseCase;
 import com.springbootecommerce.shophappens.customer.application.port.in.ManageCustomerAddressesUseCase.SaveAddressCommand;
@@ -30,7 +31,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/account/addresses")
 public class AddressController {
 
-    private final AuthenticatedCustomerResolver authenticator;
+    private final CurrentCustomerIdentity currentCustomer;
     private final OwnedAddressQuery addresses;
     private final ManageCustomerAddressesUseCase manager;
     private final CanonicalUrlFactory canonicalUrlFactory;
@@ -120,8 +121,7 @@ public class AddressController {
     public void notFound() {}
 
     private CustomerReference currentCustomer() {
-        return authenticator
-                .resolve()
+        return currentCustomer.current()
                 .orElseThrow(
                         () ->
                                 new ResponseStatusException(

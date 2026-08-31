@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.springbootecommerce.shophappens.customer.application.port.in.AddressReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.AddressSnapshot;
+import com.springbootecommerce.shophappens.customer.application.port.in.CurrentCustomerIdentity;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.ManageCustomerAddressesUseCase;
 import com.springbootecommerce.shophappens.customer.application.port.in.OwnedAddressQuery;
@@ -33,7 +34,7 @@ import org.springframework.test.web.servlet.MockMvc;
 class AddressControllerTest {
     @Autowired MockMvc mvc;
 
-    @MockitoBean AuthenticatedCustomerResolver authenticator;
+    @MockitoBean CurrentCustomerIdentity currentCustomer;
     @MockitoBean OwnedAddressQuery addresses;
     @MockitoBean ManageCustomerAddressesUseCase manager;
     @MockitoBean CartMergingAuthenticationSuccessHandler successHandler;
@@ -47,7 +48,7 @@ class AddressControllerTest {
 
     @Test
     void rendersTheAddressList() throws Exception {
-        when(authenticator.resolve()).thenReturn(Optional.of(CUSTOMER));
+        when(currentCustomer.current()).thenReturn(Optional.of(CUSTOMER));
         when(addresses.findForCustomer(CUSTOMER)).thenReturn(List.of(snapshot()));
 
         mvc.perform(get("/account/addresses").with(user("alex").roles("CUSTOMER")))
@@ -57,7 +58,7 @@ class AddressControllerTest {
 
     @Test
     void createsAnAddressAndRedirects() throws Exception {
-        when(authenticator.resolve()).thenReturn(Optional.of(CUSTOMER));
+        when(currentCustomer.current()).thenReturn(Optional.of(CUSTOMER));
 
         mvc.perform(
                         post("/account/addresses/new")
@@ -74,7 +75,7 @@ class AddressControllerTest {
 
     @Test
     void editsAnOwnedAddressAndRedirects() throws Exception {
-        when(authenticator.resolve()).thenReturn(Optional.of(CUSTOMER));
+        when(currentCustomer.current()).thenReturn(Optional.of(CUSTOMER));
         when(addresses.getOwned(CUSTOMER, new AddressReference(11L))).thenReturn(snapshot(11L));
 
         mvc.perform(
@@ -92,7 +93,7 @@ class AddressControllerTest {
 
     @Test
     void setsDefaultShippingAndRedirects() throws Exception {
-        when(authenticator.resolve()).thenReturn(Optional.of(CUSTOMER));
+        when(currentCustomer.current()).thenReturn(Optional.of(CUSTOMER));
         when(addresses.getOwned(CUSTOMER, new AddressReference(11L))).thenReturn(snapshot(11L));
 
         mvc.perform(
@@ -105,7 +106,7 @@ class AddressControllerTest {
 
     @Test
     void setsDefaultBillingAndRedirects() throws Exception {
-        when(authenticator.resolve()).thenReturn(Optional.of(CUSTOMER));
+        when(currentCustomer.current()).thenReturn(Optional.of(CUSTOMER));
         when(addresses.getOwned(CUSTOMER, new AddressReference(11L))).thenReturn(snapshot(11L));
 
         mvc.perform(
@@ -118,7 +119,7 @@ class AddressControllerTest {
 
     @Test
     void deletesAnOwnedAddressAndRedirects() throws Exception {
-        when(authenticator.resolve()).thenReturn(Optional.of(CUSTOMER));
+        when(currentCustomer.current()).thenReturn(Optional.of(CUSTOMER));
 
         mvc.perform(
                         post("/account/addresses/11/delete")
@@ -132,7 +133,7 @@ class AddressControllerTest {
 
     @Test
     void redisplaysTheFormOnValidationErrors() throws Exception {
-        when(authenticator.resolve()).thenReturn(Optional.of(CUSTOMER));
+        when(currentCustomer.current()).thenReturn(Optional.of(CUSTOMER));
 
         mvc.perform(
                         post("/account/addresses/new")
@@ -151,7 +152,7 @@ class AddressControllerTest {
 
     @Test
     void returnsNotFoundForForeignAddressLikeMissingAddress() throws Exception {
-        when(authenticator.resolve()).thenReturn(Optional.of(CUSTOMER));
+        when(currentCustomer.current()).thenReturn(Optional.of(CUSTOMER));
         when(addresses.getOwned(CUSTOMER, new AddressReference(999L)))
                 .thenThrow(new AddressNotOwnedException("Address 999 is not owned"));
 

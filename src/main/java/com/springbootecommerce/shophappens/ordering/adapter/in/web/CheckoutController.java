@@ -1,11 +1,8 @@
 package com.springbootecommerce.shophappens.ordering.adapter.in.web;
-
-import com.springbootecommerce.shophappens.account.application.port.in.AuthenticatedAccountIdentity;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PublishedInsufficientStockException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PublishedProductUnavailableException;
+import com.springbootecommerce.shophappens.customer.application.port.in.CurrentCustomerIdentity;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
-import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReferenceQuery;
-import com.springbootecommerce.shophappens.customer.application.port.in.ExternalAccountId;
 import com.springbootecommerce.shophappens.customer.application.port.in.OwnedAddressUnavailableException;
 import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutPreparation;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderCommand;
@@ -27,30 +24,26 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
-
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/checkout")
 public class CheckoutController {
     private final PrepareCheckoutUseCase preparation;
     private final PlaceOrderUseCase orders;
-    private final AuthenticatedAccountIdentity authenticatedAccount;
-    private final CustomerReferenceQuery customers;
+    private final CurrentCustomerIdentity currentCustomer;
     private final CanonicalUrlFactory canonicalUrlFactory;
-
     @GetMapping
     public String form(Model model) {
-        CustomerReference customer = currentCustomer();
+        CustomerReference customer = currentCustomerOrThrow();
         addModel(model, customer, new CheckoutForm());
         return "ordering/checkout";
     }
-
     @PostMapping
     public String place(
             @Valid @ModelAttribute("checkoutForm") CheckoutForm form,
             BindingResult bindingResult,
             Model model) {
-        CustomerReference customer = currentCustomer();
+        CustomerReference customer = currentCustomerOrThrow();
         if (bindingResult.hasErrors()) {
             addModel(model, customer, form);
             return "ordering/checkout";
@@ -67,34 +60,28 @@ public class CheckoutController {
                                         .AddressReference(form.getBillingAddressId())));
         return "redirect:/orders/" + result.orderNumber();
     }
-
     @ExceptionHandler(OwnedAddressUnavailableException.class)
     public String addressNotOwned(OwnedAddressUnavailableException exception) {
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Address is not owned", exception);
     }
-
     @ExceptionHandler({
         EmptyCheckoutException.class,
         PublishedProductUnavailableException.class,
         PublishedInsufficientStockException.class
     })
     public String checkoutFailure(Model model) {
-        CustomerReference customer = currentCustomer();
+        CustomerReference customer = currentCustomerOrThrow();
         addModel(model, customer, new CheckoutForm());
         model.addAttribute("checkoutError", "Some items are no longer available.");
         return "ordering/checkout";
     }
-
-    private CustomerReference currentCustomer() {
-        return customers
-                .findByExternalAccountId(
-                        new ExternalAccountId(authenticatedAccount.account().value()))
+    private CustomerReference currentCustomerOrThrow() {
+        return currentCustomer.current()
                 .orElseThrow(
                         () ->
                                 new ResponseStatusException(
                                         HttpStatus.NOT_FOUND, "Customer not found"));
     }
-
     private void addModel(Model model, CustomerReference customer, CheckoutForm form) {
         CheckoutPreparation result = preparation.prepare(customer);
         if (form.getCheckoutId() == null) {

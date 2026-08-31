@@ -7,6 +7,7 @@ import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartUse
 import com.springbootecommerce.shophappens.catalog.application.port.in.BrowseCatalogUseCase;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductSummary;
+import com.springbootecommerce.shophappens.customer.application.port.in.CurrentCustomerIdentity;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
 import com.springbootecommerce.shophappens.shared.web.SeoMetadata;
@@ -29,7 +30,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/cart")
 public class CartController {
 
-    private final CartOwnerResolver owners;
+    private final CurrentCustomerIdentity currentCustomer;
     private final GuestCartSession guestSessions;
     private final GuestCartUseCase guestCart;
     private final CustomerCartUseCase customerCart;
@@ -38,7 +39,7 @@ public class CartController {
 
     @GetMapping
     public String view(HttpSession session, Model model) {
-        Optional<CustomerReference> customer = owners.resolve();
+        Optional<CustomerReference> customer = currentCustomer.current();
         List<CartItemSnapshot> items =
                 customer.map(customerCart::getSnapshot)
                         .map(snapshot -> snapshot.items())
@@ -72,7 +73,7 @@ public class CartController {
             @RequestParam("quantity") String rawQuantity) {
         int quantity = parseQuantity(rawQuantity);
         ProductReference product = new ProductReference(productId);
-        Optional<CustomerReference> customer = owners.resolve();
+        Optional<CustomerReference> customer = currentCustomer.current();
         if (customer.isPresent()) {
             customerCart.changeQuantity(customer.get(), product, quantity);
         } else {
@@ -84,7 +85,7 @@ public class CartController {
     @PostMapping("/items/{productId}/remove")
     public String remove(HttpSession session, @PathVariable long productId) {
         ProductReference product = new ProductReference(productId);
-        Optional<CustomerReference> customer = owners.resolve();
+        Optional<CustomerReference> customer = currentCustomer.current();
         if (customer.isPresent()) {
             customerCart.remove(customer.get(), product);
         } else {
