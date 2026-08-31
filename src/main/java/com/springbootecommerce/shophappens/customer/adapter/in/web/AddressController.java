@@ -121,7 +121,8 @@ public class AddressController {
     public void notFound() {}
 
     private CustomerReference currentCustomer() {
-        return currentCustomer.current()
+        return currentCustomer
+                .current()
                 .orElseThrow(
                         () ->
                                 new ResponseStatusException(

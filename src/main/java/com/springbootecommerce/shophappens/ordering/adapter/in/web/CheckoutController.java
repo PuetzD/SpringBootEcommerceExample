@@ -1,4 +1,5 @@
 package com.springbootecommerce.shophappens.ordering.adapter.in.web;
+
 import com.springbootecommerce.shophappens.catalog.application.port.in.PublishedInsufficientStockException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PublishedProductUnavailableException;
 import com.springbootecommerce.shophappens.customer.application.port.in.CurrentCustomerIdentity;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
+
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/checkout")
@@ -32,12 +34,14 @@ public class CheckoutController {
     private final PlaceOrderUseCase orders;
     private final CurrentCustomerIdentity currentCustomer;
     private final CanonicalUrlFactory canonicalUrlFactory;
+
     @GetMapping
     public String form(Model model) {
         CustomerReference customer = currentCustomerOrThrow();
         addModel(model, customer, new CheckoutForm());
         return "ordering/checkout";
     }
+
     @PostMapping
     public String place(
             @Valid @ModelAttribute("checkoutForm") CheckoutForm form,
@@ -60,10 +64,12 @@ public class CheckoutController {
                                         .AddressReference(form.getBillingAddressId())));
         return "redirect:/orders/" + result.orderNumber();
     }
+
     @ExceptionHandler(OwnedAddressUnavailableException.class)
     public String addressNotOwned(OwnedAddressUnavailableException exception) {
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Address is not owned", exception);
     }
+
     @ExceptionHandler({
         EmptyCheckoutException.class,
         PublishedProductUnavailableException.class,
@@ -75,13 +81,16 @@ public class CheckoutController {
         model.addAttribute("checkoutError", "Some items are no longer available.");
         return "ordering/checkout";
     }
+
     private CustomerReference currentCustomerOrThrow() {
-        return currentCustomer.current()
+        return currentCustomer
+                .current()
                 .orElseThrow(
                         () ->
                                 new ResponseStatusException(
                                         HttpStatus.NOT_FOUND, "Customer not found"));
     }
+
     private void addModel(Model model, CustomerReference customer, CheckoutForm form) {
         CheckoutPreparation result = preparation.prepare(customer);
         if (form.getCheckoutId() == null) {
