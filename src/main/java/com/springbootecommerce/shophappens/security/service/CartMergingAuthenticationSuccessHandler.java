@@ -71,7 +71,9 @@ public class CartMergingAuthenticationSuccessHandler
                                     });
                 }
             } catch (RuntimeException ex) {
-                log.warn("Could not merge guest cart after login; guest cart will be dropped.", ex);
+                log.warn(
+                        "Could not merge guest cart after login; guest cart identifier will be retained for retry.",
+                        ex);
             }
         }
         super.onAuthenticationSuccess(request, response, authentication);
