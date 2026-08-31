@@ -1,5 +1,6 @@
 package com.springbootecommerce.shophappens.architecture;
 
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -82,6 +83,45 @@ class ArchitectureRulesTest {
                         "jakarta.persistence..",
                         "org.hibernate..",
                         "org.springframework.data.redis..")
+                .check(imported);
+    }
+
+    @Test
+    void boundedContextDomainsDependOnlyOnOwnDomainSharedKernelAndJavaTypes() {
+        for (String context : BOUNDED_CONTEXTS) {
+            classes()
+                    .that()
+                    .resideInAPackage(ROOT + "." + context + ".domain..")
+                    .should()
+                    .onlyDependOnClassesThat()
+                    .resideInAnyPackage(
+                            ROOT + "." + context + ".domain..",
+                            ROOT + ".sharedkernel..",
+                            "java..")
+                    .check(imported);
+        }
+    }
+
+    @Test
+    void sharedKernelDoesNotDependOnBoundedContextsFrameworksOrWebTypes() {
+        noClasses()
+                .that()
+                .resideInAPackage(ROOT + ".sharedkernel..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage(
+                        ROOT + ".account..",
+                        ROOT + ".customer..",
+                        ROOT + ".catalog..",
+                        ROOT + ".cart..",
+                        ROOT + ".ordering..",
+                        "org.springframework..",
+                        "jakarta.persistence..",
+                        "org.hibernate..",
+                        "jakarta.servlet..",
+                        "jakarta.ws.rs..",
+                        "org.thymeleaf..",
+                        "..web..")
                 .check(imported);
     }
 

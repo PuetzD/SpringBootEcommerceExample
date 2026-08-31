@@ -62,4 +62,15 @@ class AuthenticatedCustomerIdentityTest {
         assertThat(result).isEmpty();
         verifyNoInteractions(customerQuery);
     }
+
+    @Test
+    void givenCustomerQueryFailure_propagatesIllegalStateException() {
+        long accountId = 123L;
+        var externalAccountId = new ExternalAccountId(accountId);
+        var queryFailure = new IllegalStateException("Customer query failed");
+        when(authenticatedAccount.account()).thenReturn(new AccountReference(accountId));
+        when(customerQuery.findByExternalAccountId(externalAccountId)).thenThrow(queryFailure);
+
+        assertThatThrownBy(currentCustomer::current).isSameAs(queryFailure);
+    }
 }

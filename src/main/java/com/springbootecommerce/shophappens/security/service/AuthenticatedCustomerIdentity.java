@@ -1,5 +1,6 @@
 package com.springbootecommerce.shophappens.security.service;
 
+import com.springbootecommerce.shophappens.account.application.port.in.AccountReference;
 import com.springbootecommerce.shophappens.account.application.port.in.AuthenticatedAccountIdentity;
 import com.springbootecommerce.shophappens.customer.application.port.in.CurrentCustomerIdentity;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
@@ -22,13 +23,14 @@ public class AuthenticatedCustomerIdentity implements CurrentCustomerIdentity {
 
     @Override
     public Optional<CustomerReference> current() {
+        AccountReference account;
         try {
-            var account = authenticatedAccount.account();
-            var externalAccountId = new ExternalAccountId(account.value());
-            return customerQuery.findByExternalAccountId(externalAccountId);
+            account = authenticatedAccount.account();
         } catch (IllegalStateException e) {
             // Not authenticated
             return Optional.empty();
         }
+        var externalAccountId = new ExternalAccountId(account.value());
+        return customerQuery.findByExternalAccountId(externalAccountId);
     }
 }
