@@ -12,25 +12,22 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.springbootecommerce.shophappens.catalog.application.command.CreateProductCommand;
-import com.springbootecommerce.shophappens.catalog.application.command.DeleteProductCommand;
-import com.springbootecommerce.shophappens.catalog.application.command.UpdateProductCommand;
+import com.springbootecommerce.shophappens.catalog.application.port.in.CreateProductCommand;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminPage;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminSearch;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminView;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdministrationQuery;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdministrationUseCase;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductCategorySummary;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductRevision;
-import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdministrationUseCase;
-import com.springbootecommerce.shophappens.sharedkernel.money.Money;
+import com.springbootecommerce.shophappens.catalog.application.port.in.UpdateProductCommand;
 import com.springbootecommerce.shophappens.security.SecurityConfiguration;
 import com.springbootecommerce.shophappens.security.service.CartMergingAuthenticationSuccessHandler;
-
+import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -42,15 +39,11 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest(ProductAdminApiController.class)
 @Import(SecurityConfiguration.class)
 class ProductAdminApiControllerTest {
-    @Autowired
-    MockMvc mockMvc;
+    @Autowired MockMvc mockMvc;
 
-    @MockitoBean
-    ProductAdministrationQuery productAdminQuery;
-    @MockitoBean
-    ProductAdministrationUseCase productAdministrationUseCase;
-    @MockitoBean
-    CartMergingAuthenticationSuccessHandler successHandler;
+    @MockitoBean ProductAdministrationQuery productAdminQuery;
+    @MockitoBean ProductAdministrationUseCase productAdministrationUseCase;
+    @MockitoBean CartMergingAuthenticationSuccessHandler successHandler;
 
     @Test
     void adminCanListProducts() throws Exception {
@@ -67,8 +60,8 @@ class ProductAdminApiControllerTest {
                         new ProductRevision(0),
                         List.of(
                                 new ProductCategorySummary(
-                                        new com.springbootecommerce.shophappens.catalog.application.port.in.CategoryReference(
-                                                10L),
+                                        new com.springbootecommerce.shophappens.catalog.application
+                                                .port.in.CategoryReference(10L),
                                         "Tools",
                                         "tools")));
         when(productAdminQuery.searchProducts(any(ProductAdminSearch.class)))
@@ -100,7 +93,18 @@ class ProductAdminApiControllerTest {
     @Test
     void createProductReturnsCreatedLocation() throws Exception {
         when(productAdministrationUseCase.createProduct(any(CreateProductCommand.class)))
-                .thenReturn(1L);
+                .thenReturn(
+                        new ProductAdminView(
+                                new ProductReference(1L),
+                                "SKU-1",
+                                "Widget",
+                                "Useful widget",
+                                new Money(BigDecimal.valueOf(19.99)),
+                                7,
+                                "https://example.com/widget.png",
+                                true,
+                                new ProductRevision(0),
+                                List.of()));
         when(productAdminQuery.findProduct(new ProductReference(1L)))
                 .thenReturn(
                         Optional.of(
@@ -129,8 +133,23 @@ class ProductAdminApiControllerTest {
 
     @Test
     void updateProductReturnsUpdatedProduct() throws Exception {
-        when(productAdministrationUseCase.updateProduct(eq(1L), any(UpdateProductCommand.class)))
-                .thenReturn(1L);
+        when(
+                        productAdministrationUseCase.updateProduct(
+                                eq(new ProductReference(1L)),
+                                any(ProductRevision.class),
+                                any(UpdateProductCommand.class)))
+                .thenReturn(
+                        new ProductAdminView(
+                                new ProductReference(1L),
+                                "SKU-2",
+                                "Updated widget",
+                                "Updated description",
+                                new Money(BigDecimal.valueOf(29.99)),
+                                10,
+                                "https://example.com/updated.png",
+                                true,
+                                new ProductRevision(1),
+                                List.of()));
         when(productAdminQuery.findProduct(new ProductReference(1L)))
                 .thenReturn(
                         Optional.of(
@@ -150,6 +169,7 @@ class ProductAdminApiControllerTest {
                         put("/api/admin/products/1")
                                 .with(user("admin").roles("ADMIN"))
                                 .with(csrf())
+                                .header("If-Match", "\"0\"")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(
                                         "{\"sku\":\"SKU-2\",\"name\":\"Updated widget\",\"description\":\"Updated description\",\"price\":29.99,\"stockQuantity\":10,\"imageUrl\":\"https://example.com/updated.png\",\"active\":true}"))
@@ -159,13 +179,11 @@ class ProductAdminApiControllerTest {
 
     @Test
     void deleteProductReturnsNoContent() throws Exception {
-        when(productAdministrationUseCase.deleteProduct(any(DeleteProductCommand.class)))
-                .thenReturn(true);
-
         mockMvc.perform(
                         delete("/api/admin/products/1")
                                 .with(user("admin").roles("ADMIN"))
-                                .with(csrf()))
+                                .with(csrf())
+                                .header("If-Match", "\"4\""))
                 .andExpect(status().isNoContent());
     }
 }

@@ -1,5 +1,8 @@
 package com.springbootecommerce.shophappens.catalog.application.port.out;
 
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminPage;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminSearch;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductRevision;
 import com.springbootecommerce.shophappens.catalog.domain.model.CategoryId;
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
 import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
@@ -19,6 +22,14 @@ public interface ProductRepository {
     List<Product> findAllActive();
 
     List<Product> findAll();
+
+    ProductAdminPage searchForAdministration(ProductAdminSearch search);
+
+    Optional<VersionedProduct> findForAdministration(ProductId id);
+
+    VersionedProduct insertForAdministration(Product product);
+
+    VersionedProduct updateForAdministration(Product product, ProductRevision expectedRevision);
 
     long countActiveByCategoryId(CategoryId categoryId);
 

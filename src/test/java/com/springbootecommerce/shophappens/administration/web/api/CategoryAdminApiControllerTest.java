@@ -19,15 +19,13 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryA
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdminSearch;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdminView;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdministrationQuery;
+import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdministrationUseCase;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryRevision;
-import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdministrationUseCase;
 import com.springbootecommerce.shophappens.security.SecurityConfiguration;
 import com.springbootecommerce.shophappens.security.service.CartMergingAuthenticationSuccessHandler;
-
 import java.util.List;
 import java.util.Optional;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -39,15 +37,11 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest(CategoryAdminApiController.class)
 @Import(SecurityConfiguration.class)
 class CategoryAdminApiControllerTest {
-    @Autowired
-    MockMvc mockMvc;
+    @Autowired MockMvc mockMvc;
 
-    @MockitoBean
-    CategoryAdministrationQuery categoryAdminQuery;
-    @MockitoBean
-    CategoryAdministrationUseCase categoryAdministrationUseCase;
-    @MockitoBean
-    CartMergingAuthenticationSuccessHandler successHandler;
+    @MockitoBean CategoryAdministrationQuery categoryAdminQuery;
+    @MockitoBean CategoryAdministrationUseCase categoryAdministrationUseCase;
+    @MockitoBean CartMergingAuthenticationSuccessHandler successHandler;
 
     @Test
     void adminCanListCategories() throws Exception {

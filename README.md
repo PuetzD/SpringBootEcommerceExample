@@ -135,6 +135,12 @@ Format Java sources with:
 ./mvnw spotless:apply
 ```
 
+The Gradle equivalent is:
+
+```bash
+./gradlew spotlessApply
+```
+
 ## Demo Data
 
 The database schema is managed by Flyway migrations in `db/migration` and

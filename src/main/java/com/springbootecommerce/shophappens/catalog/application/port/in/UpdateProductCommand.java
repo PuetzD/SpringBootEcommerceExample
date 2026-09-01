@@ -1,6 +1,7 @@
 package com.springbootecommerce.shophappens.catalog.application.port.in;
 
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
+
 import java.util.Set;
 
 public record UpdateProductCommand(

@@ -9,10 +9,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryA
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdministrationUseCase;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryReference;
 import jakarta.validation.Valid;
-
 import java.net.URI;
-import java.util.List;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -48,8 +45,7 @@ public class CategoryAdminApiController {
         }
         var results = categoryAdminQuery.listCategories(new CategoryAdminSearch(page, size));
         var content = results.content().stream().map(this::toResponse).toList();
-        var pageData =
-                new PageImpl<>(content, PageRequest.of(page, size), results.totalElements());
+        var pageData = new PageImpl<>(content, PageRequest.of(page, size), results.totalElements());
         return PageResponse.from(pageData);
     }
 

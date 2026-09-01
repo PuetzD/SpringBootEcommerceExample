@@ -13,6 +13,8 @@ public record ProductResponse(
         String imageUrl,
         boolean active,
         List<CategorySummaryResponse> categories,
+        long revision,
         String self,
         String edit,
-        String delete) {}
+        String delete) {
+}

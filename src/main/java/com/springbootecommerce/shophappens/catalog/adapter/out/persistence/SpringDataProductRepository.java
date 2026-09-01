@@ -30,6 +30,22 @@ interface SpringDataProductRepository extends JpaRepository<ProductJpaEntity, Lo
     List<ProductJpaEntity> findAllByOrderByNameAscIdAsc();
 
     @Query(
+            """
+                    select p from ProductJpaEntity p
+                    where (:active is null or p.active = :active)
+                      and (:query = '' or lower(p.sku) like lower(concat('%', :query, '%'))
+                           or lower(p.name) like lower(concat('%', :query, '%')))
+                    """)
+    org.springframework.data.domain.Page<ProductJpaEntity> searchForAdministration(
+            @Param("query") String query,
+            @Param("active") Boolean active,
+            org.springframework.data.domain.Pageable pageable);
+
+    @EntityGraph(attributePaths = "categories")
+    @Query("select distinct p from ProductJpaEntity p where p.id in :ids")
+    List<ProductJpaEntity> findDetailedByIdIn(@Param("ids") List<Long> ids);
+
+    @Query(
             "select count(distinct p) from ProductJpaEntity p join p.categories c where c.id = :categoryId and p.active = true")
     long countActiveByCategoryId(Long categoryId);
 

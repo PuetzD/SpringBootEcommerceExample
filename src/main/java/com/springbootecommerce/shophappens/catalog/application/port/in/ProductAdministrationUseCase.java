@@ -1,13 +1,12 @@
 package com.springbootecommerce.shophappens.catalog.application.port.in;
 
-import com.springbootecommerce.shophappens.catalog.application.command.CreateProductCommand;
-import com.springbootecommerce.shophappens.catalog.application.command.DeleteProductCommand;
-import com.springbootecommerce.shophappens.catalog.application.command.UpdateProductCommand;
-
 public interface ProductAdministrationUseCase {
-    long createProduct(CreateProductCommand command);
+    ProductAdminView createProduct(CreateProductCommand command);
 
-    long updateProduct(long productId, UpdateProductCommand command);
+    ProductAdminView updateProduct(
+            ProductReference product,
+            ProductRevision expectedRevision,
+            UpdateProductCommand command);
 
-    boolean deleteProduct(DeleteProductCommand command);
+    void deactivateProduct(ProductReference product, ProductRevision expectedRevision);
 }

@@ -10,10 +10,8 @@ import com.springbootecommerce.shophappens.catalog.application.port.out.Category
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductRepository;
 import com.springbootecommerce.shophappens.catalog.domain.model.Category;
 import com.springbootecommerce.shophappens.catalog.domain.model.CategoryId;
-
 import java.util.List;
 import java.util.Optional;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,9 +29,16 @@ public class CategoryAdministrationQueryService implements CategoryAdministratio
                 categoryRepository.findAll().stream().map(this::toView).toList();
         int from = Math.min(search.page() * search.size(), categories.size());
         int to = Math.min(from + search.size(), categories.size());
-        int totalPages = categories.isEmpty() ? 0 : (int) Math.ceil((double) categories.size() / search.size());
+        int totalPages =
+                categories.isEmpty()
+                        ? 0
+                        : (int) Math.ceil((double) categories.size() / search.size());
         return new CategoryAdminPage(
-                categories.subList(from, to), search.page(), search.size(), categories.size(), totalPages);
+                categories.subList(from, to),
+                search.page(),
+                search.size(),
+                categories.size(),
+                totalPages);
     }
 
     @Override
@@ -41,18 +46,22 @@ public class CategoryAdministrationQueryService implements CategoryAdministratio
         return categoryRepository.findAll().stream()
                 .filter(
                         candidate ->
-                                candidate.id().map(id -> id.value() == category.value()).orElse(false))
+                                candidate
+                                        .id()
+                                        .map(id -> id.value() == category.value())
+                                        .orElse(false))
                 .findFirst()
                 .map(this::toView);
     }
 
     @Override
     public List<com.springbootecommerce.shophappens.catalog.application.port.in.CategoryOption>
-    listCategoryOptions() {
+            listCategoryOptions() {
         return categoryRepository.findAll().stream()
                 .map(
                         category ->
-                                new com.springbootecommerce.shophappens.catalog.application.port.in.CategoryOption(
+                                new com.springbootecommerce.shophappens.catalog.application.port.in
+                                        .CategoryOption(
                                         new CategoryReference(category.id().orElseThrow().value()),
                                         category.name(),
                                         category.slug()))
