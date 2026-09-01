@@ -43,6 +43,20 @@ work.
 - Java 21
 - Docker and Docker Compose
 
+The repository supports both Maven and Gradle for backend work. Use `./mvnw`
+or `./gradlew` depending on which build path you want to exercise.
+
+If you prefer an isolated setup, open the repository in the devcontainer under
+`.devcontainer/`. It includes the Java and Node toolchain plus the PostgreSQL
+and Redis services from Compose.
+
+If you want to start the devcontainer workspace shell directly with Compose,
+use:
+
+```bash
+docker compose -f docker-compose.yml -f .devcontainer/docker-compose.yml --profile devcontainer up postgres redis workspace
+```
+
 To run PostgreSQL, Redis, and the Java application in containers:
 
 ```bash
@@ -98,11 +112,20 @@ Run the backend test suite with:
 ./mvnw test
 ```
 
+The Gradle equivalent is:
+
+```bash
+./gradlew test
+```
+
 `./mvnw verify` runs the complete lifecycle, including CSS generation,
 formatting, Checkstyle, PMD, unit tests, architecture tests, and integration
 tests. The integration tests start disposable PostgreSQL and Redis
 containers; Docker must be available for those tests. It also generates the JaCoCo coverage report at
 `target/site/jacoco/index.html`.
+
+The Gradle analogue is `./gradlew check`. It runs the same Java test suite plus
+the configured formatting, Checkstyle, PMD, and integration-test tasks.
 
 Format Java sources with:
 

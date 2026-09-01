@@ -1,0 +1,14 @@
+services:
+  workspace:
+    profiles:
+      - devcontainer
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    command: sleep infinity
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/demo
+      SPRING_DATASOURCE_USERNAME: demo
+      SPRING_DATASOURCE_PASSWORD: demo
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
