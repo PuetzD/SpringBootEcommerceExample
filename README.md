@@ -11,7 +11,7 @@ development. I'm also learning DDD here.
 - Spring MVC, Thymeleaf, and Spring Security
 - Spring Data JPA, PostgreSQL, Flyway, and Redis
 - Tailwind CSS and daisyUI
-- Maven, Docker Compose, and Testcontainers
+- Maven, Gradle, Docker Compose, and Testcontainers
 
 ## Current Architecture
 
@@ -41,21 +41,17 @@ work.
 ### Prerequisites
 
 - Java 21
+- Node 22
 - Docker and Docker Compose
 
-The repository supports both Maven and Gradle for backend work. Use `./mvnw`
-or `./gradlew` depending on which build path you want to exercise.
+Use either `./mvnw` or `./gradlew` for backend work. Both wrappers are kept in
+the repository, so you do not need a globally installed Maven or Gradle.
 
-If you prefer an isolated setup, open the repository in the devcontainer under
-`.devcontainer/`. It includes the Java and Node toolchain plus the PostgreSQL
-and Redis services from Compose.
+The simplest local setup on Windows, WSL, macOS, or Linux is:
 
-If you want to start the devcontainer workspace shell directly with Compose,
-use:
-
-```bash
-docker compose -f docker-compose.yml -f .devcontainer/docker-compose.yml --profile devcontainer up postgres redis workspace
-```
+1. Install Java 21 and Node 22.
+2. Start PostgreSQL and Redis with Docker Compose.
+3. Run the app with Maven or Gradle from the host.
 
 To run PostgreSQL, Redis, and the Java application in containers:
 
@@ -72,6 +68,12 @@ on the host, start those services first with Docker Compose:
 ```bash
 docker compose up -d postgres redis
 ./mvnw spring-boot:run
+```
+
+The Gradle equivalent is:
+
+```bash
+./gradlew bootRun
 ```
 
 Open <http://localhost:8080> after the application starts.

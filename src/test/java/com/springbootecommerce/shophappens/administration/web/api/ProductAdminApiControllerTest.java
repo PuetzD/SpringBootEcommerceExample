@@ -12,18 +12,25 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.springbootecommerce.shophappens.administration.application.port.in.ProductAdminQuery;
-import com.springbootecommerce.shophappens.administration.application.port.in.ProductAdminView;
-import com.springbootecommerce.shophappens.administration.application.port.in.ProductCategorySummary;
 import com.springbootecommerce.shophappens.catalog.application.command.CreateProductCommand;
 import com.springbootecommerce.shophappens.catalog.application.command.DeleteProductCommand;
 import com.springbootecommerce.shophappens.catalog.application.command.UpdateProductCommand;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminPage;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminSearch;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminView;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdministrationQuery;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductCategorySummary;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductRevision;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdministrationUseCase;
+import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import com.springbootecommerce.shophappens.security.SecurityConfiguration;
 import com.springbootecommerce.shophappens.security.service.CartMergingAuthenticationSuccessHandler;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -35,26 +42,37 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest(ProductAdminApiController.class)
 @Import(SecurityConfiguration.class)
 class ProductAdminApiControllerTest {
-    @Autowired MockMvc mockMvc;
+    @Autowired
+    MockMvc mockMvc;
 
-    @MockitoBean ProductAdminQuery productAdminQuery;
-    @MockitoBean ProductAdministrationUseCase productAdministrationUseCase;
-    @MockitoBean CartMergingAuthenticationSuccessHandler successHandler;
+    @MockitoBean
+    ProductAdministrationQuery productAdminQuery;
+    @MockitoBean
+    ProductAdministrationUseCase productAdministrationUseCase;
+    @MockitoBean
+    CartMergingAuthenticationSuccessHandler successHandler;
 
     @Test
     void adminCanListProducts() throws Exception {
         ProductAdminView product =
                 new ProductAdminView(
-                        1L,
+                        new ProductReference(1L),
                         "SKU-1",
                         "Widget",
                         "Useful widget",
-                        BigDecimal.valueOf(19.99),
+                        new Money(BigDecimal.valueOf(19.99)),
                         7,
                         "https://example.com/widget.png",
                         true,
-                        List.of(new ProductCategorySummary(10L, "Tools", "tools")));
-        when(productAdminQuery.findAll()).thenReturn(List.of(product));
+                        new ProductRevision(0),
+                        List.of(
+                                new ProductCategorySummary(
+                                        new com.springbootecommerce.shophappens.catalog.application.port.in.CategoryReference(
+                                                10L),
+                                        "Tools",
+                                        "tools")));
+        when(productAdminQuery.searchProducts(any(ProductAdminSearch.class)))
+                .thenReturn(new ProductAdminPage(List.of(product), 0, 20, 1, 1));
 
         mockMvc.perform(get("/api/admin/products").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
@@ -83,18 +101,19 @@ class ProductAdminApiControllerTest {
     void createProductReturnsCreatedLocation() throws Exception {
         when(productAdministrationUseCase.createProduct(any(CreateProductCommand.class)))
                 .thenReturn(1L);
-        when(productAdminQuery.findById(1L))
+        when(productAdminQuery.findProduct(new ProductReference(1L)))
                 .thenReturn(
                         Optional.of(
                                 new ProductAdminView(
-                                        1L,
+                                        new ProductReference(1L),
                                         "SKU-1",
                                         "Widget",
                                         "Useful widget",
-                                        BigDecimal.valueOf(19.99),
+                                        new Money(BigDecimal.valueOf(19.99)),
                                         7,
                                         "https://example.com/widget.png",
                                         true,
+                                        new ProductRevision(0),
                                         List.of())));
 
         mockMvc.perform(
@@ -112,18 +131,19 @@ class ProductAdminApiControllerTest {
     void updateProductReturnsUpdatedProduct() throws Exception {
         when(productAdministrationUseCase.updateProduct(eq(1L), any(UpdateProductCommand.class)))
                 .thenReturn(1L);
-        when(productAdminQuery.findById(1L))
+        when(productAdminQuery.findProduct(new ProductReference(1L)))
                 .thenReturn(
                         Optional.of(
                                 new ProductAdminView(
-                                        1L,
+                                        new ProductReference(1L),
                                         "SKU-2",
                                         "Updated widget",
                                         "Updated description",
-                                        BigDecimal.valueOf(29.99),
+                                        new Money(BigDecimal.valueOf(29.99)),
                                         10,
                                         "https://example.com/updated.png",
                                         true,
+                                        new ProductRevision(0),
                                         List.of())));
 
         mockMvc.perform(

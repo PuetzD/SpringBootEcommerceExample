@@ -1,14 +1,18 @@
 package com.springbootecommerce.shophappens.administration.web.api;
 
-import com.springbootecommerce.shophappens.administration.application.port.in.CategoryAdminQuery;
-import com.springbootecommerce.shophappens.administration.application.port.in.CategoryAdminView;
 import com.springbootecommerce.shophappens.catalog.application.command.CreateCategoryCommand;
 import com.springbootecommerce.shophappens.catalog.application.command.DeleteCategoryCommand;
 import com.springbootecommerce.shophappens.catalog.application.command.UpdateCategoryCommand;
+import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdminSearch;
+import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdminView;
+import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdministrationQuery;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdministrationUseCase;
+import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryReference;
 import jakarta.validation.Valid;
+
 import java.net.URI;
 import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -29,7 +33,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 @RequestMapping("/api/admin")
 public class CategoryAdminApiController {
-    private final CategoryAdminQuery categoryAdminQuery;
+    private final CategoryAdministrationQuery categoryAdminQuery;
     private final CategoryAdministrationUseCase categoryAdministrationUseCase;
 
     @GetMapping("/categories")
@@ -42,19 +46,17 @@ public class CategoryAdminApiController {
         if (size <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Size must be > 0");
         }
-        List<CategoryAdminView> results = categoryAdminQuery.findAll();
-        int fromIndex = Math.min(page * size, results.size());
-        int toIndex = Math.min(fromIndex + size, results.size());
-        var slice = results.subList(fromIndex, toIndex);
-        var content = slice.stream().map(this::toResponse).toList();
-        var pageData = new PageImpl<>(content, PageRequest.of(page, size), results.size());
+        var results = categoryAdminQuery.listCategories(new CategoryAdminSearch(page, size));
+        var content = results.content().stream().map(this::toResponse).toList();
+        var pageData =
+                new PageImpl<>(content, PageRequest.of(page, size), results.totalElements());
         return PageResponse.from(pageData);
     }
 
     @GetMapping("/categories/{id}")
     public CategoryResponse getCategory(@PathVariable long id) {
         return categoryAdminQuery
-                .findById(id)
+                .findCategory(new CategoryReference(id))
                 .map(this::toResponse)
                 .orElseThrow(
                         () ->
@@ -70,7 +72,7 @@ public class CategoryAdminApiController {
                         new CreateCategoryCommand(request.name()));
         CategoryResponse body =
                 categoryAdminQuery
-                        .findById(createdId)
+                        .findCategory(new CategoryReference(createdId))
                         .map(this::toResponse)
                         .orElseThrow(
                                 () ->
@@ -85,7 +87,7 @@ public class CategoryAdminApiController {
             @PathVariable long id, @Valid @RequestBody UpdateCategoryRequest request) {
         categoryAdministrationUseCase.updateCategory(id, new UpdateCategoryCommand(request.name()));
         return categoryAdminQuery
-                .findById(id)
+                .findCategory(new CategoryReference(id))
                 .map(this::toResponse)
                 .orElseThrow(
                         () ->
@@ -105,12 +107,12 @@ public class CategoryAdminApiController {
 
     private CategoryResponse toResponse(CategoryAdminView category) {
         return new CategoryResponse(
-                category.id(),
+                category.category().value(),
                 category.name(),
                 category.slug(),
                 category.productCount(),
-                "/api/admin/categories/" + category.id(),
-                "/api/admin/categories/" + category.id(),
-                "/api/admin/categories/" + category.id());
+                "/api/admin/categories/" + category.category().value(),
+                "/api/admin/categories/" + category.category().value(),
+                "/api/admin/categories/" + category.category().value());
     }
 }

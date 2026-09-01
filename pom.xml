@@ -11,8 +11,8 @@
     <groupId>com.springbootecommerce</groupId>
     <artifactId>shophappens</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>ecommerce</name>
-    <description>ecommerce</description>
+    <name>shophappens</name>
+    <description>ecommerce project</description>
     <url/>
     <licenses>
         <license/>

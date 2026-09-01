@@ -18,6 +18,8 @@ public interface ProductRepository {
 
     List<Product> findAllActive();
 
+    List<Product> findAll();
+
     long countActiveByCategoryId(CategoryId categoryId);
 
     List<Product> findActiveByCategoryId(CategoryId categoryId);

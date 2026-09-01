@@ -26,6 +26,9 @@ interface SpringDataProductRepository extends JpaRepository<ProductJpaEntity, Lo
     @EntityGraph(attributePaths = "categories")
     List<ProductJpaEntity> findByActiveTrueOrderByNameAscIdAsc();
 
+    @EntityGraph(attributePaths = "categories")
+    List<ProductJpaEntity> findAllByOrderByNameAscIdAsc();
+
     @Query(
             "select count(distinct p) from ProductJpaEntity p join p.categories c where c.id = :categoryId and p.active = true")
     long countActiveByCategoryId(Long categoryId);

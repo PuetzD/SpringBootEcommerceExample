@@ -68,6 +68,12 @@ class ProductRepositoryAdapter implements ProductRepository {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<Product> findAll() {
+        return springData.findAllByOrderByNameAscIdAsc().stream().map(mapper::toDomain).toList();
+    }
+
+    @Override
     @Transactional
     public Product save(Product product) {
         Set<CategoryJpaEntity> categoryRefs = loadCategoryRefs(product.categoryIds());

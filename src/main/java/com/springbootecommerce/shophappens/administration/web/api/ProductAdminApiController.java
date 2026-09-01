@@ -1,16 +1,20 @@
 package com.springbootecommerce.shophappens.administration.web.api;
 
-import com.springbootecommerce.shophappens.administration.application.port.in.ProductAdminQuery;
-import com.springbootecommerce.shophappens.administration.application.port.in.ProductAdminView;
-import com.springbootecommerce.shophappens.administration.application.port.in.ProductCategorySummary;
 import com.springbootecommerce.shophappens.catalog.application.command.CreateProductCommand;
 import com.springbootecommerce.shophappens.catalog.application.command.DeleteProductCommand;
 import com.springbootecommerce.shophappens.catalog.application.command.UpdateProductCommand;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminSearch;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminView;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdministrationQuery;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductCategorySummary;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdministrationUseCase;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import jakarta.validation.Valid;
+
 import java.net.URI;
 import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -31,7 +35,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 @RequestMapping("/api/admin")
 public class ProductAdminApiController {
-    private final ProductAdminQuery productAdminQuery;
+    private final ProductAdministrationQuery productAdminQuery;
     private final ProductAdministrationUseCase productAdministrationUseCase;
 
     @GetMapping("/products")
@@ -44,19 +48,17 @@ public class ProductAdminApiController {
         if (size <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Size must be > 0");
         }
-        List<ProductAdminView> results = productAdminQuery.findAll();
-        int fromIndex = Math.min(page * size, results.size());
-        int toIndex = Math.min(fromIndex + size, results.size());
-        var slice = results.subList(fromIndex, toIndex);
-        var content = slice.stream().map(this::toResponse).toList();
-        var pageData = new PageImpl<>(content, PageRequest.of(page, size), results.size());
+        var results = productAdminQuery.searchProducts(new ProductAdminSearch(page, size));
+        var content = results.content().stream().map(this::toResponse).toList();
+        var pageData =
+                new PageImpl<>(content, PageRequest.of(page, size), results.totalElements());
         return PageResponse.from(pageData);
     }
 
     @GetMapping("/products/{id}")
     public ProductResponse getProduct(@PathVariable long id) {
         return productAdminQuery
-                .findById(id)
+                .findProduct(new ProductReference(id))
                 .map(this::toResponse)
                 .orElseThrow(
                         () ->
@@ -78,7 +80,7 @@ public class ProductAdminApiController {
                                 request.imageUrl()));
         ProductResponse body =
                 productAdminQuery
-                        .findById(createdId)
+                        .findProduct(new ProductReference(createdId))
                         .map(this::toResponse)
                         .orElseThrow(
                                 () ->
@@ -102,7 +104,7 @@ public class ProductAdminApiController {
                         request.imageUrl(),
                         request.active()));
         return productAdminQuery
-                .findById(id)
+                .findProduct(new ProductReference(id))
                 .map(this::toResponse)
                 .orElseThrow(
                         () ->
@@ -121,18 +123,18 @@ public class ProductAdminApiController {
 
     private ProductResponse toResponse(ProductAdminView product) {
         return new ProductResponse(
-                product.id(),
+                product.product().value(),
                 product.sku(),
                 product.name(),
                 product.description(),
-                product.price(),
+                product.price().amount(),
                 product.stockQuantity(),
                 product.imageUrl(),
                 product.active(),
                 toCategorySummaries(product.categories()),
-                "/api/admin/products/" + product.id(),
-                "/api/admin/products/" + product.id(),
-                "/api/admin/products/" + product.id());
+                "/api/admin/products/" + product.product().value(),
+                "/api/admin/products/" + product.product().value(),
+                "/api/admin/products/" + product.product().value());
     }
 
     private List<CategorySummaryResponse> toCategorySummaries(
@@ -144,7 +146,7 @@ public class ProductAdminApiController {
                 .map(
                         category ->
                                 new CategorySummaryResponse(
-                                        category.id(), category.name(), category.slug()))
+                                        category.category().value(), category.name(), category.slug()))
                 .toList();
     }
 }

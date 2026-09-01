@@ -29,6 +29,6 @@ class CategoryRepositoryAdapter implements CategoryRepository {
     }
 
     private Category toDomain(CategoryJpaEntity jpa) {
-        return Category.restore(new CategoryId(jpa.getId()), jpa.getName());
+        return Category.restore(new CategoryId(jpa.getId()), jpa.getName(), jpa.getSlug());
     }
 }
