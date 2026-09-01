@@ -8,8 +8,6 @@ plugins {
     id 'jacoco'
 }
 
-buildDir = file('target')
-
 group = 'com.springbootecommerce'
 version = '0.0.1-SNAPSHOT'
 
