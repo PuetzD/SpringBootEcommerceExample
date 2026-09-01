@@ -27,6 +27,7 @@ class ArchitectureRulesTest {
     private static final List<String> PROTECTED_SLICES =
             List.of(
                     "sharedkernel",
+                    "configuration",
                     "storefront",
                     "security",
                     "administration",
@@ -142,8 +143,6 @@ class ArchitectureRulesTest {
                     noClasses()
                             .that()
                             .resideOutsideOfPackage(ROOT + "." + context + "..")
-                            .and()
-                            .resideOutsideOfPackage(ROOT + ".administration..")
                             .should()
                             .dependOnClassesThat()
                             .resideInAnyPackage(

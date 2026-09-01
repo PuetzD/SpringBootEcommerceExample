@@ -1,4 +1,4 @@
-package com.springbootecommerce.shophappens.ordering.domain.event;
+package com.springbootecommerce.shophappens.ordering.application.event;
 
 import com.springbootecommerce.shophappens.ordering.domain.model.Order;
 import com.springbootecommerce.shophappens.ordering.domain.model.OrderAddress;
@@ -8,7 +8,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-public record OrderPlaced(
+public record OrderPlacedIntegrationEvent(
         UUID eventId,
         UUID orderId,
         String orderNumber,
@@ -20,12 +20,12 @@ public record OrderPlaced(
         Address billingAddress) {
     public static final String EVENT_TYPE = "ordering.order-placed.v1";
 
-    public OrderPlaced {
+    public OrderPlacedIntegrationEvent {
         items = List.copyOf(items);
     }
 
-    public static OrderPlaced from(Order order) {
-        return new OrderPlaced(
+    public static OrderPlacedIntegrationEvent from(Order order) {
+        return new OrderPlacedIntegrationEvent(
                 UUID.randomUUID(),
                 order.orderId().value(),
                 order.orderNumber().value(),

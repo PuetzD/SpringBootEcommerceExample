@@ -22,7 +22,7 @@ public class OutboxKafkaPublisher {
 
     private final IntegrationEventOutbox outbox;
     private final KafkaTemplate<String, String> kafka;
-    private final Clock clock = Clock.systemUTC();
+    private final Clock clock;
 
     @Scheduled(fixedDelayString = "${ordering.events.kafka.poll-delay:1000}")
     public void publishPending() {
