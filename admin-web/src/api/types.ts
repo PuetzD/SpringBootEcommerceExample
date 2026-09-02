@@ -1,7 +1,8 @@
 export interface ApiErrorResponse {
     message: string
     status: number
-    fieldErrors?: FieldErrorResponse[]
+    code?: string
+    fieldErrors?: FieldErrorResponse[] | Record<string, string>
 }
 
 export interface FieldErrorResponse {
@@ -40,6 +41,23 @@ export interface CategoryOption {
     id: number
     name: string
     slug: string
+}
+
+export interface Category {
+    id: number
+    name: string
+    slug: string
+    revision: number
+    productCount: number
+}
+
+export interface CreateCategoryInput {
+    name: string
+}
+
+export interface RenameCategoryInput {
+    name: string
+    revision: number
 }
 
 export interface CreateProductInput {

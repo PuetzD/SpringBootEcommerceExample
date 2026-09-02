@@ -3,18 +3,26 @@ import {clearToken, getToken, refreshToken} from '../auth/CsrfProvider'
 
 export class ApiError extends Error {
     status: number
+    code: string
     fieldErrors: FieldErrorResponse[]
 
     constructor(body: ApiErrorResponse) {
         super(body.message)
         this.status = body.status
-        this.fieldErrors = body.fieldErrors ?? []
+        this.code = body.code ?? 'unknown'
+        this.fieldErrors = Array.isArray(body.fieldErrors)
+            ? body.fieldErrors
+            : Object.entries(body.fieldErrors ?? {}).map(([field, message]) => ({field, message}))
     }
 }
 
 function csrfHeaders(): Record<string, string> {
     const token = getToken()
     return token ? {'X-XSRF-TOKEN': token} : {}
+}
+
+function revisionHeaders(revision?: number): Record<string, string> {
+    return revision === undefined ? {} : {'If-Match': `"${revision}"`}
 }
 
 async function parseResponse<T>(response: Response): Promise<T> {
@@ -70,7 +78,7 @@ export const ApiClient = {
         return handleResponse<T>(response)
     },
 
-    async put<T>(path: string, body: unknown): Promise<T> {
+    async put<T>(path: string, body: unknown, revision?: number): Promise<T> {
         const response = await fetch(path, {
             method: 'PUT',
             credentials: 'same-origin',
@@ -78,17 +86,18 @@ export const ApiClient = {
                 'Content-Type': 'application/json',
                 Accept: 'application/json',
                 ...csrfHeaders(),
+                ...revisionHeaders(revision),
             },
             body: JSON.stringify(body),
         })
         return handleResponse<T>(response)
     },
 
-    async delete(path: string): Promise<void> {
+    async delete(path: string, revision?: number): Promise<void> {
         const response = await fetch(path, {
             method: 'DELETE',
             credentials: 'same-origin',
-            headers: {Accept: 'application/json', ...csrfHeaders()},
+            headers: {Accept: 'application/json', ...csrfHeaders(), ...revisionHeaders(revision)},
         })
         await handleResponse<void>(response)
     },

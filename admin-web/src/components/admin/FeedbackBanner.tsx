@@ -10,7 +10,7 @@ export function FeedbackBanner({
   tone = 'success',
 }: FeedbackBannerProps) {
   return (
-    <div className={`alert alert-${tone} mb-4`} role="status">
+    <div className={`alert alert-${tone} mb-4`} role={tone === 'error' ? 'alert' : 'status'}>
       <div>
         <h2 className="font-semibold">{title}</h2>
         <p>{message}</p>
