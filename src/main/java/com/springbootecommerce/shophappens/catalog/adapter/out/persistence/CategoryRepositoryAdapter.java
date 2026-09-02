@@ -178,7 +178,7 @@ class CategoryRepositoryAdapter implements CategoryRepository {
         }
     }
 
-    private Map<Long, Long> membershipCounts(java.util.Set<Long> ids) {
+    private Map<Long, Long> membershipCounts(Set<Long> ids) {
         if (ids.isEmpty()) return Map.of();
         return products.countProductsByCategoryIds(ids).stream()
                 .collect(

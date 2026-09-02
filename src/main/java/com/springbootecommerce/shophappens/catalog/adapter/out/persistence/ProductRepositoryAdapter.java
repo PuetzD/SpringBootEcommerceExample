@@ -169,7 +169,7 @@ class ProductRepositoryAdapter implements ProductRepository {
         if (ids.isEmpty()) return Set.of();
         List<CategoryJpaEntity> found = categories.findAllById(ids);
         if (found.size() != ids.size()) {
-            Set<Long> missing = new java.util.HashSet<>(ids);
+            Set<Long> missing = new HashSet<>(ids);
             found.forEach(category -> missing.remove(category.getId()));
             throw new CategoryNotFoundException(new CategoryReference(missing.iterator().next()));
         }
