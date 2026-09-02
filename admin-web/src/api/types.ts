@@ -10,6 +10,15 @@ export interface FieldErrorResponse {
     message: string
 }
 
+export type ApiQueryValue = string | number | boolean
+
+export type ApiQueryParams = Record<string, ApiQueryValue | undefined>
+
+export interface ApiRequestOptions {
+    params?: ApiQueryParams
+    revision?: number
+}
+
 export interface PageResponse<T> {
     content: T[]
     page: number
