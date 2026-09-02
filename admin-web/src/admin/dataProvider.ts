@@ -19,6 +19,7 @@ type ProductMutationData = Partial<Product> & {
 }
 
 type CategoryMutationData = Partial<Category>
+type ProductRecord = Product & {categoryIds: number[]}
 
 const resourcePaths: Record<CatalogResource, string> = {
   products: '/api/admin/products',
@@ -40,6 +41,13 @@ function resourcePath(resource: string): string {
 
 function normalizeRecord<RecordType extends {id: number}>(record: RecordType): RecordType {
   return {...record}
+}
+
+function normalizeProductRecord(record: Product): ProductRecord {
+  return {
+    ...record,
+    categoryIds: record.categories.map((category) => category.id),
+  }
 }
 
 function normalizeList<RecordType extends {id: number}>(
@@ -203,7 +211,10 @@ export const dataProvider = {
       const response = await runWithReactAdminError(() =>
         ApiClient.get<PageResponse<Product>>(path, {params: normalizeProductListParams(params)}),
       )
-      return normalizeList(response)
+      return {
+        data: response.content.map(normalizeProductRecord),
+        total: response.totalElements,
+      }
     }
 
     const response = await runWithReactAdminError(() =>
@@ -219,7 +230,7 @@ export const dataProvider = {
       const response = await runWithReactAdminError(() =>
         ApiClient.get<Product>(`${path}/${params.id}`),
       )
-      return {data: normalizeRecord(response)}
+      return {data: normalizeProductRecord(response)}
     }
 
     const response = await runWithReactAdminError(() =>
@@ -245,7 +256,7 @@ export const dataProvider = {
           {revision},
         ),
       )
-      return {data: normalizeRecord(response)}
+      return {data: normalizeProductRecord(response)}
     }
 
     const data = params.data as CategoryMutationData
@@ -270,7 +281,7 @@ export const dataProvider = {
       const response = await runWithReactAdminError(() =>
         ApiClient.post<Product>(path, toCreateProductInput(params.data as ProductMutationData)),
       )
-      return {data: normalizeRecord(response)}
+      return {data: normalizeProductRecord(response)}
     }
 
     const data = params.data as CreateCategoryInput

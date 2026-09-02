@@ -46,6 +46,11 @@ const category: Category = {
   productCount: 4,
 }
 
+const normalizedProduct = {
+  ...product,
+  categoryIds: [3],
+}
+
 describe('dataProvider', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -68,7 +73,7 @@ describe('dataProvider', () => {
         filter: {q: ' router ', active: 'false'},
       }),
     ).resolves.toEqual({
-      data: [product],
+      data: [normalizedProduct],
       total: 1,
     })
 
@@ -80,6 +85,31 @@ describe('dataProvider', () => {
         active: false,
       },
     })
+  })
+
+  it('normalizes product categoryIds for getOne while preserving backend category data', async () => {
+    get.mockResolvedValue(product)
+
+    await expect(
+      dataProvider.getOne('products', {
+        id: product.id,
+      }),
+    ).resolves.toEqual({
+      data: normalizedProduct,
+    })
+  })
+
+  it('normalizes product categoryIds for create responses', async () => {
+    post.mockResolvedValue(product)
+
+    await expect(
+      dataProvider.create('products', {
+        data: {
+          ...product,
+          categoryIds: [3],
+        },
+      }),
+    ).resolves.toEqual({data: normalizedProduct})
   })
 
   it('updates products with body revision and the shared If-Match transport option', async () => {
@@ -95,7 +125,7 @@ describe('dataProvider', () => {
         },
         previousData: product,
       }),
-    ).resolves.toEqual({data: product})
+    ).resolves.toEqual({data: normalizedProduct})
 
     expect(put).toHaveBeenCalledWith(
       '/api/admin/products/9',
