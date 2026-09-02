@@ -52,4 +52,16 @@ interface SpringDataProductRepository extends JpaRepository<ProductJpaEntity, Lo
     @Query(
             "select distinct p from ProductJpaEntity p join p.categories c where c.id = :categoryId and p.active = true order by p.name asc, p.id asc")
     List<ProductJpaEntity> findActiveByCategoryId(Long categoryId);
+
+    @Query(
+            """
+                    select c.id, count(p.id)
+                    from ProductJpaEntity p join p.categories c
+                    where c.id in :categoryIds
+                    group by c.id
+                    """)
+    List<Object[]> countProductsByCategoryIds(
+            @Param("categoryIds") java.util.Set<Long> categoryIds);
+
+    boolean existsByCategoriesId(Long categoryId);
 }

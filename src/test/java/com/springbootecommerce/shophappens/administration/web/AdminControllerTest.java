@@ -5,10 +5,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdministrationUseCase;
-import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdministrationUseCase;
 import com.springbootecommerce.shophappens.security.SecurityConfiguration;
 import com.springbootecommerce.shophappens.security.service.CartMergingAuthenticationSuccessHandler;
+import com.springbootecommerce.shophappens.security.web.AdminLoginController;
 import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,14 +16,12 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-@WebMvcTest(AdminController.class)
+@WebMvcTest({AdminController.class, AdminLoginController.class})
 @Import({CanonicalUrlFactory.class, SecurityConfiguration.class})
 class AdminControllerTest {
     @Autowired MockMvc mockMvc;
 
     @MockitoBean CartMergingAuthenticationSuccessHandler successHandler;
-    @MockitoBean ProductAdministrationUseCase adminProduct;
-    @MockitoBean CategoryAdministrationUseCase adminCategory;
 
     @Test
     void adminReceivesSpaForRoot() throws Exception {

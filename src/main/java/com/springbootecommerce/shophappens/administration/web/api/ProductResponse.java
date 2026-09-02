@@ -16,5 +16,4 @@ public record ProductResponse(
         long revision,
         String self,
         String edit,
-        String delete) {
-}
+        String delete) {}

@@ -143,7 +143,7 @@ class SecurityConfigurationIT extends AbstractIntegrationTest {
 
         mockMvc.perform(formLogin("/admin/login").user("admin@example.com").password("password"))
                 .andExpect(status().isFound())
-                .andExpect(header().string("Location", "/admin/index"));
+                .andExpect(header().string("Location", "/admin/products"));
     }
 
     @Test
@@ -176,7 +176,9 @@ class SecurityConfigurationIT extends AbstractIntegrationTest {
                         .andExpect(status().isFound())
                         .andReturn();
 
-        mockMvc.perform(get("/admin/index").cookie(loginResult.getResponse().getCookie("SESSION")))
+        mockMvc.perform(
+                        get("/admin/products")
+                                .cookie(loginResult.getResponse().getCookie("SESSION")))
                 .andExpect(status().isForbidden())
                 .andExpect(forwardedUrl("/403"));
     }

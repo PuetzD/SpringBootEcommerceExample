@@ -3,8 +3,7 @@ package com.springbootecommerce.shophappens.administration.web.api;
 import com.springbootecommerce.shophappens.catalog.application.port.in.InvalidCatalogOperationException;
 
 public final class ExpectedRevisionParser {
-    private ExpectedRevisionParser() {
-    }
+    private ExpectedRevisionParser() {}
 
     public static long parse(String ifMatch) {
         if (ifMatch == null || !ifMatch.matches("\"(0|[1-9]\\d*)\"")) {

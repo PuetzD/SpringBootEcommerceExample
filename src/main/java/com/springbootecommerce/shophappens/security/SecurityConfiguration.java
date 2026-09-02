@@ -25,7 +25,7 @@ public class SecurityConfiguration {
                         form ->
                                 form.loginPage("/admin/login")
                                         .loginProcessingUrl("/admin/login")
-                                        .defaultSuccessUrl("/admin/index", false)
+                                        .defaultSuccessUrl("/admin/products", false)
                                         .permitAll())
                 .logout(
                         logout ->
