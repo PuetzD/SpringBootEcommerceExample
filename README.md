@@ -11,6 +11,7 @@ development. I'm also learning DDD here.
 - Spring MVC, Thymeleaf, and Spring Security
 - Spring Data JPA, PostgreSQL, Flyway, and Redis
 - Tailwind CSS and daisyUI
+- React 19, React Admin, and Vite for Catalog administration
 - Maven, Docker Compose, and Testcontainers
 
 ## Current Architecture
@@ -45,8 +46,8 @@ work.
 - Docker and Docker Compose
 
 Use `./mvnw` for backend work, so you do not need a globally installed Maven.
-Maven is also the one-command path because it installs Node and builds the
-frontend assets.
+Frontend dependencies and assets are managed separately with npm; the Docker
+build composes the frontend and backend stages into the deployment image.
 
 The simplest local setup on Windows, WSL, macOS, or Linux is:
 
@@ -68,7 +69,7 @@ on the host, start those services first with Docker Compose:
 
 ```bash
 docker compose up -d postgres redis
-./mvnw generate-resources spring-boot:run
+./mvnw spring-boot:run
 ```
 
 Open <http://localhost:8080> after the application starts.
@@ -84,7 +85,7 @@ verbose local diagnostics (Spring Security trace and Hibernate SQL/binding
 logging), activate the `dev` profile:
 
 ```bash
-SPRING_PROFILES_ACTIVE=dev ./mvnw generate-resources spring-boot:run
+SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
 ```
 
 The `dev` profile runs schema migrations only. Demo data is deliberately not a
@@ -109,9 +110,9 @@ Run the backend test suite with:
 ./mvnw test
 ```
 
-`./mvnw verify` runs the complete lifecycle, including CSS generation,
-formatting, Checkstyle, PMD, unit tests, architecture tests, and integration
-tests. The integration tests start disposable PostgreSQL and Redis
+`./mvnw verify` runs the backend lifecycle, including formatting, Checkstyle,
+PMD, unit tests, architecture tests, and integration tests. The integration
+tests start disposable PostgreSQL and Redis
 containers; Docker must be available for those tests. It also generates the JaCoCo coverage report at
 `target/site/jacoco/index.html`.
 
@@ -189,8 +190,7 @@ is not a recovery procedure.
 
 ## Frontend CSS
 
-The Maven build installs the frontend dependencies and builds CSS
-automatically. To rebuild Tailwind CSS directly:
+To rebuild Tailwind CSS directly:
 
 ```bash
 npm run build:css
@@ -201,6 +201,29 @@ During UI development, watch for CSS changes with:
 ```bash
 npm run dev:css
 ```
+
+## Administration frontend
+
+The `/admin` application uses React Admin resources for Catalog-owned Products
+and flat Categories. It preserves the existing `/api/admin/products`,
+`/api/admin/categories`, and `/api/admin/categories/options` contracts.
+
+The typed Catalog data provider is the sole resource transport adapter. It
+delegates to the shared API client, which owns same-origin credentials and the
+`X-XSRF-TOKEN` CSRF header. Product and Category updates/deletes send the
+current revision through `If-Match`; stale revisions and category-in-use
+conflicts are surfaced without automatic retries.
+
+Manage frontend dependencies and the production bundle separately from Maven:
+
+```bash
+npm ci
+npm run test:admin
+npm run build:admin
+```
+
+The generated bundle is written to `src/main/resources/static/admin/` and is
+ignored by Git.
 
 ## AI Skills
 
