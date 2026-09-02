@@ -16,3 +16,49 @@ export interface PageResponse<T> {
     totalElements: number
     totalPages: number
 }
+
+export interface CategorySummary {
+    id: number
+    name: string
+    slug: string
+}
+
+export interface Product {
+    id: number
+    sku: string
+    name: string
+    description: string | null
+    price: number
+    stockQuantity: number
+    imageUrl: string | null
+    active: boolean
+    revision: number
+    categories: CategorySummary[]
+}
+
+export interface CategoryOption {
+    id: number
+    name: string
+    slug: string
+}
+
+export interface CreateProductInput {
+    sku: string
+    name: string
+    description: string | null
+    price: number
+    stockQuantity: number
+    imageUrl: string | null
+    categoryIds: number[]
+}
+
+export interface UpdateProductInput {
+    revision: number
+    name: string
+    description: string | null
+    price: number
+    stockQuantity: number
+    imageUrl: string | null
+    active: boolean
+    categoryIds: number[]
+}

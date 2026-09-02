@@ -41,11 +41,11 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 export const ApiClient = {
-    async get<T>(path: string, params?: Record<string, string | number>): Promise<T> {
+    async get<T>(path: string, params?: Record<string, string | number | boolean | undefined>): Promise<T> {
         const url = new URL(path, window.location.origin)
         if (params) {
             Object.entries(params).forEach(([key, value]) => {
-                url.searchParams.append(key, String(value))
+                if (value !== undefined) url.searchParams.append(key, String(value))
             })
         }
         const response = await fetch(url.toString(), {
