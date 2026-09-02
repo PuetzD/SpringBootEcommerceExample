@@ -1,4 +1,4 @@
-import type {ApiErrorResponse, FieldErrorResponse} from './types'
+import type {ApiErrorResponse, ApiQueryParams, ApiRequestOptions, FieldErrorResponse} from './types'
 import {clearToken, getToken, refreshToken} from '../auth/CsrfProvider'
 
 export class ApiError extends Error {
@@ -25,6 +25,28 @@ function revisionHeaders(revision?: number): Record<string, string> {
     return revision === undefined ? {} : {'If-Match': `"${revision}"`}
 }
 
+function isRequestOptions(
+    input?: ApiQueryParams | ApiRequestOptions,
+): input is ApiRequestOptions {
+    return input !== undefined && ('params' in input || 'revision' in input)
+}
+
+function normalizeQueryOptions(
+    input?: ApiQueryParams | ApiRequestOptions,
+): ApiRequestOptions {
+    if (!input) {
+        return {}
+    }
+    return isRequestOptions(input) ? input : {params: input}
+}
+
+function normalizeMutationOptions(input?: number | ApiRequestOptions): ApiRequestOptions {
+    if (typeof input === 'number') {
+        return {revision: input}
+    }
+    return input ?? {}
+}
+
 async function parseResponse<T>(response: Response): Promise<T> {
     const contentType = response.headers.get('content-type') ?? ''
     if (contentType.includes('application/json')) {
@@ -49,7 +71,8 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 export const ApiClient = {
-    async get<T>(path: string, params?: Record<string, string | number | boolean | undefined>): Promise<T> {
+    async get<T>(path: string, paramsOrOptions?: ApiQueryParams | ApiRequestOptions): Promise<T> {
+        const {params} = normalizeQueryOptions(paramsOrOptions)
         const url = new URL(path, window.location.origin)
         if (params) {
             Object.entries(params).forEach(([key, value]) => {
@@ -78,7 +101,8 @@ export const ApiClient = {
         return handleResponse<T>(response)
     },
 
-    async put<T>(path: string, body: unknown, revision?: number): Promise<T> {
+    async put<T>(path: string, body: unknown, revisionOrOptions?: number | ApiRequestOptions): Promise<T> {
+        const {revision} = normalizeMutationOptions(revisionOrOptions)
         const response = await fetch(path, {
             method: 'PUT',
             credentials: 'same-origin',
@@ -93,7 +117,8 @@ export const ApiClient = {
         return handleResponse<T>(response)
     },
 
-    async delete(path: string, revision?: number): Promise<void> {
+    async delete(path: string, revisionOrOptions?: number | ApiRequestOptions): Promise<void> {
+        const {revision} = normalizeMutationOptions(revisionOrOptions)
         const response = await fetch(path, {
             method: 'DELETE',
             credentials: 'same-origin',

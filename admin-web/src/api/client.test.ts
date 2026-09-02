@@ -57,6 +57,38 @@ describe('ApiClient', () => {
             csrfModule.clearToken()
         })
 
+    it('get accepts query params through typed request options', async () => {
+            ; (global.fetch as any).mockResolvedValueOnce({
+                ok: true,
+                status: 200,
+                headers: new Headers({ 'content-type': 'application/json' }),
+                json: async () => ({ content: [] }),
+            })
+
+            const { ApiClient } = await import('./client')
+            await ApiClient.get('/api/admin/products', {
+                params: { page: 1, size: 20, q: 'router', active: false },
+            })
+
+            expect((global.fetch as any).mock.calls[0][0]).toBe(
+                'http://localhost:3000/api/admin/products?page=1&size=20&q=router&active=false',
+            )
+        })
+
+    it('put accepts revision through typed request options', async () => {
+            ; (global.fetch as any).mockResolvedValueOnce({
+                ok: true,
+                status: 200,
+                headers: new Headers({ 'content-type': 'application/json' }),
+                json: async () => ({ id: 1 }),
+            })
+
+            const { ApiClient } = await import('./client')
+            await ApiClient.put('/api/admin/products/1', { name: 'Updated' }, { revision: 4 })
+
+            expect((global.fetch as any).mock.calls[0][1].headers['If-Match']).toBe('"4"')
+        })
+
     it('non-2xx responses throw typed ApiErrorResponse', async () => {
             const errorBody = { message: 'Not found', status: 404 }
             ; (global.fetch as any).mockResolvedValueOnce({
