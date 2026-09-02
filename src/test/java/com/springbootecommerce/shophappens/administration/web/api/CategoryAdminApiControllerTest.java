@@ -12,9 +12,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.springbootecommerce.shophappens.catalog.application.command.CreateCategoryCommand;
-import com.springbootecommerce.shophappens.catalog.application.command.DeleteCategoryCommand;
-import com.springbootecommerce.shophappens.catalog.application.command.UpdateCategoryCommand;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdminPage;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdminSearch;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdminView;
@@ -22,10 +19,11 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryA
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdministrationUseCase;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryRevision;
+import com.springbootecommerce.shophappens.catalog.application.port.in.CreateCategoryCommand;
+import com.springbootecommerce.shophappens.catalog.application.port.in.RenameCategoryCommand;
 import com.springbootecommerce.shophappens.security.SecurityConfiguration;
 import com.springbootecommerce.shophappens.security.service.CartMergingAuthenticationSuccessHandler;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -86,16 +84,13 @@ class CategoryAdminApiControllerTest {
     @Test
     void createCategoryReturnsCreatedLocation() throws Exception {
         when(categoryAdministrationUseCase.createCategory(any(CreateCategoryCommand.class)))
-                .thenReturn(7L);
-        when(categoryAdminQuery.findCategory(new CategoryReference(7L)))
                 .thenReturn(
-                        Optional.of(
-                                new CategoryAdminView(
-                                        new CategoryReference(7L),
-                                        "Tools",
-                                        "tools",
-                                        new CategoryRevision(0),
-                                        0)));
+                        new CategoryAdminView(
+                                new CategoryReference(7L),
+                                "Tools",
+                                "tools",
+                                new CategoryRevision(0),
+                                0));
 
         mockMvc.perform(
                         post("/api/admin/categories")
@@ -109,22 +104,23 @@ class CategoryAdminApiControllerTest {
 
     @Test
     void updateCategoryReturnsUpdatedCategory() throws Exception {
-        when(categoryAdministrationUseCase.updateCategory(eq(7L), any(UpdateCategoryCommand.class)))
-                .thenReturn(7L);
-        when(categoryAdminQuery.findCategory(new CategoryReference(7L)))
+        when(categoryAdministrationUseCase.renameCategory(
+                        eq(new CategoryReference(7L)),
+                        eq(new CategoryRevision(0)),
+                        any(RenameCategoryCommand.class)))
                 .thenReturn(
-                        Optional.of(
-                                new CategoryAdminView(
-                                        new CategoryReference(7L),
-                                        "Updated tools",
-                                        "updated-tools",
-                                        new CategoryRevision(0),
-                                        1)));
+                        new CategoryAdminView(
+                                new CategoryReference(7L),
+                                "Updated tools",
+                                "updated-tools",
+                                new CategoryRevision(1),
+                                1));
 
         mockMvc.perform(
                         put("/api/admin/categories/7")
                                 .with(user("admin").roles("ADMIN"))
                                 .with(csrf())
+                                .header("If-Match", "\"0\"")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"name\":\"Updated tools\"}"))
                 .andExpect(status().isOk())
@@ -133,13 +129,11 @@ class CategoryAdminApiControllerTest {
 
     @Test
     void deleteCategoryReturnsNoContent() throws Exception {
-        when(categoryAdministrationUseCase.deleteCategory(any(DeleteCategoryCommand.class)))
-                .thenReturn(true);
-
         mockMvc.perform(
                         delete("/api/admin/categories/7")
                                 .with(user("admin").roles("ADMIN"))
-                                .with(csrf()))
+                                .with(csrf())
+                                .header("If-Match", "\"0\""))
                 .andExpect(status().isNoContent());
     }
 }

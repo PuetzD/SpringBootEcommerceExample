@@ -1,18 +1,18 @@
 package com.springbootecommerce.shophappens.administration.web.api;
 
-import com.springbootecommerce.shophappens.catalog.application.command.CreateCategoryCommand;
-import com.springbootecommerce.shophappens.catalog.application.command.DeleteCategoryCommand;
-import com.springbootecommerce.shophappens.catalog.application.command.UpdateCategoryCommand;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdminSearch;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdminView;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdministrationQuery;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdministrationUseCase;
+import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryOption;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryReference;
+import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryRevision;
+import com.springbootecommerce.shophappens.catalog.application.port.in.CreateCategoryCommand;
+import com.springbootecommerce.shophappens.catalog.application.port.in.RenameCategoryCommand;
 import jakarta.validation.Valid;
 import java.net.URI;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,8 +46,12 @@ public class CategoryAdminApiController {
         }
         var results = categoryAdminQuery.listCategories(new CategoryAdminSearch(page, size));
         var content = results.content().stream().map(this::toResponse).toList();
-        var pageData = new PageImpl<>(content, PageRequest.of(page, size), results.totalElements());
-        return PageResponse.from(pageData);
+        return new PageResponse<>(
+                content,
+                results.page(),
+                results.size(),
+                results.totalElements(),
+                results.totalPages());
     }
 
     @GetMapping("/categories/{id}")
@@ -60,44 +65,40 @@ public class CategoryAdminApiController {
                                         HttpStatus.NOT_FOUND, "Category not found"));
     }
 
+    @GetMapping("/categories/options")
+    public List<CategoryOption> listCategoryOptions() {
+        return categoryAdminQuery.listCategoryOptions();
+    }
+
     @PostMapping("/categories")
     public ResponseEntity<CategoryResponse> createCategory(
             @Valid @RequestBody CreateCategoryRequest request) {
-        long createdId =
+        var created =
                 categoryAdministrationUseCase.createCategory(
                         new CreateCategoryCommand(request.name()));
-        CategoryResponse body =
-                categoryAdminQuery
-                        .findCategory(new CategoryReference(createdId))
-                        .map(this::toResponse)
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.CREATED,
-                                                "Category created but not retrievable"));
-        return ResponseEntity.created(URI.create("/api/admin/categories/" + createdId)).body(body);
+        long createdId = created.category().value();
+        return ResponseEntity.created(URI.create("/api/admin/categories/" + createdId))
+                .body(toResponse(created));
     }
 
     @PutMapping("/categories/{id}")
     public CategoryResponse updateCategory(
-            @PathVariable long id, @Valid @RequestBody UpdateCategoryRequest request) {
-        categoryAdministrationUseCase.updateCategory(id, new UpdateCategoryCommand(request.name()));
-        return categoryAdminQuery
-                .findCategory(new CategoryReference(id))
-                .map(this::toResponse)
-                .orElseThrow(
-                        () ->
-                                new ResponseStatusException(
-                                        HttpStatus.NOT_FOUND, "Category not found"));
+            @PathVariable long id,
+            @RequestHeader("If-Match") String ifMatch,
+            @Valid @RequestBody UpdateCategoryRequest request) {
+        return toResponse(
+                categoryAdministrationUseCase.renameCategory(
+                        new CategoryReference(id),
+                        new CategoryRevision(ExpectedRevisionParser.parse(ifMatch)),
+                        new RenameCategoryCommand(request.name())));
     }
 
     @DeleteMapping("/categories/{id}")
-    public ResponseEntity<Void> deleteCategory(@PathVariable long id) {
-        boolean deleted =
-                categoryAdministrationUseCase.deleteCategory(new DeleteCategoryCommand(id));
-        if (!deleted) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found");
-        }
+    public ResponseEntity<Void> deleteCategory(
+            @PathVariable long id, @RequestHeader("If-Match") String ifMatch) {
+        categoryAdministrationUseCase.deleteCategory(
+                new CategoryReference(id),
+                new CategoryRevision(ExpectedRevisionParser.parse(ifMatch)));
         return ResponseEntity.noContent().build();
     }
 
@@ -106,6 +107,7 @@ public class CategoryAdminApiController {
                 category.category().value(),
                 category.name(),
                 category.slug(),
+                category.revision().value(),
                 category.productCount(),
                 "/api/admin/categories/" + category.category().value(),
                 "/api/admin/categories/" + category.category().value(),

@@ -12,12 +12,10 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.ProductRe
 import com.springbootecommerce.shophappens.catalog.application.port.in.UpdateProductCommand;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import jakarta.validation.Valid;
-
 import java.net.URI;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,8 +41,11 @@ public class ProductAdminApiController {
     @GetMapping("/products")
     public PageResponse<ProductResponse> listProducts(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        var result = productAdminQuery.searchProducts(new ProductAdminSearch(page, size));
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) Boolean active) {
+        var result =
+                productAdminQuery.searchProducts(new ProductAdminSearch(page, size, q, active));
         return new PageResponse<>(
                 result.content().stream().map(this::toResponse).toList(),
                 result.page(),
@@ -84,13 +85,11 @@ public class ProductAdminApiController {
 
     @PutMapping("/products/{id}")
     public ProductResponse updateProduct(
-            @PathVariable long id,
-            @RequestHeader("If-Match") String ifMatch,
-            @Valid @RequestBody UpdateProductRequest request) {
+            @PathVariable long id, @Valid @RequestBody UpdateProductRequest request) {
         ProductAdminView updated =
                 productAdministrationUseCase.updateProduct(
                         new ProductReference(id),
-                        new ProductRevision(ExpectedRevisionParser.parse(ifMatch)),
+                        new ProductRevision(request.revision()),
                         new UpdateProductCommand(
                                 request.name(),
                                 request.description(),

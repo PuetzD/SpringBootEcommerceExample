@@ -1,13 +1,12 @@
 package com.springbootecommerce.shophappens.catalog.application.port.in;
 
-import com.springbootecommerce.shophappens.catalog.application.command.CreateCategoryCommand;
-import com.springbootecommerce.shophappens.catalog.application.command.DeleteCategoryCommand;
-import com.springbootecommerce.shophappens.catalog.application.command.UpdateCategoryCommand;
-
 public interface CategoryAdministrationUseCase {
-    long createCategory(CreateCategoryCommand command);
+    CategoryAdminView createCategory(CreateCategoryCommand command);
 
-    long updateCategory(long categoryId, UpdateCategoryCommand command);
+    CategoryAdminView renameCategory(
+            CategoryReference category,
+            CategoryRevision expectedRevision,
+            RenameCategoryCommand command);
 
-    boolean deleteCategory(DeleteCategoryCommand command);
+    void deleteCategory(CategoryReference category, CategoryRevision expectedRevision);
 }

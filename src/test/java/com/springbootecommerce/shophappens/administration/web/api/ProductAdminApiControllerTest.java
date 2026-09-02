@@ -133,11 +133,10 @@ class ProductAdminApiControllerTest {
 
     @Test
     void updateProductReturnsUpdatedProduct() throws Exception {
-        when(
-                        productAdministrationUseCase.updateProduct(
-                                eq(new ProductReference(1L)),
-                                any(ProductRevision.class),
-                                any(UpdateProductCommand.class)))
+        when(productAdministrationUseCase.updateProduct(
+                        eq(new ProductReference(1L)),
+                        any(ProductRevision.class),
+                        any(UpdateProductCommand.class)))
                 .thenReturn(
                         new ProductAdminView(
                                 new ProductReference(1L),
@@ -169,10 +168,9 @@ class ProductAdminApiControllerTest {
                         put("/api/admin/products/1")
                                 .with(user("admin").roles("ADMIN"))
                                 .with(csrf())
-                                .header("If-Match", "\"0\"")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(
-                                        "{\"sku\":\"SKU-2\",\"name\":\"Updated widget\",\"description\":\"Updated description\",\"price\":29.99,\"stockQuantity\":10,\"imageUrl\":\"https://example.com/updated.png\",\"active\":true}"))
+                                        "{\"revision\":0,\"name\":\"Updated widget\",\"description\":\"Updated description\",\"price\":29.99,\"stockQuantity\":10,\"imageUrl\":\"https://example.com/updated.png\",\"active\":true,\"categoryIds\":[]}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Updated widget"));
     }
