@@ -31,6 +31,7 @@ Concepts explicitly excluded from the first draft. They may be added later but i
 
 ## Search & architecture
 - Full-text search / Elasticsearch
+- Further administration roles and workflows beyond Catalog Products and Categories
 - Event sourcing (persistence pattern — too heavy for this scope)
 - Kafka integration events through the ordering transactional outbox: `ordering.order-placed.v1` is published asynchronously after checkout commits, with replayable at-least-once delivery and idempotent consumers.
 - Payment, shipping, tax, promotion, and notification consumers remain separate future workflows; they must not be added to checkout by making Kafka a required dependency.
