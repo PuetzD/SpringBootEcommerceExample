@@ -1,5 +1,5 @@
+import { useMemo, useState, type ReactNode } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
-import { useMemo, useState } from 'react'
 import { AdminHeader } from './AdminHeader'
 import { AdminSidebar } from './AdminSidebar'
 import { Breadcrumbs } from './Breadcrumbs'
@@ -14,7 +14,11 @@ const navLabels: Record<string, string> = {
   '/storefront': 'Storefront',
 }
 
-export function AdminShell() {
+type AdminShellProps = {
+  children?: ReactNode
+}
+
+export function AdminShell({ children }: AdminShellProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const location = useLocation()
 
@@ -45,7 +49,7 @@ export function AdminShell() {
             <Breadcrumbs />
             <FeedbackBanner title={`${currentPage} overview`} message="Everything is running normally." />
             <main id="admin-main" tabIndex={-1} className="mt-4">
-              <Outlet />
+              {children ?? <Outlet />}
             </main>
           </div>
         </div>
