@@ -11,7 +11,7 @@ development. I'm also learning DDD here.
 - Spring MVC, Thymeleaf, and Spring Security
 - Spring Data JPA, PostgreSQL, Flyway, and Redis
 - Tailwind CSS and daisyUI
-- Maven, Gradle, Docker Compose, and Testcontainers
+- Maven, Docker Compose, and Testcontainers
 
 ## Current Architecture
 
@@ -44,14 +44,15 @@ work.
 - Node 22
 - Docker and Docker Compose
 
-Use either `./mvnw` or `./gradlew` for backend work. Both wrappers are kept in
-the repository, so you do not need a globally installed Maven or Gradle.
+Use `./mvnw` for backend work, so you do not need a globally installed Maven.
+Maven is also the one-command path because it installs Node and builds the
+frontend assets.
 
 The simplest local setup on Windows, WSL, macOS, or Linux is:
 
 1. Install Java 21 and Node 22.
 2. Start PostgreSQL and Redis with Docker Compose.
-3. Run the app with Maven or Gradle from the host.
+3. Run the app with Maven from the host.
 
 To run PostgreSQL, Redis, and the Java application in containers:
 
@@ -67,13 +68,7 @@ on the host, start those services first with Docker Compose:
 
 ```bash
 docker compose up -d postgres redis
-./mvnw spring-boot:run
-```
-
-The Gradle equivalent is:
-
-```bash
-./gradlew bootRun
+./mvnw generate-resources spring-boot:run
 ```
 
 Open <http://localhost:8080> after the application starts.
@@ -89,7 +84,7 @@ verbose local diagnostics (Spring Security trace and Hibernate SQL/binding
 logging), activate the `dev` profile:
 
 ```bash
-SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
+SPRING_PROFILES_ACTIVE=dev ./mvnw generate-resources spring-boot:run
 ```
 
 The `dev` profile runs schema migrations only. Demo data is deliberately not a
@@ -114,31 +109,16 @@ Run the backend test suite with:
 ./mvnw test
 ```
 
-The Gradle equivalent is:
-
-```bash
-./gradlew test
-```
-
 `./mvnw verify` runs the complete lifecycle, including CSS generation,
 formatting, Checkstyle, PMD, unit tests, architecture tests, and integration
 tests. The integration tests start disposable PostgreSQL and Redis
 containers; Docker must be available for those tests. It also generates the JaCoCo coverage report at
 `target/site/jacoco/index.html`.
 
-The Gradle analogue is `./gradlew check`. It runs the same Java test suite plus
-the configured formatting, Checkstyle, PMD, and integration-test tasks.
-
 Format Java sources with:
 
 ```bash
 ./mvnw spotless:apply
-```
-
-The Gradle equivalent is:
-
-```bash
-./gradlew spotlessApply
 ```
 
 ## Demo Data
@@ -168,7 +148,7 @@ application with:
 ```bash
 ORDERING_EVENTS_KAFKA_ENABLED=true \
 SPRING_KAFKA_BOOTSTRAP_SERVERS=localhost:9092 \
-./mvnw spring-boot:run
+./mvnw generate-resources spring-boot:run
 ```
 
 The publisher reads unpublished rows from `integration_outbox`, sends them to
