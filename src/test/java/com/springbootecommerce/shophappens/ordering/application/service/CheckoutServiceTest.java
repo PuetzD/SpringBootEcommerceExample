@@ -5,8 +5,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.springbootecommerce.shophappens.customer.application.port.in.AddressReference;
-import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.ordering.application.event.OrderPlacedIntegrationEvent;
 import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutReference;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderCommand;
@@ -111,10 +109,7 @@ class CheckoutServiceTest {
     private static PlaceOrderCommand command(
             long customer, UUID checkout, long shipping, long billing) {
         return new PlaceOrderCommand(
-                new CustomerReference(customer),
-                new CheckoutReference(checkout),
-                new AddressReference(shipping),
-                new AddressReference(billing));
+                new CustomerId(customer), new CheckoutReference(checkout), shipping, billing);
     }
 
     private static CheckoutCart cartWith(long productId, int quantity) {

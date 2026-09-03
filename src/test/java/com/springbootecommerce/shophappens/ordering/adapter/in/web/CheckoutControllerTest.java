@@ -23,6 +23,7 @@ import com.springbootecommerce.shophappens.ordering.application.port.in.PrepareC
 import com.springbootecommerce.shophappens.security.SecurityConfiguration;
 import com.springbootecommerce.shophappens.security.service.CartMergingAuthenticationSuccessHandler;
 import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -50,8 +51,10 @@ class CheckoutControllerTest {
     @BeforeEach
     void setUp() {
         when(currentCustomer.current()).thenReturn(Optional.of(CUSTOMER));
-        when(preparation.prepare(CUSTOMER))
-                .thenReturn(new CheckoutPreparation(CUSTOMER, List.of(), List.of()));
+        when(preparation.prepare(new CustomerId(CUSTOMER.value())))
+                .thenReturn(
+                        new CheckoutPreparation(
+                                new CustomerId(CUSTOMER.value()), List.of(), List.of()));
     }
 
     @Test

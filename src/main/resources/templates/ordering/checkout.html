@@ -26,13 +26,13 @@
         <label class="label" for="shippingAddressId">Shipping</label>
         <select id="shippingAddressId" th:field="*{shippingAddressId}" class="select select-bordered w-full">
           <option value="">Select an address</option>
-          <option th:each="address : ${checkout.addresses()}" th:value="${address.address().value()}" th:text="${address.recipientName() + ' — ' + address.postalCode() + ' ' + address.city()}">Address</option>
+          <option th:each="address : ${checkout.addresses()}" th:value="${address.addressId()}" th:text="${address.recipientName() + ' — ' + address.postalCode() + ' ' + address.city()}">Address</option>
         </select>
         <div class="text-error" th:errors="*{shippingAddressId}"></div>
         <label class="label" for="billingAddressId">Billing</label>
         <select id="billingAddressId" th:field="*{billingAddressId}" class="select select-bordered w-full">
           <option value="">Select an address</option>
-          <option th:each="address : ${checkout.addresses()}" th:value="${address.address().value()}" th:text="${address.recipientName() + ' — ' + address.postalCode() + ' ' + address.city()}">Address</option>
+          <option th:each="address : ${checkout.addresses()}" th:value="${address.addressId()}" th:text="${address.recipientName() + ' — ' + address.postalCode() + ' ' + address.city()}">Address</option>
         </select>
         <div class="text-error" th:errors="*{billingAddressId}"></div>
       </section>
@@ -43,4 +43,3 @@
 <th:block id="page-scripts"></th:block>
 </body>
 </html>
-

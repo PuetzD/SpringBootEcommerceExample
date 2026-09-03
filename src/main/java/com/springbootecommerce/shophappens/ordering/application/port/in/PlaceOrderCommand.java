@@ -1,10 +1,9 @@
 package com.springbootecommerce.shophappens.ordering.application.port.in;
 
-import com.springbootecommerce.shophappens.customer.application.port.in.AddressReference;
-import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 
 public record PlaceOrderCommand(
-        CustomerReference customer,
+        CustomerId customer,
         CheckoutReference checkout,
-        AddressReference shippingAddress,
-        AddressReference billingAddress) {}
+        long shippingAddress,
+        long billingAddress) {}

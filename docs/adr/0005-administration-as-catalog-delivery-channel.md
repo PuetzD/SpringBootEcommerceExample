@@ -1,4 +1,4 @@
-# ADR-0002: Administration as a Catalog delivery channel
+# ADR-0005: Administration as a Catalog delivery channel
 
 ## Title
 

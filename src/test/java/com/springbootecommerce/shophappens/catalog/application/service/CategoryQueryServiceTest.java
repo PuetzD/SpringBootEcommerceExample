@@ -45,11 +45,11 @@ class CategoryQueryServiceTest {
         var result = service.findAllActive();
 
         assertThat(result).hasSize(2);
-        assertThat(result.get(0).id()).isEqualTo(new CategoryId(1L));
+        assertThat(result.get(0).id()).isEqualTo(1L);
         assertThat(result.get(0).name()).isEqualTo("Electronics");
         assertThat(result.get(0).slug()).isEqualTo("electronics");
         assertThat(result.get(0).productCount()).isEqualTo(1);
-        assertThat(result.get(1).id()).isEqualTo(new CategoryId(2L));
+        assertThat(result.get(1).id()).isEqualTo(2L);
         assertThat(result.get(1).name()).isEqualTo("Books");
         assertThat(result.get(1).slug()).isEqualTo("books");
         assertThat(result.get(1).productCount()).isEqualTo(1);
@@ -73,7 +73,7 @@ class CategoryQueryServiceTest {
         var result = service.findBySlug("electronics");
 
         assertThat(result).isPresent();
-        assertThat(result.get().id()).isEqualTo(new CategoryId(1L));
+        assertThat(result.get().id()).isEqualTo(1L);
         assertThat(result.get().name()).isEqualTo("Electronics");
         assertThat(result.get().slug()).isEqualTo("electronics");
         assertThat(result.get().productCount()).isEqualTo(1);

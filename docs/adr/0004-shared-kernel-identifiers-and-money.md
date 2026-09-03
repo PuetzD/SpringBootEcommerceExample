@@ -1,4 +1,4 @@
-# ADR-0001: Shared kernel identifiers and Money
+# ADR-0004: Shared kernel identifiers and Money
 
 ## Title
 

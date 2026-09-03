@@ -3,8 +3,6 @@ package com.springbootecommerce.shophappens.ordering.adapter.out.persistence;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.springbootecommerce.shophappens.customer.application.port.in.AddressReference;
-import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.integration.AbstractIntegrationTest;
 import com.springbootecommerce.shophappens.ordering.adapter.out.persistence.CheckoutSeeds.CustomerCartSeed;
 import com.springbootecommerce.shophappens.ordering.application.exception.CheckoutItemUnavailableException;
@@ -12,6 +10,7 @@ import com.springbootecommerce.shophappens.ordering.application.port.in.Checkout
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderCommand;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderUseCase;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlacedOrder;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CyclicBarrier;
@@ -85,10 +84,10 @@ class CheckoutConcurrencyIT extends AbstractIntegrationTest {
 
     private static PlaceOrderCommand command(CustomerCartSeed customer) {
         return new PlaceOrderCommand(
-                new CustomerReference(customer.customerId()),
+                new CustomerId(customer.customerId()),
                 new CheckoutReference(UUID.randomUUID()),
-                new AddressReference(customer.shippingAddressId()),
-                new AddressReference(customer.billingAddressId()));
+                customer.shippingAddressId(),
+                customer.billingAddressId());
     }
 
     private static Attempt placeAfterBarrier(

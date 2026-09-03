@@ -14,7 +14,6 @@ import com.springbootecommerce.shophappens.cart.domain.model.CartId;
 import com.springbootecommerce.shophappens.cart.domain.model.CartOwner;
 import com.springbootecommerce.shophappens.cart.domain.model.GuestCartId;
 import com.springbootecommerce.shophappens.cart.domain.model.Quantity;
-import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReferenceQuery;
 import com.springbootecommerce.shophappens.integration.AbstractIntegrationTest;
@@ -65,12 +64,11 @@ class GuestCartMergeRecoveryIT extends AbstractIntegrationTest {
                 .isEqualTo(guestId.value().toString());
         assertThat(guests.find(guestId)).isPresent();
         assertThat(ledger.claim(guestId, new CustomerId(CUSTOMER.value()))).isFalse();
-        assertThat(customerCarts.get(CUSTOMER).items())
+        assertThat(customerCarts.get(new CustomerId(CUSTOMER.value())).items())
                 .singleElement()
                 .satisfies(
                         item -> {
-                            assertThat(item.product())
-                                    .isEqualTo(new ProductReference(PRODUCT.value()));
+                            assertThat(item.product()).isEqualTo(new ProductId(PRODUCT.value()));
                             assertThat(item.quantity()).isEqualTo(3);
                         });
 
@@ -78,7 +76,7 @@ class GuestCartMergeRecoveryIT extends AbstractIntegrationTest {
 
         assertThat(session.getAttribute(GuestCartReference.SESSION_ATTRIBUTE)).isNull();
         assertThat(guests.find(guestId)).isEmpty();
-        assertThat(customerCarts.get(CUSTOMER).items())
+        assertThat(customerCarts.get(new CustomerId(CUSTOMER.value())).items())
                 .singleElement()
                 .satisfies(item -> assertThat(item.quantity()).isEqualTo(3));
     }

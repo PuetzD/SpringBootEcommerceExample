@@ -1,19 +1,19 @@
 package com.springbootecommerce.shophappens.ordering.adapter.out.kafka;
 
+import com.springbootecommerce.shophappens.ordering.application.port.in.UpdateOutboxStatusUseCase;
 import com.springbootecommerce.shophappens.ordering.application.port.out.IntegrationEventOutbox;
 import com.springbootecommerce.shophappens.ordering.application.port.out.IntegrationEventOutbox.PendingIntegrationEvent;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
-import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
-@RequiredArgsConstructor
 @ConditionalOnProperty(name = "ordering.events.kafka.enabled", havingValue = "true")
 public class OutboxKafkaPublisher {
     private static final int BATCH_SIZE = 100;
@@ -21,8 +21,21 @@ public class OutboxKafkaPublisher {
     private static final String EVENT_VERSION = "1";
 
     private final IntegrationEventOutbox outbox;
+    private final UpdateOutboxStatusUseCase statuses;
     private final KafkaTemplate<String, String> kafka;
     private final Clock clock;
+
+    @Autowired
+    public OutboxKafkaPublisher(
+            IntegrationEventOutbox outbox,
+            UpdateOutboxStatusUseCase statuses,
+            KafkaTemplate<String, String> kafka,
+            Clock clock) {
+        this.outbox = outbox;
+        this.statuses = statuses;
+        this.kafka = kafka;
+        this.clock = clock;
+    }
 
     @Scheduled(fixedDelayString = "${ordering.events.kafka.poll-delay:1000}")
     public void publishPending() {
@@ -40,10 +53,10 @@ public class OutboxKafkaPublisher {
                                 event.eventId().toString().getBytes(StandardCharsets.UTF_8));
                 kafka.send(record).get();
             } catch (Exception exception) {
-                outbox.markFailed(event.eventId(), exception.getMessage());
+                statuses.markFailed(event.eventId(), exception.getMessage());
                 continue;
             }
-            outbox.markPublished(event.eventId(), Instant.now(clock));
+            statuses.markPublished(event.eventId(), Instant.now(clock));
         }
     }
 }

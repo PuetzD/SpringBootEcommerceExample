@@ -36,7 +36,7 @@ public class CustomerAddressGatewayAdapter implements CustomerAddressGateway {
                 .map(
                         a ->
                                 new AvailableAddress(
-                                        a.address(),
+                                        a.address().value(),
                                         a.recipientName(),
                                         a.city(),
                                         a.postalCode(),

@@ -53,7 +53,7 @@ public class CategoryQueryService implements BrowseCategoriesUseCase {
     private CategorySummary toSummary(Category category) {
         CategoryId categoryId = category.id().orElseThrow();
         long count = productRepository.countActiveByCategoryId(categoryId);
-        return new CategorySummary(categoryId, category.name(), category.slug(), count);
+        return new CategorySummary(categoryId.value(), category.name(), category.slug(), count);
     }
 
     private ProductSummary toSummary(Product product) {

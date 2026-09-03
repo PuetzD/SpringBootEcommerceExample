@@ -18,7 +18,6 @@ import com.springbootecommerce.shophappens.cart.domain.model.CartId;
 import com.springbootecommerce.shophappens.cart.domain.model.CartOwner;
 import com.springbootecommerce.shophappens.cart.domain.model.GuestCartId;
 import com.springbootecommerce.shophappens.cart.domain.model.Quantity;
-import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import java.util.Optional;
@@ -45,7 +44,7 @@ class CartMergeServiceTest {
         when(ledger.claim(guestId, new CustomerId(42L))).thenReturn(true);
         when(customers.findOrCreate(new CustomerId(42L))).thenReturn(customer);
 
-        service.merge(new GuestCartReference(guestId.value()), new CustomerReference(42L));
+        service.merge(new GuestCartReference(guestId.value()), new CustomerId(42L));
 
         verify(customers).save(argThat(cart -> cart.items().getFirst().quantity().value() == 5));
         verify(afterCommit).execute(argThat(action -> action != null));
@@ -63,7 +62,7 @@ class CartMergeServiceTest {
                 .when(afterCommit)
                 .execute(any(Runnable.class));
 
-        service.merge(new GuestCartReference(guestId.value()), new CustomerReference(42L));
+        service.merge(new GuestCartReference(guestId.value()), new CustomerId(42L));
 
         verify(guests, never()).find(guestId);
         verify(guests).delete(guestId);

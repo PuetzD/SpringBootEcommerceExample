@@ -20,7 +20,7 @@
     <section class="grid md:grid-cols-2 gap-6">
       <div th:each="address : ${order.addresses()}" class="card bg-base-100 shadow-sm">
         <div class="card-body">
-          <h2 class="card-title" th:text="${address.role().name()}">SHIPPING</h2>
+          <h2 class="card-title" th:text="${address.role()}">SHIPPING</h2>
           <p th:text="${address.recipientName()}">Recipient</p>
           <p th:text="${address.addressLine1()}">Address</p>
           <p th:if="${address.addressLine2() != null}" th:text="${address.addressLine2()}">Address line 2</p>
@@ -35,4 +35,3 @@
 <th:block id="page-scripts"></th:block>
 </body>
 </html>
-

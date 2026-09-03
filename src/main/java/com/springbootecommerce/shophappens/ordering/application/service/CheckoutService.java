@@ -46,7 +46,7 @@ public class CheckoutService implements PlaceOrderUseCase {
     @Override
     @Transactional
     public PlacedOrder place(PlaceOrderCommand command) {
-        CustomerId cid = new CustomerId(command.customer().value());
+        CustomerId cid = command.customer();
         CheckoutId ckid = new CheckoutId(command.checkout().value());
 
         checkoutLock.acquire(cid, ckid);
@@ -61,8 +61,8 @@ public class CheckoutService implements PlaceOrderUseCase {
             throw new EmptyCheckoutException();
         }
 
-        OrderAddress shipping = addresses.shipping(cid, command.shippingAddress().value());
-        OrderAddress billing = addresses.billing(cid, command.billingAddress().value());
+        OrderAddress shipping = addresses.shipping(cid, command.shippingAddress());
+        OrderAddress billing = addresses.billing(cid, command.billingAddress());
 
         List<RequestedProduct> requested =
                 cart.products().stream()
