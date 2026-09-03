@@ -4,6 +4,9 @@ import {ProductList} from './ProductList'
 
 describe('Product resource', () => {
   it('renders server-backed product columns and inactive activation action', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
     render(
       <AdminContext
         dataProvider={{
@@ -36,5 +39,10 @@ describe('Product resource', () => {
     expect(await screen.findByText('Router')).toBeTruthy()
     expect(screen.getByText('SKU-9')).toBeTruthy()
     expect(screen.getByRole('button', {name: /activate router/i})).toBeTruthy()
+    expect(consoleError).not.toHaveBeenCalled()
+    expect(consoleWarn).not.toHaveBeenCalled()
+
+    consoleError.mockRestore()
+    consoleWarn.mockRestore()
   })
 })

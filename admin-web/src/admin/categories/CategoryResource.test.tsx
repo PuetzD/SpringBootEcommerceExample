@@ -4,6 +4,9 @@ import {CategoryList} from './CategoryList'
 
 describe('Category resource', () => {
   it('renders category product counts from the data provider', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
     render(
       <AdminContext
         dataProvider={{
@@ -21,5 +24,10 @@ describe('Category resource', () => {
 
     expect(await screen.findByText('Networking')).toBeTruthy()
     expect(screen.getByText('4')).toBeTruthy()
+    expect(consoleError).not.toHaveBeenCalled()
+    expect(consoleWarn).not.toHaveBeenCalled()
+
+    consoleError.mockRestore()
+    consoleWarn.mockRestore()
   })
 })
