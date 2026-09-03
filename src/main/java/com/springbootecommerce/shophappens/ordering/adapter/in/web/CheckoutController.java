@@ -11,6 +11,7 @@ import com.springbootecommerce.shophappens.ordering.application.port.in.PrepareC
 import com.springbootecommerce.shophappens.ordering.domain.exception.EmptyCheckoutException;
 import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
 import com.springbootecommerce.shophappens.shared.web.SeoMetadata;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -55,13 +56,11 @@ public class CheckoutController {
         var result =
                 orders.place(
                         new PlaceOrderCommand(
-                                customer,
+                                new CustomerId(customer.value()),
                                 new com.springbootecommerce.shophappens.ordering.application.port.in
                                         .CheckoutReference(form.getCheckoutId()),
-                                new com.springbootecommerce.shophappens.customer.application.port.in
-                                        .AddressReference(form.getShippingAddressId()),
-                                new com.springbootecommerce.shophappens.customer.application.port.in
-                                        .AddressReference(form.getBillingAddressId())));
+                                form.getShippingAddressId(),
+                                form.getBillingAddressId()));
         return "redirect:/orders/" + result.orderNumber();
     }
 
@@ -88,7 +87,7 @@ public class CheckoutController {
     }
 
     private void addModel(Model model, CustomerReference customer, CheckoutForm form) {
-        CheckoutPreparation result = preparation.prepare(customer);
+        CheckoutPreparation result = preparation.prepare(new CustomerId(customer.value()));
         if (form.getCheckoutId() == null) {
             form.setCheckoutId(UUID.randomUUID());
         }
@@ -96,13 +95,13 @@ public class CheckoutController {
             result.addresses().stream()
                     .filter(address -> address.defaultShipping())
                     .findFirst()
-                    .ifPresent(address -> form.setShippingAddressId(address.address().value()));
+                    .ifPresent(address -> form.setShippingAddressId(address.addressId()));
         }
         if (form.getBillingAddressId() == null) {
             result.addresses().stream()
                     .filter(address -> address.defaultBilling())
                     .findFirst()
-                    .ifPresent(address -> form.setBillingAddressId(address.address().value()));
+                    .ifPresent(address -> form.setBillingAddressId(address.addressId()));
         }
         model.addAttribute("checkoutForm", form);
         model.addAttribute("checkout", result);

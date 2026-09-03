@@ -72,7 +72,13 @@ class CustomerAddressGatewayAdapterTest {
         assertThat(adapter.available(CUSTOMER_ID))
                 .containsExactly(
                         new AvailableAddress(
-                                ADDRESS, "Jane Doe", "Metropolis", "10001", "US", true, false));
+                                ADDRESS.value(),
+                                "Jane Doe",
+                                "Metropolis",
+                                "10001",
+                                "US",
+                                true,
+                                false));
     }
 
     private static AddressSnapshot snapshot() {

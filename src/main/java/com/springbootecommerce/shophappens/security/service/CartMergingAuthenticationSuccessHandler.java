@@ -5,6 +5,7 @@ import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartRef
 import com.springbootecommerce.shophappens.cart.application.port.in.MergeGuestCartUseCase;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReferenceQuery;
 import com.springbootecommerce.shophappens.customer.application.port.in.ExternalAccountId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -64,7 +65,8 @@ public class CartMergingAuthenticationSuccessHandler
                                     new ExternalAccountId(identity.account().value()))
                             .ifPresent(
                                     customer -> {
-                                        mergeGuestCart.merge(guest, customer);
+                                        mergeGuestCart.merge(
+                                                guest, new CustomerId(customer.value()));
                                         request.getSession()
                                                 .removeAttribute(
                                                         GuestCartReference.SESSION_ATTRIBUTE);

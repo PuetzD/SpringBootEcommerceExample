@@ -15,6 +15,7 @@ import com.springbootecommerce.shophappens.cart.application.port.in.MergeGuestCa
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReferenceQuery;
 import com.springbootecommerce.shophappens.customer.application.port.in.ExternalAccountId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,7 +60,8 @@ class CartMergingAuthenticationSuccessHandlerTest {
 
         handler.onAuthenticationSuccess(request, response, authentication);
 
-        verify(mergeGuestCart).merge(new GuestCartReference(GUEST_UUID), CUSTOMER);
+        verify(mergeGuestCart)
+                .merge(new GuestCartReference(GUEST_UUID), new CustomerId(CUSTOMER.value()));
         assertThat(session.getAttribute(GuestCartReference.SESSION_ATTRIBUTE)).isNull();
         assertThat(response.getRedirectedUrl()).isEqualTo("/");
     }

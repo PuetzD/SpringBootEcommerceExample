@@ -26,6 +26,8 @@ import com.springbootecommerce.shophappens.customer.application.port.in.Customer
 import com.springbootecommerce.shophappens.security.SecurityConfiguration;
 import com.springbootecommerce.shophappens.security.service.CartMergingAuthenticationSuccessHandler;
 import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
 import java.util.List;
@@ -73,7 +75,8 @@ class CartControllerTest {
 
         ArgumentCaptor<GuestCartReference> guest =
                 ArgumentCaptor.forClass(GuestCartReference.class);
-        verify(guestCart).changeQuantity(guest.capture(), eq(PRODUCT), eq(2));
+        verify(guestCart)
+                .changeQuantity(guest.capture(), eq(new ProductId(PRODUCT.value())), eq(2));
         org.assertj.core.api.Assertions.assertThat(guest.getValue().value().toString())
                 .isEqualTo(stored);
     }
@@ -91,7 +94,9 @@ class CartControllerTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/cart"));
 
-        verify(customerCart).changeQuantity(CUSTOMER, PRODUCT, 2);
+        verify(customerCart)
+                .changeQuantity(
+                        new CustomerId(CUSTOMER.value()), new ProductId(PRODUCT.value()), 2);
         verify(guestCart, never())
                 .changeQuantity(any(), any(), org.mockito.ArgumentMatchers.anyInt());
     }
@@ -107,16 +112,17 @@ class CartControllerTest {
 
         ArgumentCaptor<GuestCartReference> guest =
                 ArgumentCaptor.forClass(GuestCartReference.class);
-        verify(guestCart).remove(guest.capture(), eq(PRODUCT));
+        verify(guestCart).remove(guest.capture(), eq(new ProductId(PRODUCT.value())));
     }
 
     @Test
     void rendersTheCartViewForAnAuthenticatedCustomer() throws Exception {
         when(currentCustomer.current()).thenReturn(Optional.of(CUSTOMER));
-        when(customerCart.getSnapshot(CUSTOMER))
+        when(customerCart.getSnapshot(new CustomerId(CUSTOMER.value())))
                 .thenReturn(
                         new CustomerCartSnapshot(
-                                CUSTOMER, List.of(new CartItemSnapshot(PRODUCT, 2))));
+                                new CustomerId(CUSTOMER.value()),
+                                List.of(new CartItemSnapshot(new ProductId(PRODUCT.value()), 2))));
         when(catalog.findActiveById(PRODUCT)).thenReturn(Optional.of(productSummary()));
 
         mvc.perform(get("/cart").with(user("alex").roles("CUSTOMER")))

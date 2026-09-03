@@ -6,6 +6,7 @@ import com.springbootecommerce.shophappens.ordering.application.port.in.OrderDet
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderQuery;
 import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
 import com.springbootecommerce.shophappens.shared.web.SeoMetadata;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -26,7 +27,7 @@ public class OrderController {
     @GetMapping
     public String list(Model model) {
         CustomerReference customer = currentCustomerOrThrow();
-        model.addAttribute("orders", orders.findAll(customer));
+        model.addAttribute("orders", orders.findAll(new CustomerId(customer.value())));
         addSeo(model, "Your orders", "/orders");
         return "ordering/order-list";
     }
@@ -35,7 +36,7 @@ public class OrderController {
     public String detail(@PathVariable String orderNumber, Model model) {
         CustomerReference customer = currentCustomerOrThrow();
         OrderDetail order =
-                orders.findOwned(customer, orderNumber)
+                orders.findOwned(new CustomerId(customer.value()), orderNumber)
                         .orElseThrow(
                                 () ->
                                         new ResponseStatusException(

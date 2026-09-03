@@ -1,7 +1,7 @@
 package com.springbootecommerce.shophappens.ordering.application.port.in;
 
-import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 
 public interface PrepareCheckoutUseCase {
-    CheckoutPreparation prepare(CustomerReference customer);
+    CheckoutPreparation prepare(CustomerId customer);
 }

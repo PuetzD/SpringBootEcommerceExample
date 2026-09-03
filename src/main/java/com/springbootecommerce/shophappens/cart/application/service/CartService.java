@@ -15,8 +15,6 @@ import com.springbootecommerce.shophappens.cart.domain.model.CartId;
 import com.springbootecommerce.shophappens.cart.domain.model.CartOwner;
 import com.springbootecommerce.shophappens.cart.domain.model.GuestCartId;
 import com.springbootecommerce.shophappens.cart.domain.model.Quantity;
-import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
-import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import java.util.List;
@@ -36,22 +34,22 @@ public class CartService
     private final CustomerCartRepository customers;
 
     @Override
-    public void changeQuantity(GuestCartReference guest, ProductReference product, int quantity) {
+    public void changeQuantity(GuestCartReference guest, ProductId product, int quantity) {
         GuestCartId guestId = new GuestCartId(guest.value());
         Cart cart =
                 guests.find(guestId)
                         .orElseGet(() -> Cart.empty(CartId.random(), new CartOwner.Guest(guestId)));
-        cart.changeQuantity(new ProductId(product.value()), new Quantity(quantity));
+        cart.changeQuantity(product, new Quantity(quantity));
         guests.save(cart);
     }
 
     @Override
-    public void remove(GuestCartReference guest, ProductReference product) {
+    public void remove(GuestCartReference guest, ProductId product) {
         GuestCartId guestId = new GuestCartId(guest.value());
         Cart cart =
                 guests.find(guestId)
                         .orElseGet(() -> Cart.empty(CartId.random(), new CartOwner.Guest(guestId)));
-        cart.remove(new ProductId(product.value()));
+        cart.remove(product);
         guests.save(cart);
     }
 
@@ -70,54 +68,46 @@ public class CartService
 
     @Override
     @Transactional
-    public void changeQuantity(CustomerReference customer, ProductReference product, int quantity) {
-        CustomerId customerId = new CustomerId(customer.value());
-        Cart cart = customers.findOrCreate(customerId);
-        cart.changeQuantity(new ProductId(product.value()), new Quantity(quantity));
+    public void changeQuantity(CustomerId customer, ProductId product, int quantity) {
+        Cart cart = customers.findOrCreate(customer);
+        cart.changeQuantity(product, new Quantity(quantity));
         customers.save(cart);
     }
 
     @Override
     @Transactional
-    public void remove(CustomerReference customer, ProductReference product) {
-        CustomerId customerId = new CustomerId(customer.value());
-        Cart cart = customers.findOrCreate(customerId);
-        cart.remove(new ProductId(product.value()));
+    public void remove(CustomerId customer, ProductId product) {
+        Cart cart = customers.findOrCreate(customer);
+        cart.remove(product);
         customers.save(cart);
     }
 
     @Override
-    public CustomerCartSnapshot getSnapshot(CustomerReference customer) {
+    public CustomerCartSnapshot getSnapshot(CustomerId customer) {
         Cart cart =
                 customers
-                        .find(new CustomerId(customer.value()))
+                        .find(customer)
                         .orElseGet(
                                 () ->
                                         Cart.empty(
-                                                CartId.random(),
-                                                new CartOwner.Customer(
-                                                        new CustomerId(customer.value()))));
+                                                CartId.random(), new CartOwner.Customer(customer)));
         return new CustomerCartSnapshot(customer, toItemSnapshots(cart));
     }
 
     @Override
-    public CustomerCartSnapshot get(CustomerReference customer) {
+    public CustomerCartSnapshot get(CustomerId customer) {
         return getSnapshot(customer);
     }
 
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
-    public void clear(CustomerReference customer) {
-        customers.clear(new CustomerId(customer.value()));
+    public void clear(CustomerId customer) {
+        customers.clear(customer);
     }
 
     private List<CartItemSnapshot> toItemSnapshots(Cart cart) {
         return cart.items().stream()
-                .map(
-                        item ->
-                                new CartItemSnapshot(
-                                        new ProductReference(item.productId().value()),
-                                        item.quantity().value()))
+                .map(item -> new CartItemSnapshot(item.productId(), item.quantity().value()))
                 .toList();
     }
 }

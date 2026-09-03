@@ -263,6 +263,50 @@ class ArchitectureRulesTest {
     }
 
     @Test
+    void publishedContractsDoNotDependOnAnotherContextContractOrDomain() {
+        List<String> violations = new java.util.ArrayList<>();
+        for (JavaClass clazz : imported) {
+            String from = publishedContextOf(clazz);
+            if (from == null) {
+                continue;
+            }
+            for (var dependency : clazz.getDirectDependenciesFromSelf()) {
+                JavaClass target = dependency.getTargetClass();
+                String to = sliceOf(target);
+                if (to == null || to.equals(from) || to.equals("sharedkernel")) {
+                    continue;
+                }
+                if (BOUNDED_CONTEXTS.contains(to)) {
+                    violations.add(clazz.getName() + " -> " + target.getName());
+                }
+            }
+        }
+        assertThat(violations).isEmpty();
+    }
+
+    @Test
+    void publishedQueryContractsDoNotExposeDomainOrPersistenceTypes() {
+        List<String> violations = new java.util.ArrayList<>();
+        for (JavaClass clazz : imported) {
+            if (!clazz.getPackageName().contains(".application.port.in")) {
+                continue;
+            }
+            if (clazz.getSimpleName().endsWith("Exception")) {
+                continue;
+            }
+            for (var dependency : clazz.getDirectDependenciesFromSelf()) {
+                JavaClass target = dependency.getTargetClass();
+                if (target.getPackageName().contains(".domain.")
+                        || target.getPackageName().contains(".adapter.out.persistence")
+                        || target.getPackageName().startsWith("jakarta.persistence.")) {
+                    violations.add(clazz.getName() + " -> " + target.getName());
+                }
+            }
+        }
+        assertThat(violations).isEmpty();
+    }
+
+    @Test
     void inboundWebAdaptersDoNotUseAnotherContextsDomainOrExceptionTypes() {
         List<String> violations = new java.util.ArrayList<>();
         for (JavaClass clazz : imported) {
@@ -327,6 +371,14 @@ class ArchitectureRulesTest {
             }
         }
         return null;
+    }
+
+    private static String publishedContextOf(JavaClass clazz) {
+        if (!clazz.getPackageName().contains(".application.port.in")) {
+            return null;
+        }
+        String slice = sliceOf(clazz);
+        return BOUNDED_CONTEXTS.contains(slice) ? slice : null;
     }
 
     private static void assertThatNoCycles(Map<String, Set<String>> graph) {

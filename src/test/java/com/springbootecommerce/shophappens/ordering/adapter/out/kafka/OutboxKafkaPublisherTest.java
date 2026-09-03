@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.springbootecommerce.shophappens.ordering.application.port.in.UpdateOutboxStatusUseCase;
 import com.springbootecommerce.shophappens.ordering.application.port.out.IntegrationEventOutbox;
 import com.springbootecommerce.shophappens.ordering.application.port.out.IntegrationEventOutbox.PendingIntegrationEvent;
 import java.nio.charset.StandardCharsets;
@@ -26,6 +27,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 @SuppressWarnings("unchecked")
 class OutboxKafkaPublisherTest {
     @Mock IntegrationEventOutbox outbox;
+    @Mock UpdateOutboxStatusUseCase statuses;
     @Mock KafkaTemplate<String, String> kafka;
     private static final Instant PUBLISHED_AT = Instant.parse("2026-08-31T10:15:32Z");
 
@@ -42,7 +44,8 @@ class OutboxKafkaPublisherTest {
         when(kafka.send(any(ProducerRecord.class)))
                 .thenReturn(CompletableFuture.completedFuture(null));
         OutboxKafkaPublisher publisher =
-                new OutboxKafkaPublisher(outbox, kafka, Clock.fixed(PUBLISHED_AT, ZoneOffset.UTC));
+                new OutboxKafkaPublisher(
+                        outbox, statuses, kafka, Clock.fixed(PUBLISHED_AT, ZoneOffset.UTC));
 
         publisher.publishPending();
 
@@ -68,6 +71,6 @@ class OutboxKafkaPublisherTest {
                                 record.getValue().headers().lastHeader("event-id").value(),
                                 StandardCharsets.UTF_8))
                 .isEqualTo("11111111-1111-1111-1111-111111111111");
-        verify(outbox).markPublished(eventId, PUBLISHED_AT);
+        verify(statuses).markPublished(eventId, PUBLISHED_AT);
     }
 }
