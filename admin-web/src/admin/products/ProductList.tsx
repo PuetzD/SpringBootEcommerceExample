@@ -6,6 +6,7 @@ import {
   FunctionField,
   List,
   NumberField,
+  Pagination,
   SelectInput,
   TextField,
   TextInput,
@@ -31,7 +32,12 @@ function ProductListActions() {
 
 export function ProductList() {
   return (
-    <List filters={filters} actions={<ProductListActions />} perPage={20}>
+    <List
+      filters={filters}
+      actions={<ProductListActions />}
+      perPage={20}
+      pagination={<Pagination rowsPerPageOptions={[5, 10, 20, 25, 50]} />}
+    >
       <Datagrid rowClick="edit" bulkActionButtons={false}>
         <TextField source="sku" />
         <TextField source="name" />

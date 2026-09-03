@@ -1,4 +1,4 @@
-import {CreateButton, Datagrid, DeleteButton, EditButton, List, NumberField, TextField} from 'react-admin'
+import {CreateButton, Datagrid, DeleteButton, EditButton, List, NumberField, Pagination, TextField} from 'react-admin'
 
 function CategoryListActions() {
   return <CreateButton />
@@ -6,7 +6,11 @@ function CategoryListActions() {
 
 export function CategoryList() {
   return (
-    <List actions={<CategoryListActions />} perPage={20}>
+    <List
+      actions={<CategoryListActions />}
+      perPage={20}
+      pagination={<Pagination rowsPerPageOptions={[5, 10, 20, 25, 50]} />}
+    >
       <Datagrid rowClick="edit" bulkActionButtons={false}>
         <TextField source="name" />
         <TextField source="slug" />

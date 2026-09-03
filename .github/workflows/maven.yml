@@ -35,7 +35,7 @@ jobs:
           cache: 'npm'
 
       - name: Build frontend (CSS + admin-web)
-        run: npm ci && npm run build:frontend
+        run: npm ci && npm test && npm run build:frontend
 
       - name: Verify with Maven
         run: ./mvnw -B verify

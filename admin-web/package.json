@@ -10,6 +10,8 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@mui/icons-material": "7.3.5",
+    "@mui/material": "7.3.5",
     "react": "^19.1.0",
     "react-admin": "^5.15.2",
     "react-dom": "^19.1.0",
