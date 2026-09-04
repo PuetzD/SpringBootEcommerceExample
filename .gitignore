@@ -48,6 +48,7 @@ src/main/resources/static/admin/
 .worktrees/
 .superpowers/
 /docs/superpowers/
+/docs/superpowers/plans/
 .codex/config.toml
 .qwen/skills/
 .kilo/
