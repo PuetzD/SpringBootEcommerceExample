@@ -37,5 +37,8 @@ jobs:
       - name: Build frontend (CSS + admin-web)
         run: npm ci && npm test && npm run build:frontend
 
+      - name: Audit production frontend dependencies
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Verify with Maven
         run: ./mvnw -B verify
