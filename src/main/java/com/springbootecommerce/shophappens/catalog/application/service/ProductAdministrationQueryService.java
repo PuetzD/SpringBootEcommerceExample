@@ -25,6 +25,9 @@ public class ProductAdministrationQueryService implements ProductAdministrationQ
 
     @Override
     public Optional<ProductAdminView> findProduct(ProductReference product) {
+        if (product.value() < 1) {
+            return Optional.empty();
+        }
         return productRepository.findAdminViewById(new ProductId(product.value()));
     }
 }

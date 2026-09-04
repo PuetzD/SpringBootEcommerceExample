@@ -49,8 +49,14 @@ class AdminControllerTest {
     }
 
     @Test
-    void apiRoutesNotHandledByFallback() throws Exception {
-        mockMvc.perform(get("/api/admin/products")).andExpect(status().is3xxRedirection());
+    void anonymousApiRoutesReturnUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/admin/products")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void nonAdminApiRoutesReturnForbidden() throws Exception {
+        mockMvc.perform(get("/api/admin/products").with(user("customer").roles("CUSTOMER")))
+                .andExpect(status().isForbidden());
     }
 
     @Test

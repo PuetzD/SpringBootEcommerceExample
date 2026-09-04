@@ -74,6 +74,15 @@ class ProductAdminApiControllerTest {
     }
 
     @Test
+    void rejectsOversizedProductPages() throws Exception {
+        mockMvc.perform(
+                        get("/api/admin/products")
+                                .param("size", "101")
+                                .with(user("admin").roles("ADMIN")))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void customerReceivesForbiddenForProducts() throws Exception {
         mockMvc.perform(get("/api/admin/products").with(user("customer").roles("CUSTOMER")))
                 .andExpect(status().isForbidden());

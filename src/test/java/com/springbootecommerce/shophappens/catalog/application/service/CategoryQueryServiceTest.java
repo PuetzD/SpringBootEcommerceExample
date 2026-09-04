@@ -6,7 +6,6 @@ import static org.mockito.Mockito.when;
 
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryReference;
 import com.springbootecommerce.shophappens.catalog.application.port.out.CategoryRepository;
-import com.springbootecommerce.shophappens.catalog.application.port.out.ProductPage;
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductRepository;
 import com.springbootecommerce.shophappens.catalog.domain.model.Category;
 import com.springbootecommerce.shophappens.catalog.domain.model.CategoryId;
@@ -18,6 +17,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -89,8 +89,8 @@ class CategoryQueryServiceTest {
                 restoredProduct(1L, "ELEC-001", "Laptop", "999.99", 5, Set.of(new CategoryId(1L)));
         Product prod2 =
                 restoredProduct(2L, "BOOK-001", "Novel", "19.99", 10, Set.of(new CategoryId(2L)));
-        when(productRepository.findActivePageByCategoryId(new CategoryId(1L), 0, 20))
-                .thenReturn(new ProductPage(List.of(prod1), 0, 20, 1, 1));
+        when(productRepository.findActiveByCategoryId(new CategoryId(1L)))
+                .thenReturn(List.of(prod1));
 
         var result = service.findActiveProductsByCategorySlug("electronics");
 
@@ -98,6 +98,29 @@ class CategoryQueryServiceTest {
         assertThat(result.get(0).product().value()).isEqualTo(1L);
         assertThat(result.get(0).sku()).isEqualTo("ELEC-001");
         assertThat(result.get(0).name()).isEqualTo("Laptop");
+    }
+
+    @Test
+    void findActiveProductsByCategorySlugReturnsAllProductsWithoutPaging() {
+        Category category = restoredCategory(1L, "Electronics");
+        when(categoryRepository.findBySlug("electronics")).thenReturn(Optional.of(category));
+        List<Product> products =
+                IntStream.rangeClosed(1, 21)
+                        .mapToObj(
+                                id ->
+                                        restoredProduct(
+                                                id,
+                                                "ELEC-%03d".formatted(id),
+                                                "Product " + id,
+                                                "9.99",
+                                                5,
+                                                Set.of(new CategoryId(1L))))
+                        .toList();
+        when(productRepository.findActiveByCategoryId(new CategoryId(1L))).thenReturn(products);
+
+        var result = service.findActiveProductsByCategorySlug("electronics");
+
+        assertThat(result).hasSize(21);
     }
 
     @Test

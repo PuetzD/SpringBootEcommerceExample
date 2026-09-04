@@ -4,9 +4,12 @@ import com.springbootecommerce.shophappens.security.service.CartMergingAuthentic
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.HttpStatusAccessDeniedHandler;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
 @Configuration
@@ -33,7 +36,21 @@ public class SecurityConfiguration {
                                 logout.logoutUrl("/admin/logout")
                                         .logoutSuccessUrl("/admin/login?logout")
                                         .permitAll())
-                .exceptionHandling(exception -> exception.accessDeniedPage("/403"));
+                .exceptionHandling(
+                        exception ->
+                                exception
+                                        .defaultAuthenticationEntryPointFor(
+                                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                                                request ->
+                                                        request.getServletPath()
+                                                                .startsWith("/api/admin/"))
+                                        .defaultAccessDeniedHandlerFor(
+                                                new HttpStatusAccessDeniedHandler(
+                                                        HttpStatus.FORBIDDEN),
+                                                request ->
+                                                        request.getServletPath()
+                                                                .startsWith("/api/admin/"))
+                                        .accessDeniedPage("/403"));
         applySecurityHeaders(http);
 
         return http.build();

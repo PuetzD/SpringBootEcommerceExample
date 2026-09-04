@@ -25,4 +25,12 @@ class ProductAdministrationQueryServiceTest {
         assertThat(service.findProduct(new ProductReference(101L))).containsSame(expected);
         verify(products).findAdminViewById(new ProductId(101L));
     }
+
+    @Test
+    void returnsEmptyForInvalidProductReferences() {
+        ProductRepository products = mock(ProductRepository.class);
+        ProductAdministrationQueryService service = new ProductAdministrationQueryService(products);
+
+        assertThat(service.findProduct(new ProductReference(0L))).isEmpty();
+    }
 }
