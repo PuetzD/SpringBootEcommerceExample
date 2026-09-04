@@ -35,7 +35,7 @@ describe('ApiClient', () => {
 
             await ApiClient.post('/api/admin/products', { name: 'Test' })
 
-            expect((global.fetch as any).mock.calls[0][1].headers['X-XSRF-TOKEN']).toBe(csrfToken)
+            expect((global.fetch as any).mock.calls[0][1].headers['X-CSRF-TOKEN']).toBe(csrfToken)
             csrfModule.clearToken()
         })
 
@@ -53,7 +53,7 @@ describe('ApiClient', () => {
 
             await ApiClient.delete('/api/admin/products/1')
 
-            expect((global.fetch as any).mock.calls[0][1].headers['X-XSRF-TOKEN']).toBe(csrfToken)
+            expect((global.fetch as any).mock.calls[0][1].headers['X-CSRF-TOKEN']).toBe(csrfToken)
             csrfModule.clearToken()
         })
 

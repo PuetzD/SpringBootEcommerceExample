@@ -3,8 +3,8 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
   data:
-      redis:
-        password: ${SPRING_DATA_REDIS_PASSWORD}
+    redis:
+      password: ${SPRING_DATA_REDIS_PASSWORD}
   session:
     cookie:
       http-only: true
