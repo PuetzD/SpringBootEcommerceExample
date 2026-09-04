@@ -10,7 +10,6 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.Published
 import com.springbootecommerce.shophappens.catalog.application.port.in.PurchaseLine;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PurchaseProductsUseCase;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PurchasedProductSnapshot;
-import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
 import com.springbootecommerce.shophappens.ordering.application.exception.CheckoutItemUnavailableException;
 import com.springbootecommerce.shophappens.ordering.application.port.out.PurchasedProduct;
 import com.springbootecommerce.shophappens.ordering.application.port.out.RequestedProduct;
@@ -36,7 +35,7 @@ class CatalogPurchaseGatewayAdapterTest {
 
     @Test
     void translatesMissingProductAndPreservesCause() {
-        var cause = new PublishedProductUnavailableException(new ProductId(7L), null);
+        var cause = new PublishedProductUnavailableException(new ProductReference(7L), null);
         when(purchaseProducts.purchase(List.of(line(7L, 1)))).thenThrow(cause);
 
         Throwable thrown = catchThrowable(() -> adapter.purchase(List.of(requested(7L, 1))));
@@ -48,8 +47,7 @@ class CatalogPurchaseGatewayAdapterTest {
     @Test
     void translatesInsufficientStockAndPreservesCause() {
         var cause =
-                new PublishedInsufficientStockException(
-                        new ProductId(7L), new Sku("WEAP-002"), 3, 1);
+                new PublishedInsufficientStockException(new ProductReference(7L), "WEAP-002", 3, 1);
         when(purchaseProducts.purchase(List.of(line(7L, 3)))).thenThrow(cause);
 
         Throwable thrown = catchThrowable(() -> adapter.purchase(List.of(requested(7L, 3))));

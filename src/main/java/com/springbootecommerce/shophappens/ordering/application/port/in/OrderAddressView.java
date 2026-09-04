@@ -1,6 +1,6 @@
 package com.springbootecommerce.shophappens.ordering.application.port.in;
 
-public record OrderAddressDetail(
+public record OrderAddressView(
         String role,
         String recipientName,
         String companyName,

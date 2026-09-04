@@ -3,9 +3,9 @@ package com.springbootecommerce.shophappens.ordering.application.service;
 import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutAddress;
 import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutItem;
 import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutPreparation;
-import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAddressDetail;
+import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAddressView;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderDetail;
-import com.springbootecommerce.shophappens.ordering.application.port.in.OrderItemDetail;
+import com.springbootecommerce.shophappens.ordering.application.port.in.OrderItemView;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderQuery;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderReference;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderSummary;
@@ -63,8 +63,8 @@ public class OrderQueryService implements PrepareCheckoutUseCase, OrderQuery {
                                         o.items().stream()
                                                 .map(
                                                         i ->
-                                                                new OrderItemDetail(
-                                                                        i.productId(),
+                                                                new OrderItemView(
+                                                                        i.productId().value(),
                                                                         i.sku(),
                                                                         i.productName(),
                                                                         i.unitPrice(),
@@ -74,7 +74,7 @@ public class OrderQueryService implements PrepareCheckoutUseCase, OrderQuery {
                                         List.of(o.shippingAddress(), o.billingAddress()).stream()
                                                 .map(
                                                         a ->
-                                                                new OrderAddressDetail(
+                                                                new OrderAddressView(
                                                                         a.role().name(),
                                                                         a.recipientName(),
                                                                         a.companyName(),

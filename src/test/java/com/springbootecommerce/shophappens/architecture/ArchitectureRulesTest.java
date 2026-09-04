@@ -83,7 +83,8 @@ class ArchitectureRulesTest {
                         "org.springframework..",
                         "jakarta.persistence..",
                         "org.hibernate..",
-                        "org.springframework.data.redis..")
+                        "org.springframework.data.redis..",
+                        "lombok..")
                 .check(imported);
     }
 
@@ -282,6 +283,32 @@ class ArchitectureRulesTest {
             }
         }
         assertThat(violations).isEmpty();
+    }
+
+    @Test
+    void publishedInputPortsDoNotExposeDomainTypes() {
+        noClasses()
+                .that()
+                .resideInAPackage("..application.port.in..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage("..domain..", "..adapter..", "..web..")
+                .check(imported);
+    }
+
+    @Test
+    void administrationUsesOnlyCatalogPublishedInputPorts() {
+        noClasses()
+                .that()
+                .resideInAnyPackage("..administration..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage(
+                        "..catalog.application.service..",
+                        "..catalog.application.port.out..",
+                        "..catalog.domain..",
+                        "..catalog.adapter..")
+                .check(imported);
     }
 
     @Test
