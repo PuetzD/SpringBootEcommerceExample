@@ -15,5 +15,6 @@ public class RegistrationForm {
     private String email;
 
     @Size(min = 12, max = 72, message = "Password must be between 12 and 72 characters")
+    @NotBlank(message = "Password is required")
     private String password;
 }
