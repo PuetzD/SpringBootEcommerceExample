@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,11 +30,13 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin")
 public class ProductAdminApiController {
+    private static final int MAX_PAGE_SIZE = 100;
     private final ProductAdministrationQuery productAdminQuery;
     private final ProductAdministrationUseCase productAdministrationUseCase;
 
@@ -43,6 +46,13 @@ public class ProductAdminApiController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String q,
             @RequestParam(required = false) Boolean active) {
+        if (page < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Page must be >= 0");
+        }
+        if (size <= 0 || size > MAX_PAGE_SIZE) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Size must be between 1 and " + MAX_PAGE_SIZE);
+        }
         var result =
                 productAdminQuery.searchProducts(new ProductAdminSearch(page, size, q, active));
         return new PageResponse<>(

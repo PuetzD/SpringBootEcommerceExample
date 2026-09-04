@@ -32,6 +32,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 @RequestMapping("/api/admin")
 public class CategoryAdminApiController {
+    private static final int MAX_PAGE_SIZE = 100;
     private final CategoryAdministrationQuery categoryAdminQuery;
     private final CategoryAdministrationUseCase categoryAdministrationUseCase;
 
@@ -42,8 +43,9 @@ public class CategoryAdminApiController {
         if (page < 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Page must be >= 0");
         }
-        if (size <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Size must be > 0");
+        if (size <= 0 || size > MAX_PAGE_SIZE) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Size must be between 1 and " + MAX_PAGE_SIZE);
         }
         var results = categoryAdminQuery.listCategories(new CategoryAdminSearch(page, size));
         var content = results.content().stream().map(this::toResponse).toList();

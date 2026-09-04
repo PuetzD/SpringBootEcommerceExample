@@ -66,6 +66,15 @@ class CategoryAdminApiControllerTest {
     }
 
     @Test
+    void rejectsOversizedCategoryPages() throws Exception {
+        mockMvc.perform(
+                        get("/api/admin/categories")
+                                .param("size", "101")
+                                .with(user("admin").roles("ADMIN")))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void customerReceivesForbiddenForCategories() throws Exception {
         mockMvc.perform(get("/api/admin/categories").with(user("customer").roles("CUSTOMER")))
                 .andExpect(status().isForbidden());
