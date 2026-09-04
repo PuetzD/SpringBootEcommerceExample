@@ -74,6 +74,23 @@ class OrderTest {
     }
 
     @Test
+    void restoresPersistedOrderWithNoItems() {
+        Order order =
+                Order.restore(
+                        OrderId.random(),
+                        new OrderNumber("ORD-20260828-ABC123DEF456"),
+                        new CheckoutId(UUID.randomUUID()),
+                        new CustomerId(42L),
+                        List.of(),
+                        shippingAddress(),
+                        billingAddress(),
+                        Instant.parse("2026-08-28T08:00:00Z"),
+                        Money.zero());
+
+        assertThat(order.items()).isEmpty();
+    }
+
+    @Test
     void validatesRestoredOrderTotalsUsingTheOrderCurrency() {
         Money unitPrice = new Money(new BigDecimal("19.99"), Currency.USD);
 
