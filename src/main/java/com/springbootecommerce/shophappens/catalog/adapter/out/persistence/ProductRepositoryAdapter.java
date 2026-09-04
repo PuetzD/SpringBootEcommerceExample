@@ -10,6 +10,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.ProductCa
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductRevision;
 import com.springbootecommerce.shophappens.catalog.application.port.in.StaleProductRevisionException;
+import com.springbootecommerce.shophappens.catalog.application.port.out.ProductPage;
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductRepository;
 import com.springbootecommerce.shophappens.catalog.application.port.out.VersionedProduct;
 import com.springbootecommerce.shophappens.catalog.domain.model.CategoryId;
@@ -80,6 +81,26 @@ class ProductRepositoryAdapter implements ProductRepository {
         return springData.findByActiveTrueOrderByNameAscIdAsc().stream()
                 .map(mapper::toDomain)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProductPage findActivePage(int page, int size) {
+        var result =
+                springData.findByActiveTrue(
+                        org.springframework.data.domain.PageRequest.of(
+                                page,
+                                size,
+                                org.springframework.data.domain.Sort.by(
+                                        org.springframework.data.domain.Sort.Direction.ASC,
+                                        "name",
+                                        "id")));
+        return new ProductPage(
+                result.getContent().stream().map(mapper::toDomain).toList(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages());
     }
 
     @Override

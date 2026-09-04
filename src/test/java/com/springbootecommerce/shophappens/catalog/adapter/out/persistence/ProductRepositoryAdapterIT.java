@@ -111,6 +111,21 @@ class ProductRepositoryAdapterIT extends AbstractIntegrationTest {
                 .containsExactly("ORD-B", "ORD-A", "ORD-C");
     }
 
+    @Test
+    void returnsStableBoundedActivePage() {
+        seedProduct("PAGE-A", "Alpha", "1.00", 5);
+        seedProduct("PAGE-B", "Bravo", "1.00", 5);
+        seedProduct("PAGE-C", "Charlie", "1.00", 5);
+
+        var result = products.findActivePage(1, 2);
+
+        assertThat(result.products()).extracting(Product::name).containsExactly("Charlie");
+        assertThat(result.page()).isEqualTo(1);
+        assertThat(result.size()).isEqualTo(2);
+        assertThat(result.totalElements()).isEqualTo(3);
+        assertThat(result.totalPages()).isEqualTo(2);
+    }
+
     private static Comparator<Product> orderByNameThenId() {
         return Comparator.comparing(Product::name)
                 .thenComparing(product -> product.id().orElseThrow().value());
@@ -133,5 +148,9 @@ class ProductRepositoryAdapterIT extends AbstractIntegrationTest {
                         "/images/product-placeholder.svg",
                         Set.of(new CategoryId(categoryId)));
         return products.save(product);
+    }
+
+    private Product seedProduct(String sku, String name, String price, int stock) {
+        return seedProduct(sku, name, new Money(new BigDecimal(price)), stock);
     }
 }

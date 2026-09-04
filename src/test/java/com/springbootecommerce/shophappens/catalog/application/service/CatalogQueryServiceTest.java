@@ -1,10 +1,12 @@
 package com.springbootecommerce.shophappens.catalog.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductSummary;
+import com.springbootecommerce.shophappens.catalog.application.port.out.ProductPage;
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductRepository;
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
 import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
@@ -49,6 +51,31 @@ class CatalogQueryServiceTest {
         assertThat(result.get(0).imageUrl()).isEqualTo("/images/product-placeholder.svg");
         assertThat(result.get(1).product().value()).isEqualTo(8L);
         assertThat(result.get(1).sku()).isEqualTo("MAGI-006");
+    }
+
+    @Test
+    void findActivePageMapsProductsAndMetadata() {
+        Product seven = restoredProduct(7L, "WEAP-002", "Rubber Duck of Debugging", "18.99", 5);
+        when(productRepository.findActivePage(1, 20))
+                .thenReturn(new ProductPage(List.of(seven), 1, 20, 21, 2));
+
+        var result = service.findActivePage(1, 20);
+
+        assertThat(result.products())
+                .singleElement()
+                .extracting(ProductSummary::sku)
+                .isEqualTo("WEAP-002");
+        assertThat(result.page()).isEqualTo(1);
+        assertThat(result.size()).isEqualTo(20);
+        assertThat(result.totalElements()).isEqualTo(21);
+        assertThat(result.totalPages()).isEqualTo(2);
+    }
+
+    @Test
+    void findActivePageRejectsOversizedPage() {
+        assertThatThrownBy(() -> service.findActivePage(0, 21))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("20");
     }
 
     @Test
