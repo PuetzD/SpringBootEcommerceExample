@@ -80,6 +80,15 @@ class ProductAdminApiControllerTest {
     }
 
     @Test
+    void missingProductReturnsCatalogNotFoundError() throws Exception {
+        when(productAdminQuery.findProduct(new ProductReference(1L))).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/admin/products/1").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("catalog.product.not-found"));
+    }
+
+    @Test
     void invalidProductPayloadReturnsBadRequest() throws Exception {
         mockMvc.perform(
                         post("/api/admin/products")

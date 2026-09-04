@@ -7,6 +7,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAd
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdministrationQuery;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdministrationUseCase;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductCategorySummary;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductNotFoundException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductRevision;
 import com.springbootecommerce.shophappens.catalog.application.port.in.UpdateProductCommand;
@@ -17,7 +18,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,7 +29,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequiredArgsConstructor
@@ -59,10 +58,7 @@ public class ProductAdminApiController {
         return productAdminQuery
                 .findProduct(new ProductReference(id))
                 .map(this::toResponse)
-                .orElseThrow(
-                        () ->
-                                new ResponseStatusException(
-                                        HttpStatus.NOT_FOUND, "Product not found"));
+                .orElseThrow(() -> new ProductNotFoundException(new ProductReference(id)));
     }
 
     @PostMapping("/products")
