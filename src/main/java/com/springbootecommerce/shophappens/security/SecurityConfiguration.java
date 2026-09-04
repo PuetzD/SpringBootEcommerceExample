@@ -7,6 +7,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
 @Configuration
 @EnableWebSecurity
@@ -33,6 +34,7 @@ public class SecurityConfiguration {
                                         .logoutSuccessUrl("/admin/login?logout")
                                         .permitAll())
                 .exceptionHandling(exception -> exception.accessDeniedPage("/403"));
+        applySecurityHeaders(http);
 
         return http.build();
     }
@@ -73,7 +75,39 @@ public class SecurityConfiguration {
                                         .logoutSuccessUrl("/login?logout")
                                         .permitAll())
                 .exceptionHandling(exception -> exception.accessDeniedPage("/403"));
+        applySecurityHeaders(http);
 
         return http.build();
+    }
+
+    private static void applySecurityHeaders(HttpSecurity http) throws Exception {
+        http.headers(
+                headers -> {
+                    headers.contentSecurityPolicy(
+                            csp ->
+                                    csp.policyDirectives(
+                                            "default-src 'self'; "
+                                                    + "script-src 'self'; "
+                                                    + "style-src 'self' 'unsafe-inline'; "
+                                                    + "img-src 'self' data:; "
+                                                    + "font-src 'self'; "
+                                                    + "object-src 'none'; "
+                                                    + "base-uri 'self'; "
+                                                    + "frame-ancestors 'none'"));
+                    headers.frameOptions(frame -> frame.deny());
+                    headers.referrerPolicy(
+                            referrer ->
+                                    referrer.policy(
+                                            ReferrerPolicyHeaderWriter.ReferrerPolicy
+                                                    .STRICT_ORIGIN_WHEN_CROSS_ORIGIN));
+                    headers.permissionsPolicy(
+                            permissions ->
+                                    permissions.policy("geolocation=(), microphone=(), camera=()"));
+                    headers.httpStrictTransportSecurity(
+                            hsts ->
+                                    hsts.includeSubDomains(true)
+                                            .preload(true)
+                                            .maxAgeInSeconds(31536000));
+                });
     }
 }
