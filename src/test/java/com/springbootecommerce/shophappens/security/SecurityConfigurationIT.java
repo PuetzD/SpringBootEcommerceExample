@@ -50,6 +50,28 @@ class SecurityConfigurationIT extends AbstractIntegrationTest {
     }
 
     @Test
+    void sendsSecureBrowserHeadersOnPublicAndAdminResponses() throws Exception {
+        mockMvc.perform(get("/catalog/security-test").secure(true))
+                .andExpect(status().isOk())
+                .andExpect(
+                        header().string(
+                                        "Content-Security-Policy",
+                                        containsString("default-src 'self'")))
+                .andExpect(header().string("X-Frame-Options", "DENY"))
+                .andExpect(header().string("Referrer-Policy", "strict-origin-when-cross-origin"))
+                .andExpect(
+                        header().string(
+                                        "Permissions-Policy",
+                                        "geolocation=(), microphone=(), camera=()"))
+                .andExpect(
+                        header().string("Strict-Transport-Security", containsString("max-age=")));
+
+        mockMvc.perform(get("/admin/login").secure(true))
+                .andExpect(status().isOk())
+                .andExpect(header().string("X-Frame-Options", "DENY"));
+    }
+
+    @Test
     void rendersHomepageInThePublicIndexWithSeoMetadata() throws Exception {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
