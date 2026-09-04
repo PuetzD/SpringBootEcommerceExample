@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryReference;
 import com.springbootecommerce.shophappens.catalog.application.port.out.CategoryRepository;
+import com.springbootecommerce.shophappens.catalog.application.port.out.ProductPage;
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductRepository;
 import com.springbootecommerce.shophappens.catalog.domain.model.Category;
 import com.springbootecommerce.shophappens.catalog.domain.model.CategoryId;
@@ -88,8 +89,8 @@ class CategoryQueryServiceTest {
                 restoredProduct(1L, "ELEC-001", "Laptop", "999.99", 5, Set.of(new CategoryId(1L)));
         Product prod2 =
                 restoredProduct(2L, "BOOK-001", "Novel", "19.99", 10, Set.of(new CategoryId(2L)));
-        when(productRepository.findActiveByCategoryId(new CategoryId(1L)))
-                .thenReturn(List.of(prod1));
+        when(productRepository.findActivePageByCategoryId(new CategoryId(1L), 0, 20))
+                .thenReturn(new ProductPage(List.of(prod1), 0, 20, 1, 1));
 
         var result = service.findActiveProductsByCategorySlug("electronics");
 
