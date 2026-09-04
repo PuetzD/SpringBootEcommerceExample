@@ -17,8 +17,26 @@ import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWrite
 public class SecurityConfiguration {
     @Bean
     @Order(1)
+    SecurityFilterChain adminApiSecurityFilterChain(HttpSecurity http) throws Exception {
+        http.securityMatcher("/api/admin/**")
+                .authorizeHttpRequests(auth -> auth.anyRequest().hasRole("ADMIN"))
+                .exceptionHandling(
+                        exception ->
+                                exception
+                                        .authenticationEntryPoint(
+                                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                                        .accessDeniedHandler(
+                                                new HttpStatusAccessDeniedHandler(
+                                                        HttpStatus.FORBIDDEN)));
+        applySecurityHeaders(http);
+
+        return http.build();
+    }
+
+    @Bean
+    @Order(2)
     SecurityFilterChain adminSecurityFilterChain(HttpSecurity http) throws Exception {
-        http.securityMatcher("/admin/**", "/api/admin/**")
+        http.securityMatcher("/admin/**")
                 .authorizeHttpRequests(
                         auth ->
                                 auth.requestMatchers("/admin/login")
@@ -36,28 +54,14 @@ public class SecurityConfiguration {
                                 logout.logoutUrl("/admin/logout")
                                         .logoutSuccessUrl("/admin/login?logout")
                                         .permitAll())
-                .exceptionHandling(
-                        exception ->
-                                exception
-                                        .defaultAuthenticationEntryPointFor(
-                                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
-                                                request ->
-                                                        request.getServletPath()
-                                                                .startsWith("/api/admin/"))
-                                        .defaultAccessDeniedHandlerFor(
-                                                new HttpStatusAccessDeniedHandler(
-                                                        HttpStatus.FORBIDDEN),
-                                                request ->
-                                                        request.getServletPath()
-                                                                .startsWith("/api/admin/"))
-                                        .accessDeniedPage("/403"));
+                .exceptionHandling(exception -> exception.accessDeniedPage("/403"));
         applySecurityHeaders(http);
 
         return http.build();
     }
 
     @Bean
-    @Order(2)
+    @Order(3)
     SecurityFilterChain storefrontSecurityFilterChain(
             HttpSecurity http, CartMergingAuthenticationSuccessHandler successHandler)
             throws Exception {
