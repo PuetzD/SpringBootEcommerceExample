@@ -28,9 +28,6 @@ public record Order(
         Objects.requireNonNull(placedAt, "placedAt must not be null");
         Objects.requireNonNull(total, "total must not be null");
         items = List.copyOf(items);
-        if (items.isEmpty()) {
-            throw new EmptyCheckoutException();
-        }
         Money calculatedTotal =
                 items.stream()
                         .map(OrderItem::lineTotal)
