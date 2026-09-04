@@ -26,9 +26,12 @@ internals are never shared.
 - **Catalog ↔ Ordering**: Catalog and Ordering share the stable meaning of Money. Ordering snapshots the current Catalog price when an Order is placed.
 - **Ordering → Catalog + Cart**: Successful checkout decreases Catalog stock and clears the Cart atomically with Order creation.
 - **Ordering → Integration platform**: Ordering records versioned immutable integration events in its transactional outbox. Kafka publication is asynchronous and post-commit; events expose identifiers and snapshots, never aggregates or persistence entities.
+- **Ordering ↔ Payment/Reservation/Fulfillment (planned capabilities)**: these capabilities own separate Payment, Reservation, Shipment, Return, and Refund lifecycles. They collaborate through immutable published contracts and authenticated idempotent operations; none becomes a shared aggregate or persistence entity.
 - **Administration → Catalog**: Administration is a protected inbound delivery adapter, not a sixth bounded context. Its HTTP and React-Admin delivery surfaces consume Catalog's published input ports; Catalog owns the administration language, policies, and transactions.
 
 No context shares a persistence entity with another context. Cross-context collaboration uses identifiers, immutable contracts, and application operations.
+
+The portfolio extensibility baseline models German B2C physical-goods commerce in EUR with simple SKU-backed Products and account-required checkout. Payment, tax, shipping, reservation, fulfillment, and privacy automation remain future capabilities with separate decisions and contracts. The operating assumptions are recorded in [the commerce operating model](./docs/superpowers/specs/2026-09-03-commerce-operating-model.md).
 
 ## Identifier value objects
 

@@ -37,5 +37,5 @@ The relationship between a Product and a Category. A Product may have multiple m
 _Avoid_: Product ownership, category inventory
 
 **Money**:
-A non-negative monetary amount with two-decimal precision. Amount determines monetary equality because this shop uses one implicit currency.
-_Avoid_: Decimal, currency-specific Money
+A non-negative EUR monetary amount with two-decimal precision. New commercial records carry explicit EUR currency metadata, and amounts from another currency cannot be combined.
+_Avoid_: Decimal, implicit currency, exchange rate

@@ -28,6 +28,26 @@ class MoneyTest {
     }
 
     @Test
+    void exposesExplicitCurrencyAndPreservesItThroughArithmetic() {
+        var price = new Money(new BigDecimal("19.99"), Currency.EUR);
+
+        assertThat(price.currency()).isEqualTo(Currency.EUR);
+        assertThat(price.add(price).currency()).isEqualTo(Currency.EUR);
+        assertThat(price.multiply(2).currency()).isEqualTo(Currency.EUR);
+        assertThat(Money.zero(Currency.EUR).currency()).isEqualTo(Currency.EUR);
+    }
+
+    @Test
+    void rejectsAddingDifferentCurrencies() {
+        var euro = new Money(new BigDecimal("1.00"), Currency.EUR);
+        var dollar = new Money(new BigDecimal("1.00"), Currency.USD);
+
+        assertThatThrownBy(() -> euro.add(dollar))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Currency mismatch");
+    }
+
+    @Test
     void rejectsNonPositiveMultipliers() {
         var price = new Money(new BigDecimal("1.00"));
         assertThatThrownBy(() -> price.multiply(0)).isInstanceOf(IllegalArgumentException.class);

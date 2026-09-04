@@ -37,13 +37,41 @@ The Order Address recording where billing correspondence is to be directed.
 _Avoid_: Billing Address, Invoice Address
 
 **Order Total**:
-The Money sum of all Order Item line totals.
-_Avoid_: Cart total, payment amount
+The immutable payable EUR amount accepted at Checkout. It is the sum of merchandise, discounts, shipping, and tax in the accepted Price Breakdown.
+_Avoid_: Cart total, current catalog total, recomputed historical total
+
+**Price Breakdown**:
+The immutable accepted calculation of merchandise, discounts, shipping, tax basis, tax, and payable total for one Checkout Quote.
+_Avoid_: Cart total, invoice, provider response
+
+**Checkout Quote**:
+A short-lived, versioned offer containing authoritative line snapshots, normalized addresses, selected shipping, tax calculation, and a Price Breakdown. It must be explicitly accepted before an Order is created.
+_Avoid_: Cart, estimate, Order
+
+**Reservation**:
+An expiring commitment of Catalog stock for one Checkout Quote. It is consumed once by a completed Order or released once on failure/expiry.
+_Avoid_: Stock decrement, Order, availability flag
+
+**Payment**:
+The separately tracked provider-backed attempt to authorize and capture the accepted Order Total. Payment state does not replace Order state.
+_Avoid_: Checkout, card data, paid Order
+
+**Shipment**:
+The fulfillment record for sending an Order to its Shipping Order Address, including carrier progress and tracking.
+_Avoid_: Order, shipping charge, delivery promise
+
+**Return**:
+An authorized post-delivery request to send purchased goods back for inspection and disposition.
+_Avoid_: Cancellation, Refund
+
+**Refund**:
+A recorded reversal of all or part of a captured Payment, linked to the applicable Order items and provider result.
+_Avoid_: Return, discount, cancellation
 
 **Placed Order**:
 An Order accepted after every Product and Address passes Checkout and the purchase is recorded completely.
 _Avoid_: Confirmed Order, paid Order
 
 **Money**:
-A non-negative monetary amount with two-decimal precision. Ordering uses the same implicit-currency meaning of Money as Catalog.
-_Avoid_: Decimal, currency-specific Money
+A non-negative EUR monetary amount with two-decimal precision. Ordering snapshots the currency, tax basis, tax, charges, and payable amount and never recalculates a historical Order.
+_Avoid_: Decimal, implicit currency, recomputed total
