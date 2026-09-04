@@ -7,6 +7,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAd
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminSearch;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminView;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductCategorySummary;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductNotFoundException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductRevision;
 import com.springbootecommerce.shophappens.catalog.application.port.in.StaleProductRevisionException;
@@ -20,6 +21,7 @@ import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -152,7 +154,11 @@ class ProductRepositoryAdapter implements ProductRepository {
                                         Collectors.toMap(
                                                 ProductJpaEntity::getId, Function.identity()));
         List<ProductAdminView> content =
-                ids.stream().map(detailed::get).map(this::toAdminView).toList();
+                ids.stream()
+                        .map(detailed::get)
+                        .filter(Objects::nonNull)
+                        .map(this::toAdminView)
+                        .toList();
         return new ProductAdminPage(
                 content,
                 search.page(),
@@ -189,8 +195,7 @@ class ProductRepositoryAdapter implements ProductRepository {
         ProductJpaEntity entity =
                 springData
                         .findDetailedById(id)
-                        .orElseThrow(
-                                () -> new IllegalArgumentException("Product not found: " + id));
+                        .orElseThrow(() -> new ProductNotFoundException(new ProductReference(id)));
         if (entity.getVersion() != expectedRevision.value()) {
             throw new StaleProductRevisionException(new ProductReference(id), expectedRevision);
         }

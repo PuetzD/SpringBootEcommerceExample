@@ -4,6 +4,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryA
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdminSearch;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdminView;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryInUseException;
+import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryNotFoundException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryOption;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryRevision;
@@ -122,7 +123,7 @@ class CategoryRepositoryAdapter implements CategoryRepository {
                 springData
                         .findById(id)
                         .orElseThrow(
-                                () -> new IllegalArgumentException("Category not found: " + id));
+                                () -> new CategoryNotFoundException(new CategoryReference(id)));
         if (entity.getVersion() != expectedRevision.value()) {
             throw new StaleCategoryRevisionException(new CategoryReference(id), expectedRevision);
         }
@@ -158,8 +159,8 @@ class CategoryRepositoryAdapter implements CategoryRepository {
                         .findById(id.value())
                         .orElseThrow(
                                 () ->
-                                        new IllegalArgumentException(
-                                                "Category not found: " + id.value()));
+                                        new CategoryNotFoundException(
+                                                new CategoryReference(id.value())));
         if (entity.getVersion() != expectedRevision.value()) {
             throw new StaleCategoryRevisionException(
                     new CategoryReference(id.value()), expectedRevision);

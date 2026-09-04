@@ -24,6 +24,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.RenameCat
 import com.springbootecommerce.shophappens.security.SecurityConfiguration;
 import com.springbootecommerce.shophappens.security.service.CartMergingAuthenticationSuccessHandler;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -68,6 +69,16 @@ class CategoryAdminApiControllerTest {
     void customerReceivesForbiddenForCategories() throws Exception {
         mockMvc.perform(get("/api/admin/categories").with(user("customer").roles("CUSTOMER")))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void missingCategoryReturnsCatalogNotFoundError() throws Exception {
+        when(categoryAdminQuery.findCategory(new CategoryReference(7L)))
+                .thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/admin/categories/7").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("catalog.category.not-found"));
     }
 
     @Test

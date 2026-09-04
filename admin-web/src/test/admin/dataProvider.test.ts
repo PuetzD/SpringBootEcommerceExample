@@ -114,6 +114,21 @@ describe('dataProvider', () => {
     expect(get).toHaveBeenNthCalledWith(2, '/api/admin/categories/8')
   })
 
+  it('normalizes requested product records for react-admin reference inputs', async () => {
+    get.mockImplementation((path: string) =>
+      Promise.resolve({...product, id: Number(path.split('/').pop())}),
+    )
+
+    await expect(
+      dataProvider.getMany('products', {ids: [9, 10]}),
+    ).resolves.toEqual({
+      data: [{...normalizedProduct, id: 9}, {...normalizedProduct, id: 10}],
+    })
+
+    expect(get).toHaveBeenNthCalledWith(1, '/api/admin/products/9')
+    expect(get).toHaveBeenNthCalledWith(2, '/api/admin/products/10')
+  })
+
   it('normalizes product categoryIds for create responses', async () => {
     post.mockResolvedValue(product)
 

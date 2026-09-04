@@ -4,6 +4,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryA
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdminView;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdministrationQuery;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdministrationUseCase;
+import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryNotFoundException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryOption;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryRevision;
@@ -59,10 +60,7 @@ public class CategoryAdminApiController {
         return categoryAdminQuery
                 .findCategory(new CategoryReference(id))
                 .map(this::toResponse)
-                .orElseThrow(
-                        () ->
-                                new ResponseStatusException(
-                                        HttpStatus.NOT_FOUND, "Category not found"));
+                .orElseThrow(() -> new CategoryNotFoundException(new CategoryReference(id)));
     }
 
     @GetMapping("/categories/options")
