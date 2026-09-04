@@ -11,13 +11,10 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          if (id.includes('/node_modules/react-admin/') || id.includes('/node_modules/ra-')) {
-            return 'react-admin'
-          }
-          if (id.includes('/node_modules/react-router') || id.includes('/node_modules/@remix-run/')) {
-            return 'router'
-          }
+        manualChunks: {
+          'react-admin': ['react-admin'],
+          mui: ['@mui/material', '@mui/icons-material'],
+          router: ['react-router-dom'],
         },
       },
     },
