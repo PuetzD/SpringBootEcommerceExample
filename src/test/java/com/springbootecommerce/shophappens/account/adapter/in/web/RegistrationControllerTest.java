@@ -1,5 +1,6 @@
 package com.springbootecommerce.shophappens.account.adapter.in.web;
 
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -39,5 +40,14 @@ class RegistrationControllerTest {
                                 .param("password", "twelve-chars!"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/login?registered"));
+    }
+
+    @Test
+    void rejectsMissingPasswordBeforeCallingRegistration() throws Exception {
+        mvc.perform(post("/register").with(csrf()).param("email", "customer@example.com"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("customer/register"));
+
+        verifyNoInteractions(registration);
     }
 }
