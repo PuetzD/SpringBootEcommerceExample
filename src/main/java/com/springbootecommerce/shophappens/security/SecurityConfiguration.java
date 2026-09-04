@@ -54,6 +54,7 @@ public class SecurityConfiguration {
                                                 "/register/**",
                                                 "/error",
                                                 "/403",
+                                                "/actuator/health/**",
                                                 "/css/**",
                                                 "/js/**",
                                                 "/images/**",
