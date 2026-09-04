@@ -176,6 +176,12 @@ class ProductRepositoryAdapter implements ProductRepository {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Optional<ProductAdminView> findAdminViewById(ProductId id) {
+        return springData.findDetailedById(id.value()).map(this::toAdminView);
+    }
+
+    @Override
     @Transactional
     public VersionedProduct insertForAdministration(Product product) {
         try {

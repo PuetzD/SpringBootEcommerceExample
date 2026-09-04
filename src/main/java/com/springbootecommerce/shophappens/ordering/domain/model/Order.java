@@ -32,7 +32,9 @@ public record Order(
             throw new EmptyCheckoutException();
         }
         Money calculatedTotal =
-                items.stream().map(OrderItem::lineTotal).reduce(Money.zero(), Money::add);
+                items.stream()
+                        .map(OrderItem::lineTotal)
+                        .reduce(Money.zero(total.currency()), Money::add);
         if (!calculatedTotal.equals(total)) {
             throw new IllegalArgumentException("Order total does not match item totals");
         }
@@ -53,7 +55,13 @@ public record Order(
             OrderAddress shippingAddress,
             OrderAddress billingAddress,
             Instant placedAt) {
-        Money total = items.stream().map(OrderItem::lineTotal).reduce(Money.zero(), Money::add);
+        if (items.isEmpty()) {
+            throw new EmptyCheckoutException();
+        }
+        Money total =
+                items.stream()
+                        .map(OrderItem::lineTotal)
+                        .reduce(Money.zero(items.get(0).lineTotal().currency()), Money::add);
         return new Order(
                 orderId,
                 orderNumber,

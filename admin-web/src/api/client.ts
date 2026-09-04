@@ -18,7 +18,7 @@ export class ApiError extends Error {
 
 function csrfHeaders(): Record<string, string> {
     const token = getToken()
-    return token ? {'X-XSRF-TOKEN': token} : {}
+    return token ? {'X-CSRF-TOKEN': token} : {}
 }
 
 function revisionHeaders(revision?: number): Record<string, string> {

@@ -6,6 +6,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAd
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdministrationQuery;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductRepository;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,11 +25,6 @@ public class ProductAdministrationQueryService implements ProductAdministrationQ
 
     @Override
     public Optional<ProductAdminView> findProduct(ProductReference product) {
-        return productRepository
-                .searchForAdministration(new ProductAdminSearch(0, 100))
-                .content()
-                .stream()
-                .filter(view -> view.product().equals(product))
-                .findFirst();
+        return productRepository.findAdminViewById(new ProductId(product.value()));
     }
 }
