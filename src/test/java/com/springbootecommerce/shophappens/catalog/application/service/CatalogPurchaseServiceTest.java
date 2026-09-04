@@ -9,12 +9,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
+import com.springbootecommerce.shophappens.catalog.application.port.in.PublishedInsufficientStockException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PublishedProductUnavailableException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PurchaseLine;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PurchasedProductSnapshot;
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductRepository;
-import com.springbootecommerce.shophappens.catalog.domain.exception.InsufficientStockException;
-import com.springbootecommerce.shophappens.catalog.domain.exception.ProductUnavailableException;
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
 import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
@@ -89,7 +88,7 @@ class CatalogPurchaseServiceTest {
                         () ->
                                 service.purchase(
                                         List.of(new PurchaseLine(new ProductReference(7L), 1))))
-                .isInstanceOf(ProductUnavailableException.class);
+                .isInstanceOf(PublishedProductUnavailableException.class);
         verify(products, never()).save(any());
     }
 
@@ -116,7 +115,7 @@ class CatalogPurchaseServiceTest {
                         () ->
                                 service.purchase(
                                         List.of(new PurchaseLine(new ProductReference(7L), 5))))
-                .isInstanceOf(InsufficientStockException.class);
+                .isInstanceOf(PublishedInsufficientStockException.class);
         verify(products, never()).save(any());
     }
 

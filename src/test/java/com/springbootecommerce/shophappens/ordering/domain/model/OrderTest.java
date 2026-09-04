@@ -49,6 +49,30 @@ class OrderTest {
     }
 
     @Test
+    void rejectsRestoredOrderWhenPersistedTotalDoesNotMatchItems() {
+        assertThatThrownBy(
+                        () ->
+                                Order.restore(
+                                        OrderId.random(),
+                                        new OrderNumber("ORD-20260828-ABC123DEF456"),
+                                        new CheckoutId(UUID.randomUUID()),
+                                        new CustomerId(42L),
+                                        List.of(
+                                                new OrderItem(
+                                                        new ProductId(7L),
+                                                        "ELEC-001",
+                                                        "Headphones",
+                                                        new Money(new BigDecimal("19.99")),
+                                                        2)),
+                                        shippingAddress(),
+                                        billingAddress(),
+                                        Instant.parse("2026-08-28T08:00:00Z"),
+                                        new Money(new BigDecimal("19.99"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("total");
+    }
+
+    @Test
     void itemsAreDefensiveCopyAgainstExternalMutation() {
         List<OrderItem> source =
                 new ArrayList<>(

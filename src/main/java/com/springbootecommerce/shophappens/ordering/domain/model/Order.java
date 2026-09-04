@@ -31,6 +31,11 @@ public record Order(
         if (items.isEmpty()) {
             throw new EmptyCheckoutException();
         }
+        Money calculatedTotal =
+                items.stream().map(OrderItem::lineTotal).reduce(Money.zero(), Money::add);
+        if (!calculatedTotal.equals(total)) {
+            throw new IllegalArgumentException("Order total does not match item totals");
+        }
         if (shippingAddress.role() != AddressRole.SHIPPING) {
             throw new IllegalArgumentException("Shipping address must have role SHIPPING");
         }

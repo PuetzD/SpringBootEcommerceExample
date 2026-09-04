@@ -43,7 +43,7 @@ public class CatalogPurchaseService implements PurchaseProductsUseCase {
                                             .orElseThrow(
                                                     () ->
                                                             new PublishedProductUnavailableException(
-                                                                    new ProductId(
+                                                                    new ProductReference(
                                                                             line.product().value()),
                                                                     null));
                             try {
@@ -52,14 +52,19 @@ public class CatalogPurchaseService implements PurchaseProductsUseCase {
                                 return toSnapshot(facts);
                             } catch (ProductUnavailableException exception) {
                                 throw new PublishedProductUnavailableException(
-                                        exception.getProductId(), exception.getSku());
+                                        new ProductReference(exception.getProductId().value()),
+                                        exception.getSku() == null
+                                                ? null
+                                                : exception.getSku().value());
                             } catch (
                                     com.springbootecommerce.shophappens.catalog.domain.exception
                                                     .InsufficientStockException
                                             exception) {
                                 throw new PublishedInsufficientStockException(
-                                        exception.getProductId(),
-                                        exception.getSku(),
+                                        new ProductReference(exception.getProductId().value()),
+                                        exception.getSku() == null
+                                                ? null
+                                                : exception.getSku().value(),
                                         exception.getRequestedQuantity(),
                                         exception.getAvailableQuantity());
                             }

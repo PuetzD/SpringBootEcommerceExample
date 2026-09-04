@@ -9,8 +9,8 @@ public record OrderDetail(
         String orderNumber,
         Money total,
         Instant placedAt,
-        List<OrderItemDetail> items,
-        List<OrderAddressDetail> addresses) {
+        List<OrderItemView> items,
+        List<OrderAddressView> addresses) {
     public OrderDetail {
         items = List.copyOf(items);
         addresses = List.copyOf(addresses);
