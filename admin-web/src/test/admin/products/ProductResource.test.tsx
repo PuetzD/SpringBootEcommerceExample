@@ -1,6 +1,6 @@
 import {render, screen} from '@testing-library/react'
 import {AdminContext, ResourceContextProvider} from 'react-admin'
-import {ProductList} from './ProductList'
+import {ProductList} from '../../../admin/products/ProductList'
 
 describe('Product resource', () => {
   it('renders server-backed product columns and inactive activation action', async () => {

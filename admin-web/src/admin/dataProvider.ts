@@ -239,7 +239,19 @@ export const dataProvider = {
     return {data: normalizeRecord(response)}
   },
 
-  getMany: unsupportedMethod('getMany'),
+  async getMany(resource, params) {
+    const path = resourcePath(resource)
+    const records = await runWithReactAdminError(() =>
+      Promise.all(params.ids.map((id) => ApiClient.get<Product | Category>(`${path}/${id}`))),
+    )
+
+    return {
+      data:
+        resource === 'products'
+          ? records.map((record) => normalizeProductRecord(record as Product))
+          : records.map((record) => normalizeRecord(record as Category)),
+    }
+  },
   getManyReference: unsupportedMethod('getManyReference'),
 
   async update(resource, params) {

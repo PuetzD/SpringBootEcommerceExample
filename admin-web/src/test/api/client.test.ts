@@ -15,7 +15,7 @@ describe('ApiClient', () => {
                 json: async () => data,
             })
 
-            const { ApiClient } = await import('./client')
+            const { ApiClient } = await import('../../api/client')
             const result = await ApiClient.get('/api/admin/products')
             expect(result).toEqual(data)
         })
@@ -29,8 +29,8 @@ describe('ApiClient', () => {
                 json: async () => ({ success: true }),
             })
 
-            const { ApiClient } = await import('./client')
-            const csrfModule = await import('../auth/CsrfProvider')
+            const { ApiClient } = await import('../../api/client')
+            const csrfModule = await import('../../auth/CsrfProvider')
             csrfModule.setToken(csrfToken)
 
             await ApiClient.post('/api/admin/products', { name: 'Test' })
@@ -47,8 +47,8 @@ describe('ApiClient', () => {
                 headers: new Headers(),
             })
 
-            const { ApiClient } = await import('./client')
-            const csrfModule = await import('../auth/CsrfProvider')
+            const { ApiClient } = await import('../../api/client')
+            const csrfModule = await import('../../auth/CsrfProvider')
             csrfModule.setToken(csrfToken)
 
             await ApiClient.delete('/api/admin/products/1')
@@ -65,7 +65,7 @@ describe('ApiClient', () => {
                 json: async () => ({ content: [] }),
             })
 
-            const { ApiClient } = await import('./client')
+            const { ApiClient } = await import('../../api/client')
             await ApiClient.get('/api/admin/products', {
                 params: { page: 1, size: 20, q: 'router', active: false },
             })
@@ -83,7 +83,7 @@ describe('ApiClient', () => {
                 json: async () => ({ id: 1 }),
             })
 
-            const { ApiClient } = await import('./client')
+            const { ApiClient } = await import('../../api/client')
             await ApiClient.put('/api/admin/products/1', { name: 'Updated' }, { revision: 4 })
 
             expect((global.fetch as any).mock.calls[0][1].headers['If-Match']).toBe('"4"')
@@ -98,7 +98,7 @@ describe('ApiClient', () => {
                 json: async () => errorBody,
             })
 
-            const { ApiClient } = await import('./client')
+            const { ApiClient } = await import('../../api/client')
             await expect(ApiClient.get('/api/admin/products')).rejects.toMatchObject({
                 status: 404,
                 message: 'Not found',

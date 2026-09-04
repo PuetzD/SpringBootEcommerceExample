@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
-import { CsrfProvider } from '../auth/CsrfProvider'
-import { ADMIN_BASENAME, adminRoutes } from '../app/router'
+import { CsrfProvider } from '../../auth/CsrfProvider'
+import { ADMIN_BASENAME, adminRoutes } from '../../app/router'
 
 const emptyPage = JSON.stringify({content: [], page: 0, size: 20, totalElements: 0, totalPages: 0})
 

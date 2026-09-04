@@ -6,19 +6,19 @@ export function DashboardPage() {
         <div className="card bg-base-100 shadow-sm">
           <div className="card-body">
             <h3 className="card-title text-sm">Sales</h3>
-            <p className="text-3xl font-bold">$58.4K</p>
+            <p className="text-3xl font-bold">No data connected</p>
           </div>
         </div>
         <div className="card bg-base-100 shadow-sm">
           <div className="card-body">
             <h3 className="card-title text-sm">Orders</h3>
-            <p className="text-3xl font-bold">328</p>
+            <p className="text-3xl font-bold">No data connected</p>
           </div>
         </div>
         <div className="card bg-base-100 shadow-sm">
           <div className="card-body">
             <h3 className="card-title text-sm">Customers</h3>
-            <p className="text-3xl font-bold">1,204</p>
+            <p className="text-3xl font-bold">No data connected</p>
           </div>
         </div>
       </div>
