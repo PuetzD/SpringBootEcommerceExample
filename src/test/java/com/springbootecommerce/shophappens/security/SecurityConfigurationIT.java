@@ -43,7 +43,9 @@ class SecurityConfigurationIT extends AbstractIntegrationTest {
 
     @Test
     void permitsAnonymousPublicRoutes() throws Exception {
-        mockMvc.perform(get("/catalog/security-test")).andExpect(status().isOk());
+        mockMvc.perform(get("/catalog/security-test"))
+                .andExpect(status().isOk())
+                .andExpect(header().exists("X-Correlation-ID"));
         mockMvc.perform(get("/cart/security-test")).andExpect(status().isOk());
         mockMvc.perform(get("/login")).andExpect(status().isOk());
         mockMvc.perform(get("/admin/login")).andExpect(status().isOk());

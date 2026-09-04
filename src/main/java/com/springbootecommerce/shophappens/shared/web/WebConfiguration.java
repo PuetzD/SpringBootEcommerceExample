@@ -14,4 +14,9 @@ public class WebConfiguration {
                 .redirect(HttpStatus.PERMANENT_REDIRECT)
                 .build();
     }
+
+    @Bean
+    public CorrelationIdFilter correlationIdFilter() {
+        return new CorrelationIdFilter();
+    }
 }
