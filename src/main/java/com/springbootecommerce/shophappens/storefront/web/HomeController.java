@@ -23,7 +23,7 @@ public class HomeController {
 
         model.addAttribute("seo", seo);
         model.addAttribute("canonicalUrl", canonicalUrlFactory.forPath(seo.canonicalPath()));
-        model.addAttribute("featuredProducts", catalog.findAllActive().stream().limit(3).toList());
+        model.addAttribute("featuredProducts", catalog.findActivePage(0, 3).products());
         return "storefront/index";
     }
 }

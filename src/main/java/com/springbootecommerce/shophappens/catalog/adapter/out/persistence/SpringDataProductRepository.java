@@ -27,6 +27,10 @@ interface SpringDataProductRepository extends JpaRepository<ProductJpaEntity, Lo
     List<ProductJpaEntity> findByActiveTrueOrderByNameAscIdAsc();
 
     @EntityGraph(attributePaths = "categories")
+    org.springframework.data.domain.Page<ProductJpaEntity> findByActiveTrue(
+            org.springframework.data.domain.Pageable pageable);
+
+    @EntityGraph(attributePaths = "categories")
     List<ProductJpaEntity> findAllByOrderByNameAscIdAsc();
 
     @Query(

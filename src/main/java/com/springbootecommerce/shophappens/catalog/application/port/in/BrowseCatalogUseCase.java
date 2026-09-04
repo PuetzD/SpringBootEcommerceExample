@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface BrowseCatalogUseCase {
+    CatalogPage findActivePage(int page, int size);
+
     List<ProductSummary> findAllActive();
 
     Optional<ProductSummary> findActiveById(ProductReference product);

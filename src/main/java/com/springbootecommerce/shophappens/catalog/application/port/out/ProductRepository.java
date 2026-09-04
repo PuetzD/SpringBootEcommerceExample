@@ -21,6 +21,8 @@ public interface ProductRepository {
 
     List<Product> findAllActive();
 
+    ProductPage findActivePage(int page, int size);
+
     List<Product> findAll();
 
     ProductAdminPage searchForAdministration(ProductAdminSearch search);
