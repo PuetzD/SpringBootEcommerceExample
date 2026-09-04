@@ -45,7 +45,7 @@ public class CategoryQueryService implements BrowseCategoriesUseCase {
                         .orElseThrow(
                                 () -> new IllegalArgumentException("Category not found: " + slug));
         CategoryId categoryId = category.id().orElseThrow();
-        return productRepository.findActiveByCategoryId(categoryId).stream()
+        return productRepository.findActivePageByCategoryId(categoryId, 0, 20).products().stream()
                 .map(this::toSummary)
                 .toList();
     }

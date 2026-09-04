@@ -23,6 +23,8 @@ public interface ProductRepository {
 
     ProductPage findActivePage(int page, int size);
 
+    ProductPage findActivePageByCategoryId(CategoryId categoryId, int page, int size);
+
     List<Product> findAll();
 
     ProductAdminPage searchForAdministration(ProductAdminSearch search);

@@ -105,6 +105,27 @@ class ProductRepositoryAdapter implements ProductRepository {
 
     @Override
     @Transactional(readOnly = true)
+    public ProductPage findActivePageByCategoryId(CategoryId categoryId, int page, int size) {
+        var result =
+                springData.findByCategoriesIdAndActiveTrue(
+                        categoryId.value(),
+                        org.springframework.data.domain.PageRequest.of(
+                                page,
+                                size,
+                                org.springframework.data.domain.Sort.by(
+                                        org.springframework.data.domain.Sort.Direction.ASC,
+                                        "name",
+                                        "id")));
+        return new ProductPage(
+                result.getContent().stream().map(mapper::toDomain).toList(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Product> findAll() {
         return springData.findAllByOrderByNameAscIdAsc().stream().map(mapper::toDomain).toList();
     }
