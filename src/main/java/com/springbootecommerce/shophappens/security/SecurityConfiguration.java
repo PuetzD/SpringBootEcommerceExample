@@ -101,7 +101,7 @@ public class SecurityConfiguration {
                                     referrer.policy(
                                             ReferrerPolicyHeaderWriter.ReferrerPolicy
                                                     .STRICT_ORIGIN_WHEN_CROSS_ORIGIN));
-                    headers.permissionsPolicy(
+                    headers.permissionsPolicyHeader(
                             permissions ->
                                     permissions.policy("geolocation=(), microphone=(), camera=()"));
                     headers.httpStrictTransportSecurity(
