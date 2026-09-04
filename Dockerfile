@@ -24,7 +24,11 @@ RUN ./mvnw -B -q -DskipTests package
 
 FROM eclipse-temurin:21-jre
 
-RUN groupadd --system app && useradd --system --gid app app
+RUN apt-get update \
+        && apt-get install --no-install-recommends --yes curl \
+        && rm -rf /var/lib/apt/lists/* \
+        && groupadd --system app \
+        && useradd --system --gid app app
 
 WORKDIR /app
 COPY --from=build --chown=app:app /app/target/*.jar app.jar
@@ -32,4 +36,6 @@ COPY --from=build --chown=app:app /app/target/*.jar app.jar
 USER app
 
 EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+    CMD curl --fail --silent http://localhost:8080/actuator/health/liveness || exit 1
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
