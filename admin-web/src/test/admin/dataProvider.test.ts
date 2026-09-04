@@ -1,6 +1,6 @@
 import {HttpError} from 'react-admin'
-import {ApiError} from '../api/client'
-import type {Category, PageResponse, Product} from '../api/types'
+import {ApiError} from '../../api/client'
+import type {Category, PageResponse, Product} from '../../api/types'
 
 const {get, post, put, remove} = vi.hoisted(() => ({
   get: vi.fn(),
@@ -9,8 +9,8 @@ const {get, post, put, remove} = vi.hoisted(() => ({
   remove: vi.fn(),
 }))
 
-vi.mock('../api/client', async () => {
-  const actual = await vi.importActual<typeof import('../api/client')>('../api/client')
+vi.mock('../../api/client', async () => {
+  const actual = await vi.importActual<typeof import('../../api/client')>('../../api/client')
 
   return {
     ...actual,
@@ -23,7 +23,7 @@ vi.mock('../api/client', async () => {
   }
 })
 
-import {dataProvider} from './dataProvider'
+import {dataProvider} from '../../admin/dataProvider'
 
 const product: Product = {
   id: 9,
@@ -97,6 +97,21 @@ describe('dataProvider', () => {
     ).resolves.toEqual({
       data: normalizedProduct,
     })
+  })
+
+  it('loads requested records for react-admin reference inputs', async () => {
+    get.mockImplementation((path: string) =>
+      Promise.resolve({...category, id: Number(path.split('/').pop())}),
+    )
+
+    await expect(
+      dataProvider.getMany('categories', {ids: [3, 8]}),
+    ).resolves.toEqual({
+      data: [{...category, id: 3}, {...category, id: 8}],
+    })
+
+    expect(get).toHaveBeenNthCalledWith(1, '/api/admin/categories/3')
+    expect(get).toHaveBeenNthCalledWith(2, '/api/admin/categories/8')
   })
 
   it('normalizes product categoryIds for create responses', async () => {

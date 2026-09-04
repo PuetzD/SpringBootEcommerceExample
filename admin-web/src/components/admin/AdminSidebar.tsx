@@ -1,12 +1,18 @@
+import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined'
+import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined'
+import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
+import PeopleOutlinedIcon from '@mui/icons-material/PeopleOutlined'
+import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined'
+import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined'
 import { NavLink } from 'react-router-dom'
 
 const navItems = [
-  { to: '/', label: 'Dashboard', icon: '¦' },
-  { to: '/products', label: 'Products', icon: '?' },
-  { to: '/categories', label: 'Categories', icon: '?' },
-  { to: '/orders', label: 'Orders', icon: '?' },
-  { to: '/customers', label: 'Customers', icon: '?' },
-  { to: '/storefront', label: 'Storefront', icon: '?' },
+  { to: '/', label: 'Dashboard', icon: DashboardOutlinedIcon },
+  { to: '/products', label: 'Products', icon: Inventory2OutlinedIcon },
+  { to: '/categories', label: 'Categories', icon: CategoryOutlinedIcon },
+  { to: '/orders', label: 'Orders', icon: ShoppingBagOutlinedIcon },
+  { to: '/customers', label: 'Customers', icon: PeopleOutlinedIcon },
+  { to: '/storefront', label: 'Storefront', icon: StorefrontOutlinedIcon },
 ]
 
 export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
@@ -16,7 +22,7 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
         <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-base-content/60">Navigation</p>
       </div>
       <ul className="space-y-1">
-        {navItems.map(({ to, label, icon }) => (
+        {navItems.map(({ to, label, icon: Icon }) => (
           <li key={to}>
             <NavLink
               to={to}
@@ -26,7 +32,7 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
                 ['rounded-xl px-3 py-2 text-sm font-medium transition', isActive ? 'bg-primary text-primary-content' : 'text-base-content hover:bg-base-200'].join(' ')
               }
             >
-              <span aria-hidden="true" className="text-base">{icon}</span>
+              <Icon aria-hidden="true" fontSize="small" />
               <span>{label}</span>
             </NavLink>
           </li>

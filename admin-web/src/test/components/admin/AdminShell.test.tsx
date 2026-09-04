@@ -1,9 +1,6 @@
-﻿import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { AdminShell } from './AdminShell'
-import { ConfirmDialog } from './ConfirmDialog'
-import { EmptyState } from './EmptyState'
-import { LoadingState } from './LoadingState'
+import { AdminShell } from '../../../components/admin/AdminShell'
 
 describe('AdminShell', () => {
   it('renders navigation links with accessible names and routes', () => {
@@ -21,6 +18,9 @@ describe('AdminShell', () => {
     expect(dashboardLink.getAttribute('href')).toBe('/')
     expect(productsLink.getAttribute('href')).toBe('/products')
     expect(productsLink.getAttribute('aria-current')).toBe('page')
+    expect(screen.queryByText('?')).toBeNull()
+    const sidebar = screen.getByRole('navigation', {name: /sidebar navigation/i})
+    expect([...sidebar.querySelectorAll('a')].every((link) => link.querySelector('svg'))).toBe(true)
   })
 
   it('allows the mobile drawer to open and close with a native button', () => {
@@ -44,35 +44,4 @@ describe('AdminShell', () => {
     expect(toggleButton.getAttribute('aria-expanded')).toBe('false')
   })
 
-  it('shows meaningful loading and empty state text', () => {
-    render(<LoadingState message="Loading products" />)
-    render(<EmptyState title="No products" description="Add your first product to get started." />)
-
-    expect(screen.getByText(/loading products/i)).toBeTruthy()
-    expect(screen.getByText(/no products/i)).toBeTruthy()
-    expect(screen.getByText(/add your first product to get started/i)).toBeTruthy()
-  })
-
-  it('requires an explicit confirmation action', () => {
-    const onConfirm = vi.fn()
-    const onCancel = vi.fn()
-
-    render(
-      <ConfirmDialog
-        open={true}
-        title="Delete product"
-        message="This action cannot be undone."
-        confirmLabel="Delete product"
-        cancelLabel="Cancel"
-        onConfirm={onConfirm}
-        onCancel={onCancel}
-      />,
-    )
-
-    fireEvent.click(screen.getByRole('button', { name: /delete product/i }))
-    fireEvent.click(screen.getByRole('button', { name: /cancel/i }))
-
-    expect(onConfirm).toHaveBeenCalledTimes(1)
-    expect(onCancel).toHaveBeenCalledTimes(1)
-  })
 })

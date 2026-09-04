@@ -1,3 +1,7 @@
+import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
+import MenuOutlinedIcon from '@mui/icons-material/MenuOutlined'
+import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined'
+
 type AdminHeaderProps = {
   isDrawerOpen: boolean
   onToggle: () => void
@@ -15,7 +19,11 @@ export function AdminHeader({ isDrawerOpen, onToggle }: AdminHeaderProps) {
           aria-controls="admin-drawer"
           onClick={onToggle}
         >
-          <span aria-hidden="true" className="text-xl">?</span>
+          {isDrawerOpen ? (
+            <CloseOutlinedIcon aria-hidden="true" fontSize="small" />
+          ) : (
+            <MenuOutlinedIcon aria-hidden="true" fontSize="small" />
+          )}
         </button>
 
         <div className="flex items-center gap-3">
@@ -32,7 +40,7 @@ export function AdminHeader({ isDrawerOpen, onToggle }: AdminHeaderProps) {
 
       <div className="flex-none gap-2">
         <button type="button" className="btn btn-ghost btn-sm" aria-label="Refresh data">
-          <span aria-hidden="true">?</span>
+          <RefreshOutlinedIcon aria-hidden="true" fontSize="small" />
         </button>
         <button type="button" className="btn btn-primary btn-sm">
           New report

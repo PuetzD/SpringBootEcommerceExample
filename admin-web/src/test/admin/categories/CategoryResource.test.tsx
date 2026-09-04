@@ -1,6 +1,6 @@
 import {render, screen} from '@testing-library/react'
 import {AdminContext, ResourceContextProvider} from 'react-admin'
-import {CategoryList} from './CategoryList'
+import {CategoryList} from '../../../admin/categories/CategoryList'
 
 describe('Category resource', () => {
   it('renders category product counts from the data provider', async () => {
