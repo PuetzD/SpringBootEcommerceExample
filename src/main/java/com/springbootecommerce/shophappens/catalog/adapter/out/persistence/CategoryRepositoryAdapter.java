@@ -19,21 +19,17 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+@RequiredArgsConstructor
 @Repository
 class CategoryRepositoryAdapter implements CategoryRepository {
     private final SpringDataCategoryRepository springData;
     private final SpringDataProductRepository products;
-
-    CategoryRepositoryAdapter(
-            SpringDataCategoryRepository springData, SpringDataProductRepository products) {
-        this.springData = springData;
-        this.products = products;
-    }
 
     @Override
     @Transactional(readOnly = true)

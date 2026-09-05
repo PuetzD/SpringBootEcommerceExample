@@ -11,17 +11,15 @@ import com.springbootecommerce.shophappens.catalog.application.port.out.Category
 import com.springbootecommerce.shophappens.catalog.domain.model.CategoryId;
 import java.util.List;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class CategoryAdministrationQueryService implements CategoryAdministrationQuery {
     private final CategoryRepository categoryRepository;
-
-    public CategoryAdministrationQueryService(CategoryRepository categoryRepository) {
-        this.categoryRepository = categoryRepository;
-    }
 
     @Override
     public CategoryAdminPage listCategories(CategoryAdminSearch search) {
