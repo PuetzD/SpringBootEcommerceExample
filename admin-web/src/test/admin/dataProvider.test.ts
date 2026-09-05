@@ -180,6 +180,9 @@ describe('dataProvider', () => {
     await expect(dataProvider.delete('customers', {id: 12})).rejects.toThrow(
       'Unsupported react-admin method: delete for customers',
     )
+    await expect(dataProvider.getMany('customers', {ids: [12]})).rejects.toThrow(
+      'Unsupported react-admin method: getMany for customers',
+    )
   })
 
   it('loads requested records for react-admin reference inputs', async () => {

@@ -30,7 +30,7 @@ export function CustomerShow({id}: {id?: number}) {
               source="orderNumber"
               label="Order number"
               render={(order: CustomerOrder) => (
-                <Link to={order.orderUrl}>{order.orderNumber}</Link>
+                <Link className="link" to={order.orderUrl}>{order.orderNumber}</Link>
               )}
             />
             <NumberField source="total" options={{style: 'currency', currency: 'EUR'}} />
