@@ -225,6 +225,20 @@ npm run build:admin
 The generated bundle is written to `src/main/resources/static/admin/` and is
 ignored by Git.
 
+For frontend development with automatic rebuilds, run Spring Boot with the
+Maven plugin's `addResources` configuration and start the admin bundle watcher
+in separate terminals:
+
+```bash
+./mvnw spring-boot:run
+npm run -w admin-web build -- --watch
+```
+
+The application serves resources directly from `src/main/resources`, so Java
+does not need to be restarted after frontend changes. Run `npm run dev:css` in
+an additional terminal when changing Tailwind input styles. This watch mode
+reloads rebuilt assets on refresh; Vite's HMR development server is not used.
+
 ## AI Skills
 
 This repository includes project-local AI agent skills under `.agents/skills/`.

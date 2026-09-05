@@ -6,6 +6,13 @@ import path from 'path'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   base: './',
+  server: {
+    proxy: {
+      '/api': 'http://localhost:8080',
+      '/admin/login': 'http://localhost:8080',
+      '/admin/logout': 'http://localhost:8080',
+    },
+  },
   build: {
     outDir: '../src/main/resources/static/admin',
     emptyOutDir: true,
