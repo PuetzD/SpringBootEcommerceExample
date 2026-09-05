@@ -25,6 +25,6 @@ interface SpringDataCustomerRepository extends JpaRepository<CustomerJpaEntity, 
             """)
     Page<CustomerJpaEntity> searchForAdministration(
             @Param("query") String query,
-            @Param("escapeCharacter") String escapeCharacter,
+            @Param("escapeCharacter") Character escapeCharacter,
             Pageable pageable);
 }
