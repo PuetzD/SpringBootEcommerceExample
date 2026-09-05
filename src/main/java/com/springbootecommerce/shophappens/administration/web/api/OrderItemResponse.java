@@ -1,3 +1,11 @@
 package com.springbootecommerce.shophappens.administration.web.api;
 
-public record OrderItemResponse() {}
+import java.math.BigDecimal;
+
+public record OrderItemResponse(
+        long productId,
+        String sku,
+        String productName,
+        BigDecimal unitPrice,
+        int quantity,
+        BigDecimal lineTotal) {}

@@ -1,6 +1,6 @@
 import {HttpError} from 'react-admin'
 import {ApiError} from '../../api/client'
-import type {Category, PageResponse, Product} from '../../api/types'
+import type {Category, Order, PageResponse, Product} from '../../api/types'
 
 const {get, post, put, remove} = vi.hoisted(() => ({
   get: vi.fn(),
@@ -51,6 +51,16 @@ const normalizedProduct = {
   categoryIds: [3],
 }
 
+const order: Order = {
+  id: 'ORD-20260905-ORDERADMIN1',
+  orderNumber: 'ORD-20260905-ORDERADMIN1',
+  customerId: 7,
+  total: 19.99,
+  placedAt: '2026-09-05T09:00:00Z',
+  items: [],
+  addresses: [],
+}
+
 describe('dataProvider', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -97,6 +107,32 @@ describe('dataProvider', () => {
     ).resolves.toEqual({
       data: normalizedProduct,
     })
+  })
+
+  it('loads paged orders by order number', async () => {
+    get.mockResolvedValue({content: [order], totalElements: 1})
+
+    await expect(
+      dataProvider.getList('orders', {
+        pagination: {page: 2, perPage: 10},
+        sort: {field: 'placedAt', order: 'DESC'},
+        filter: {q: ' ORD-2026 '},
+      }),
+    ).resolves.toEqual({data: [order], total: 1})
+
+    expect(get).toHaveBeenCalledWith('/api/admin/orders', {
+      params: {page: 1, size: 10, q: 'ORD-2026'},
+    })
+  })
+
+  it('loads one order by order number', async () => {
+    get.mockResolvedValue(order)
+
+    await expect(dataProvider.getOne('orders', {id: order.orderNumber})).resolves.toEqual({
+      data: order,
+    })
+
+    expect(get).toHaveBeenCalledWith(`/api/admin/orders/${order.orderNumber}`)
   })
 
   it('loads requested records for react-admin reference inputs', async () => {
