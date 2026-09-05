@@ -36,7 +36,7 @@ class CustomerRepositoryAdapter implements CustomerRepository {
     public CustomerAdminPage searchForAdministration(CustomerAdminSearch search) {
         var page =
                 springData.searchForAdministration(
-                        search.query(),
+                        escapeLikePattern(search.query()),
                         PageRequest.of(
                                 search.page(), search.size(), Sort.by(Sort.Direction.DESC, "id")));
         return new CustomerAdminPage(
@@ -62,7 +62,7 @@ class CustomerRepositoryAdapter implements CustomerRepository {
 
     @Override
     public Customer save(Customer customer) {
-        return mapper.toDomain(springData.save(mapper.toJpa(customer)));
+        return mapper.toDomain(springData.saveAndFlush(mapper.toJpa(customer)));
     }
 
     private CustomerAdminDetail toAdminDetail(CustomerJpaEntity customer) {
@@ -73,6 +73,11 @@ class CustomerRepositoryAdapter implements CustomerRepository {
                 customer.getFamilyName(),
                 customer.getContactEmail(),
                 customer.getAddresses().stream().map(this::toAdminAddress).toList());
+    }
+
+    private String escapeLikePattern(String query) {
+        if (query == null) return null;
+        return query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
 
     private CustomerAdminAddressView toAdminAddress(AddressJpaEntity address) {

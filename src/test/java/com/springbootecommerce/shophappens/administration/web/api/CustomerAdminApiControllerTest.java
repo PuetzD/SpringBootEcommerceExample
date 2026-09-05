@@ -111,13 +111,24 @@ class CustomerAdminApiControllerTest {
                         get("/api/admin/customers")
                                 .param("page", "-1")
                                 .with(user("admin").roles("ADMIN")))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("customer.invalid"));
 
         mockMvc.perform(
                         get("/api/admin/customers")
                                 .param("size", "101")
                                 .with(user("admin").roles("ADMIN")))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("customer.invalid"));
+    }
+
+    @Test
+    void rejectsNonPositiveCustomerIdWithCustomerValidationError() throws Exception {
+        mockMvc.perform(
+                        get("/api/admin/customers/{customerId}", 0)
+                                .with(user("admin").roles("ADMIN")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("customer.invalid"));
     }
 
     @Test

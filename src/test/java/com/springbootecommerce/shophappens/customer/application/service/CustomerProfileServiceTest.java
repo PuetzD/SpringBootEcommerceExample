@@ -1,6 +1,7 @@
 package com.springbootecommerce.shophappens.customer.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @ExtendWith(MockitoExtension.class)
 class CustomerProfileServiceTest {
@@ -45,6 +47,24 @@ class CustomerProfileServiceTest {
 
         assertThat(service.create(new ExternalAccountId(42L), "Ada", "Lovelace", "ada@example.com"))
                 .isEqualTo(new CustomerReference(7L));
+    }
+
+    @Test
+    void translatesConcurrentAccountConstraintViolationToProfileAlreadyExists() {
+        when(customers.findByAccountId(new AccountId(42L))).thenReturn(Optional.empty());
+        when(customers.save(any(Customer.class)))
+                .thenThrow(new DataIntegrityViolationException("duplicate account"));
+
+        assertThatThrownBy(
+                        () ->
+                                service.create(
+                                        new ExternalAccountId(42L),
+                                        "Ada",
+                                        "Lovelace",
+                                        "ada@example.com"))
+                .isInstanceOf(
+                        com.springbootecommerce.shophappens.customer.application
+                                .CustomerProfileAlreadyExistsException.class);
     }
 
     @Test

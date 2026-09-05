@@ -13,6 +13,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.ProductRe
 import com.springbootecommerce.shophappens.catalog.application.port.in.UpdateProductCommand;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import java.net.URI;
 import java.util.List;
 import java.util.Set;
@@ -64,7 +65,7 @@ public class ProductAdminApiController {
     }
 
     @GetMapping("/products/{id}")
-    public ProductResponse getProduct(@PathVariable long id) {
+    public ProductResponse getProduct(@PathVariable @Positive long id) {
         return productAdminQuery
                 .findProduct(new ProductReference(id))
                 .map(this::toResponse)
@@ -91,7 +92,7 @@ public class ProductAdminApiController {
 
     @PutMapping("/products/{id}")
     public ProductResponse updateProduct(
-            @PathVariable long id, @Valid @RequestBody UpdateProductRequest request) {
+            @PathVariable @Positive long id, @Valid @RequestBody UpdateProductRequest request) {
         ProductAdminView updated =
                 productAdministrationUseCase.updateProduct(
                         new ProductReference(id),
@@ -109,7 +110,7 @@ public class ProductAdminApiController {
 
     @DeleteMapping("/products/{id}")
     public ResponseEntity<Void> deleteProduct(
-            @PathVariable long id, @RequestHeader("If-Match") String ifMatch) {
+            @PathVariable @Positive long id, @RequestHeader("If-Match") String ifMatch) {
         productAdministrationUseCase.deactivateProduct(
                 new ProductReference(id),
                 new ProductRevision(ExpectedRevisionParser.parse(ifMatch)));
