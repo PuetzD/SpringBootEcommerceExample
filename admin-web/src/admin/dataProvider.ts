@@ -8,9 +8,10 @@ import type {
   PageResponse,
   Product,
   UpdateProductInput,
+  Order,
 } from '../api/types'
 
-type CatalogResource = 'products' | 'categories'
+type CatalogResource = 'products' | 'categories' | 'orders'
 
 type ProductMutationData = Partial<Product> & {
   categoryIds?: number[]
@@ -24,6 +25,7 @@ type ProductRecord = Product & {categoryIds: number[]}
 const resourcePaths: Record<CatalogResource, string> = {
   products: '/api/admin/products',
   categories: '/api/admin/categories',
+  orders: '/api/admin/orders',
 }
 
 function unsupportedMethod(method: string) {
@@ -39,7 +41,7 @@ function resourcePath(resource: string): string {
   throw new Error(`Unsupported catalog resource: ${resource}`)
 }
 
-function normalizeRecord<RecordType extends {id: number}>(record: RecordType): RecordType {
+function normalizeRecord<RecordType extends {id: number | string}>(record: RecordType): RecordType {
   return {...record}
 }
 
@@ -50,7 +52,7 @@ function normalizeProductRecord(record: Product): ProductRecord {
   }
 }
 
-function normalizeList<RecordType extends {id: number}>(
+function normalizeList<RecordType extends {id: number | string}>(
   response: PageResponse<RecordType>,
 ) {
   return {
@@ -95,6 +97,17 @@ function normalizeCategoryListParams(params: GetListParams) {
   return {
     page: Math.max(0, page - 1),
     size: perPage,
+  }
+}
+
+function normalizeOrderListParams(params: GetListParams) {
+  const page = params.pagination?.page ?? 1
+  const perPage = params.pagination?.perPage ?? 20
+
+  return {
+    page: Math.max(0, page - 1),
+    size: perPage,
+    q: normalizeStringFilter(params.filter?.q),
   }
 }
 
@@ -217,6 +230,13 @@ export const dataProvider = {
       }
     }
 
+    if (resource === 'orders') {
+      const response = await runWithReactAdminError(() =>
+        ApiClient.get<PageResponse<Order>>(path, {params: normalizeOrderListParams(params)}),
+      )
+      return normalizeList(response)
+    }
+
     const response = await runWithReactAdminError(() =>
       ApiClient.get<PageResponse<Category>>(path, {params: normalizeCategoryListParams(params)}),
     )
@@ -233,6 +253,13 @@ export const dataProvider = {
       return {data: normalizeProductRecord(response)}
     }
 
+    if (resource === 'orders') {
+      const response = await runWithReactAdminError(() =>
+        ApiClient.get<Order>(`${path}/${params.id}`),
+      )
+      return {data: normalizeRecord(response)}
+    }
+
     const response = await runWithReactAdminError(() =>
       ApiClient.get<Category>(`${path}/${params.id}`),
     )
@@ -240,6 +267,9 @@ export const dataProvider = {
   },
 
   async getMany(resource, params) {
+    if (resource === 'orders') {
+      throw new Error('Unsupported react-admin method: getMany for orders')
+    }
     const path = resourcePath(resource)
     const records = await runWithReactAdminError(() =>
       Promise.all(params.ids.map((id) => ApiClient.get<Product | Category>(`${path}/${id}`))),
@@ -255,6 +285,9 @@ export const dataProvider = {
   getManyReference: unsupportedMethod('getManyReference'),
 
   async update(resource, params) {
+    if (resource === 'orders') {
+      throw new Error('Unsupported react-admin method: update for orders')
+    }
     const path = resourcePath(resource)
 
     if (resource === 'products') {
@@ -287,6 +320,9 @@ export const dataProvider = {
   updateMany: unsupportedMethod('updateMany'),
 
   async create(resource, params) {
+    if (resource === 'orders') {
+      throw new Error('Unsupported react-admin method: create for orders')
+    }
     const path = resourcePath(resource)
 
     if (resource === 'products') {
@@ -304,6 +340,9 @@ export const dataProvider = {
   },
 
   async delete(resource, params) {
+    if (resource === 'orders') {
+      throw new Error('Unsupported react-admin method: delete for orders')
+    }
     const path = resourcePath(resource)
     const previousData = params.previousData as ProductMutationData | CategoryMutationData | undefined
     const revision = resolveRevision(previousData ?? {})

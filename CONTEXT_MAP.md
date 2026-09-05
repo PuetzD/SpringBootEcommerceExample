@@ -27,7 +27,7 @@ internals are never shared.
 - **Ordering → Catalog + Cart**: Successful checkout decreases Catalog stock and clears the Cart atomically with Order creation.
 - **Ordering → Integration platform**: Ordering records versioned immutable integration events in its transactional outbox. Kafka publication is asynchronous and post-commit; events expose identifiers and snapshots, never aggregates or persistence entities.
 - **Ordering ↔ Payment/Reservation/Fulfillment (planned capabilities)**: these capabilities own separate Payment, Reservation, Shipment, Return, and Refund lifecycles. They collaborate through immutable published contracts and authenticated idempotent operations; none becomes a shared aggregate or persistence entity.
-- **Administration → Catalog**: Administration is a protected inbound delivery adapter, not a sixth bounded context. Its HTTP and React-Admin delivery surfaces consume Catalog's published input ports; Catalog owns the administration language, policies, and transactions.
+- **Administration → Catalog, Ordering**: Administration is a protected inbound delivery adapter, not a sixth bounded context. Each HTTP and React-Admin delivery surface consumes the owning context's published input ports; the owning context retains its language, policies, and transactions.
 
 No context shares a persistence entity with another context. Cross-context collaboration uses identifiers, immutable contracts, and application operations.
 

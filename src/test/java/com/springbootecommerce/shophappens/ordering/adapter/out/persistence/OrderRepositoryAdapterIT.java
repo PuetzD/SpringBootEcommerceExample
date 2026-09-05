@@ -3,6 +3,9 @@ package com.springbootecommerce.shophappens.ordering.adapter.out.persistence;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.springbootecommerce.shophappens.integration.AbstractIntegrationTest;
+import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminDetail;
+import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminSearch;
+import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminSummary;
 import com.springbootecommerce.shophappens.ordering.application.port.out.OrderRepository;
 import com.springbootecommerce.shophappens.ordering.domain.model.AddressRole;
 import com.springbootecommerce.shophappens.ordering.domain.model.CheckoutId;
@@ -70,6 +73,67 @@ class OrderRepositoryAdapterIT extends AbstractIntegrationTest {
     }
 
     @Test
+    void searchesAdministrationOrdersByOrderNumberWithPaging() {
+        Order newest =
+                sampleOrder(
+                        "ORD-20260830-ADMINNEWEST1",
+                        CUSTOMER,
+                        new CheckoutId(UUID.randomUUID()),
+                        Instant.parse("2026-08-30T08:00:00Z"));
+        Order older =
+                sampleOrder(
+                        "ORD-20260829-ADMINOLDER01",
+                        CUSTOMER,
+                        new CheckoutId(UUID.randomUUID()),
+                        Instant.parse("2026-08-29T08:00:00Z"));
+        Order unrelated =
+                sampleOrder(
+                        "ORD-20260831-OTHERORDER01",
+                        CUSTOMER,
+                        new CheckoutId(UUID.randomUUID()),
+                        Instant.parse("2026-08-31T08:00:00Z"));
+        repository.save(newest);
+        repository.save(older);
+        repository.save(unrelated);
+
+        var result = repository.searchForAdministration(new OrderAdminSearch(0, 1, "ADMIN"));
+
+        assertThat(result.totalElements()).isEqualTo(2);
+        assertThat(result.content())
+                .extracting(OrderAdminSummary::orderNumber)
+                .containsExactly(newest.orderNumber().value());
+        assertThat(result.page()).isZero();
+        assertThat(result.size()).isEqualTo(1);
+        assertThat(result.totalPages()).isEqualTo(2);
+    }
+
+    @Test
+    void findsAdministrationOrderByOrderNumberWithDetails() {
+        Order original =
+                sampleOrder(
+                        "ORD-20260828-ADMINDETAIL1",
+                        CUSTOMER,
+                        new CheckoutId(UUID.randomUUID()),
+                        Instant.parse("2026-08-28T08:00:00Z"));
+        repository.save(original);
+
+        OrderAdminDetail detail =
+                repository.findForAdministration(original.orderNumber().value()).orElseThrow();
+
+        assertThat(detail.order().value()).isEqualTo(original.orderId().value());
+        assertThat(detail.orderNumber()).isEqualTo(original.orderNumber().value());
+        assertThat(detail.customerId()).isEqualTo(original.customerId());
+        assertThat(detail.total()).isEqualTo(original.total());
+        assertThat(detail.placedAt()).isEqualTo(original.placedAt());
+        assertThat(detail.items())
+                .extracting(item -> item.sku())
+                .containsExactly("ELEC-001", "TOY-003");
+        assertThat(detail.addresses())
+                .extracting(address -> address.role())
+                .containsExactlyInAnyOrder("SHIPPING", "BILLING");
+    }
+
+    @Test
     void storedRowsCarryTheComputedLineTotalsAndTotal() {
         Order original =
                 sampleOrder(
@@ -107,6 +171,11 @@ class OrderRepositoryAdapterIT extends AbstractIntegrationTest {
     }
 
     private static Order sampleOrder(String orderNumber, CustomerId customer, CheckoutId checkout) {
+        return sampleOrder(orderNumber, customer, checkout, Instant.parse("2026-08-28T08:00:00Z"));
+    }
+
+    private static Order sampleOrder(
+            String orderNumber, CustomerId customer, CheckoutId checkout, Instant placedAt) {
         return Order.place(
                 OrderId.random(),
                 new OrderNumber(orderNumber),
@@ -127,7 +196,7 @@ class OrderRepositoryAdapterIT extends AbstractIntegrationTest {
                                 3)),
                 shippingAddress(),
                 billingAddress(),
-                Instant.parse("2026-08-28T08:00:00Z"));
+                placedAt);
     }
 
     private static OrderAddress shippingAddress() {

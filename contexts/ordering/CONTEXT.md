@@ -72,6 +72,10 @@ _Avoid_: Return, discount, cancellation
 An Order accepted after every Product and Address passes Checkout and the purchase is recorded completely.
 _Avoid_: Confirmed Order, paid Order
 
+**Administrative Order View**:
+A read-only view of Orders made available to an authorized administrator for operational search and inspection. It preserves the Order Number, accepted commercial facts, and accepted postal snapshots without changing the Order.
+_Avoid_: Order status, payment state, shipment state
+
 **Money**:
 A non-negative EUR monetary amount with two-decimal precision. Ordering snapshots the currency, tax basis, tax, charges, and payable amount and never recalculates a historical Order.
 _Avoid_: Decimal, implicit currency, recomputed total

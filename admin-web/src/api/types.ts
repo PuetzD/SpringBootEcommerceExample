@@ -60,6 +60,38 @@ export interface Category {
     productCount: number
 }
 
+export interface OrderItem {
+    productId: number
+    sku: string
+    productName: string
+    unitPrice: number
+    quantity: number
+    lineTotal: number
+}
+
+export interface OrderAddress {
+    role: string
+    recipientName: string
+    companyName: string | null
+    addressLine1: string
+    addressLine2: string | null
+    city: string
+    region: string | null
+    postalCode: string
+    countryCode: string
+    phoneNumber: string | null
+}
+
+export interface Order {
+    id: string
+    orderNumber: string
+    customerId: number
+    total: number
+    placedAt: string
+    items: OrderItem[]
+    addresses: OrderAddress[]
+}
+
 export interface CreateCategoryInput {
     name: string
 }

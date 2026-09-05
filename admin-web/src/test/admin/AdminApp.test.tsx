@@ -45,6 +45,7 @@ describe('AdminApp', () => {
 
     expect(screen.getByRole('link', { name: /products/i }).getAttribute('href')).toBe('/admin/products')
     expect(screen.getByRole('link', { name: /categories/i }).getAttribute('href')).toBe('/admin/categories')
+    expect(screen.getByRole('link', { name: /orders/i }).getAttribute('href')).toBe('/admin/orders')
   })
 
   it.each(['/admin', '/admin/products', '/admin/categories', '/admin/orders', '/admin/customers', '/admin/storefront'])
