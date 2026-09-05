@@ -21,13 +21,22 @@ class CustomerRepositoryAdapterIT extends AbstractIntegrationTest {
     void savesAndRestoresTheWholeAggregate() {
         Long accountId = newAccount("adapter-fixture@example.com");
 
-        Customer unsaved = Customer.create(new AccountId(accountId));
+        Customer unsaved =
+                Customer.create(
+                        new AccountId(accountId),
+                        "Ada",
+                        "Lovelace",
+                        new com.springbootecommerce.shophappens.customer.domain.model.ContactEmail(
+                                "ada@example.com"));
         unsaved.addAddress(testCityAddress(), true, true);
 
         Customer saved = customers.save(unsaved);
         Customer restored = customers.findById(saved.id().orElseThrow()).orElseThrow();
 
         assertThat(restored.accountId()).isEqualTo(new AccountId(accountId));
+        assertThat(restored.givenName()).isEqualTo("Ada");
+        assertThat(restored.familyName()).isEqualTo("Lovelace");
+        assertThat(restored.contactEmail().value()).isEqualTo("ada@example.com");
         assertThat(restored.addresses())
                 .singleElement()
                 .satisfies(address -> assertThat(address.defaultShipping()).isTrue());
@@ -38,9 +47,15 @@ class CustomerRepositoryAdapterIT extends AbstractIntegrationTest {
         Long accountId = newAccount("adapter-default-fixture@example.com");
         Long customerId =
                 jdbc.queryForObject(
-                        "insert into customer (account_id) values (?) returning id",
+                        """
+                        insert into customer (account_id, given_name, family_name, contact_email)
+                        values (?, ?, ?, ?) returning id
+                        """,
                         Long.class,
-                        accountId);
+                        accountId,
+                        "Ada",
+                        "Lovelace",
+                        "ada@example.com");
         jdbc.update(
                 """
                 insert into address(

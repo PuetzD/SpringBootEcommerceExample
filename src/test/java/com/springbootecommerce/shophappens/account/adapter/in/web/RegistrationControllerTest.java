@@ -36,6 +36,8 @@ class RegistrationControllerTest {
         mvc.perform(
                         post("/register")
                                 .with(csrf())
+                                .param("givenName", "Ada")
+                                .param("familyName", "Lovelace")
                                 .param("email", "customer@example.com")
                                 .param("password", "twelve-chars!"))
                 .andExpect(status().is3xxRedirection())
@@ -44,7 +46,12 @@ class RegistrationControllerTest {
 
     @Test
     void rejectsMissingPasswordBeforeCallingRegistration() throws Exception {
-        mvc.perform(post("/register").with(csrf()).param("email", "customer@example.com"))
+        mvc.perform(
+                        post("/register")
+                                .with(csrf())
+                                .param("givenName", "Ada")
+                                .param("familyName", "Lovelace")
+                                .param("email", "customer@example.com"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("customer/register"));
 

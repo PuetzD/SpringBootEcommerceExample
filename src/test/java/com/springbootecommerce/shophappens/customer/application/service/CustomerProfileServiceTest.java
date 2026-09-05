@@ -35,9 +35,16 @@ class CustomerProfileServiceTest {
                 .thenAnswer(
                         invocation ->
                                 Customer.restore(
-                                        new CustomerId(7L), new AccountId(42L), List.of()));
+                                        new CustomerId(7L),
+                                        new AccountId(42L),
+                                        "Ada",
+                                        "Lovelace",
+                                        new com.springbootecommerce.shophappens.customer.domain
+                                                .model.ContactEmail("ada@example.com"),
+                                        List.of()));
 
-        assertThat(service.create(new ExternalAccountId(42L))).isEqualTo(new CustomerReference(7L));
+        assertThat(service.create(new ExternalAccountId(42L), "Ada", "Lovelace", "ada@example.com"))
+                .isEqualTo(new CustomerReference(7L));
     }
 
     @Test
@@ -80,6 +87,13 @@ class CustomerProfileServiceTest {
                                 null),
                         true,
                         true);
-        return Customer.restore(new CustomerId(customerId), new AccountId(42L), List.of(address));
+        return Customer.restore(
+                new CustomerId(customerId),
+                new AccountId(42L),
+                "Ada",
+                "Lovelace",
+                new com.springbootecommerce.shophappens.customer.domain.model.ContactEmail(
+                        "ada@example.com"),
+                List.of(address));
     }
 }

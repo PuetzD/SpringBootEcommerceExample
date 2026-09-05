@@ -62,9 +62,15 @@ class CheckoutSeeds {
                         "encoded");
         Long customerId =
                 jdbc.queryForObject(
-                        "insert into customer (account_id) values (?) returning id",
+                        """
+                        insert into customer (account_id, given_name, family_name, contact_email)
+                        values (?, ?, ?, ?) returning id
+                        """,
                         Long.class,
-                        accountId);
+                        accountId,
+                        "Jane",
+                        "Doe",
+                        "checkout-" + emailTag + "@example.com");
         Long shippingAddressId =
                 jdbc.queryForObject(
                         """

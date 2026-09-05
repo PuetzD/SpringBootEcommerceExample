@@ -38,7 +38,7 @@ public class AccountRegistrationService implements RegisterCustomerAccountUseCas
                                 () ->
                                         new IllegalStateException(
                                                 "Account was persisted without an identifier"));
-        profiles.create(savedId);
+        profiles.create(savedId, command.givenName(), command.familyName(), email.value());
         return new RegisteredCustomerAccount(new AccountReference(savedId.value()));
     }
 }
