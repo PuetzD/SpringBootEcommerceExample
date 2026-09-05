@@ -171,6 +171,12 @@ class OrderRepositoryAdapterIT extends AbstractIntegrationTest {
                                 new OrderReference(newest.orderId().value()), customer),
                         org.assertj.core.groups.Tuple.tuple(
                                 new OrderReference(older.orderId().value()), customer));
+        assertThat(summaries)
+                .extracting(OrderAdminSummary::total)
+                .containsExactly(newest.total(), older.total());
+        assertThat(summaries)
+                .extracting(OrderAdminSummary::placedAt)
+                .containsExactly(newest.placedAt(), older.placedAt());
     }
 
     @Test

@@ -1,9 +1,7 @@
 package com.springbootecommerce.shophappens.customer.application.port.in;
 
-import com.springbootecommerce.shophappens.customer.domain.model.AddressId;
-
 public record CustomerAdminAddressView(
-        AddressId addressId,
+        AddressReference address,
         String recipientName,
         String companyName,
         String addressLine1,
