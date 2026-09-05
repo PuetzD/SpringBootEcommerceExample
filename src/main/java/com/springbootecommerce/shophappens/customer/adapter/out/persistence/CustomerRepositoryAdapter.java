@@ -37,7 +37,7 @@ class CustomerRepositoryAdapter implements CustomerRepository {
         var page =
                 springData.searchForAdministration(
                         escapeLikePattern(search.query()),
-                        "\\",
+                        '\\',
                         PageRequest.of(
                                 search.page(), search.size(), Sort.by(Sort.Direction.DESC, "id")));
         return new CustomerAdminPage(
