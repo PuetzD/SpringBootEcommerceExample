@@ -14,6 +14,7 @@ describe('Order resource', () => {
             data: [
               {
                 id: 'ORD-20260905-ORDERADMIN1',
+                orderId: '00000000-0000-0000-0000-000000000009',
                 orderNumber: 'ORD-20260905-ORDERADMIN1',
                 customerId: 7,
                 total: 19.99,

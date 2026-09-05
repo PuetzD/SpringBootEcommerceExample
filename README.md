@@ -231,7 +231,7 @@ in separate terminals:
 
 ```bash
 ./mvnw spring-boot:run
-npm run -w admin-web build -- --watch
+npm run -w admin-web build:watch
 ```
 
 The application serves resources directly from `src/main/resources`, so Java

@@ -45,7 +45,7 @@ export function AdminHeader({isDrawerOpen, onToggle}: AdminHeaderProps) {
                 <button type="button" className="btn btn-ghost btn-sm" aria-label="Refresh data">
                     <RefreshOutlinedIcon aria-hidden="true" fontSize="small"/>
                 </button>
-                <button type="button" className="btn btn-primary btn-sm" onClick={logout}>
+                <button type="button" className="btn btn-primary btn-sm" onClick={() => void logout()}>
                     Logout
                 </button>
             </div>
@@ -53,15 +53,19 @@ export function AdminHeader({isDrawerOpen, onToggle}: AdminHeaderProps) {
     )
 }
 
-async function logout() {
+export async function logout() {
     if (!getToken()) {
         await refreshToken();
+    }
+    const csrfToken = getToken();
+    if (!csrfToken) {
+        throw new Error('Unable to obtain CSRF token');
     }
     await fetch('/admin/logout', {
         method: 'POST',
         credentials: 'same-origin',
         headers: {
-            'X-CSRF-Token': getToken() || '',
+            'X-CSRF-Token': csrfToken,
         }
     });
     window.location.assign('/admin/login?logout')
