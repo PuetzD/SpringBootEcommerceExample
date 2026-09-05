@@ -41,6 +41,7 @@ class AccountUserDetailsServiceTest {
         assertThat(details.getAuthorities())
                 .extracting(GrantedAuthority::getAuthority)
                 .containsExactly("ROLE_CUSTOMER");
+        assertThat(details.getUsername()).isEqualTo("customer@example.com");
         verify(accounts).findByEmail("customer@example.com");
     }
 
