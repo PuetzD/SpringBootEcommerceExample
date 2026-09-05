@@ -1,6 +1,6 @@
 import {HttpError} from 'react-admin'
 import {ApiError} from '../../api/client'
-import type {Category, PageResponse, Product} from '../../api/types'
+import type {Category, Customer, Order, PageResponse, Product} from '../../api/types'
 
 const {get, post, put, remove} = vi.hoisted(() => ({
   get: vi.fn(),
@@ -51,6 +51,27 @@ const normalizedProduct = {
   categoryIds: [3],
 }
 
+const order: Order = {
+  id: 'ORD-20260905-ORDERADMIN1',
+  orderId: '00000000-0000-0000-0000-000000000009',
+  orderNumber: 'ORD-20260905-ORDERADMIN1',
+  customerId: 7,
+  total: 19.99,
+  placedAt: '2026-09-05T09:00:00Z',
+  items: [],
+  addresses: [],
+}
+
+const customer: Customer = {
+  id: 12,
+  givenName: 'Alice',
+  familyName: 'Example',
+  contactEmail: 'alice@example.com',
+  accountId: null,
+  addresses: [],
+  orders: [],
+}
+
 describe('dataProvider', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -97,6 +118,71 @@ describe('dataProvider', () => {
     ).resolves.toEqual({
       data: normalizedProduct,
     })
+  })
+
+  it('loads paged orders by order number', async () => {
+    get.mockResolvedValue({content: [order], totalElements: 1})
+
+    await expect(
+      dataProvider.getList('orders', {
+        pagination: {page: 2, perPage: 10},
+        sort: {field: 'placedAt', order: 'DESC'},
+        filter: {q: ' ORD-2026 '},
+      }),
+    ).resolves.toEqual({data: [order], total: 1})
+
+    expect(get).toHaveBeenCalledWith('/api/admin/orders', {
+      params: {page: 1, size: 10, q: 'ORD-2026'},
+    })
+  })
+
+  it('loads one order by order number', async () => {
+    get.mockResolvedValue(order)
+
+    await expect(dataProvider.getOne('orders', {id: order.orderNumber})).resolves.toEqual({
+      data: order,
+    })
+
+    expect(get).toHaveBeenCalledWith(`/api/admin/orders/${order.orderNumber}`)
+  })
+
+  it('loads paged customers with a one-based page and trimmed search query', async () => {
+    get.mockResolvedValue({content: [customer], totalElements: 1})
+
+    await expect(
+      dataProvider.getList('customers', {
+        pagination: {page: 2, perPage: 10},
+        sort: {field: 'familyName', order: 'ASC'},
+        filter: {q: ' Alice '},
+      }),
+    ).resolves.toEqual({data: [customer], total: 1})
+
+    expect(get).toHaveBeenCalledWith('/api/admin/customers', {
+      params: {page: 1, size: 10, q: 'Alice'},
+    })
+  })
+
+  it('loads a customer detail by numeric id', async () => {
+    get.mockResolvedValue(customer)
+
+    await expect(dataProvider.getOne('customers', {id: 12})).resolves.toEqual({data: customer})
+
+    expect(get).toHaveBeenCalledWith('/api/admin/customers/12')
+  })
+
+  it('keeps customer mutations unsupported', async () => {
+    await expect(dataProvider.create('customers', {data: customer})).rejects.toThrow(
+      'Unsupported react-admin method: create for customers',
+    )
+    await expect(dataProvider.update('customers', {id: 12, data: customer})).rejects.toThrow(
+      'Unsupported react-admin method: update for customers',
+    )
+    await expect(dataProvider.delete('customers', {id: 12})).rejects.toThrow(
+      'Unsupported react-admin method: delete for customers',
+    )
+    await expect(dataProvider.getMany('customers', {ids: [12]})).rejects.toThrow(
+      'Unsupported react-admin method: getMany for customers',
+    )
   })
 
   it('loads requested records for react-admin reference inputs', async () => {

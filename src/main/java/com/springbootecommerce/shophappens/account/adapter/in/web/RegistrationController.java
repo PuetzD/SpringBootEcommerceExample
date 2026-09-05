@@ -40,7 +40,12 @@ public class RegistrationController {
             return "customer/register";
         }
         try {
-            registration.register(new RegisterCustomerAccount(form.getEmail(), form.getPassword()));
+            registration.register(
+                    new RegisterCustomerAccount(
+                            form.getEmail(),
+                            form.getPassword(),
+                            form.getGivenName(),
+                            form.getFamilyName()));
         } catch (EmailAlreadyRegisteredException ex) {
             bindingResult.rejectValue(
                     "email", "email.registered", "An account with this email already exists");

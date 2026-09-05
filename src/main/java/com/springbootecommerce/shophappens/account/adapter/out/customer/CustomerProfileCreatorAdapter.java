@@ -13,7 +13,9 @@ final class CustomerProfileCreatorAdapter implements CreateCustomerProfilePort {
     private final CreateCustomerProfileUseCase profiles;
 
     @Override
-    public void create(AccountId accountId) {
-        profiles.create(new ExternalAccountId(accountId.value()));
+    public void create(
+            AccountId accountId, String givenName, String familyName, String contactEmail) {
+        profiles.create(
+                new ExternalAccountId(accountId.value()), givenName, familyName, contactEmail);
     }
 }

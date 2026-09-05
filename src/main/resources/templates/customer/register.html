@@ -13,6 +13,16 @@
         <form th:action="@{/register}" method="post" th:object="${registrationForm}" class="flex flex-col gap-4">
           <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
           <label class="form-control">
+            First name
+            <input name="givenName" type="text" autocomplete="given-name" th:field="*{givenName}" class="input input-bordered" aria-describedby="given-name-errors" aria-invalid="${#fields.hasErrors('givenName')}">
+            <span id="given-name-errors" class="text-error text-sm" th:if="${#fields.hasErrors('givenName')}" th:errors="*{givenName}"></span>
+          </label>
+          <label class="form-control">
+            Last name
+            <input name="familyName" type="text" autocomplete="family-name" th:field="*{familyName}" class="input input-bordered" aria-describedby="family-name-errors" aria-invalid="${#fields.hasErrors('familyName')}">
+            <span id="family-name-errors" class="text-error text-sm" th:if="${#fields.hasErrors('familyName')}" th:errors="*{familyName}"></span>
+          </label>
+          <label class="form-control">
             Email
             <input
                 name="email"

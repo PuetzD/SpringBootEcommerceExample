@@ -1,5 +1,6 @@
 package com.springbootecommerce.shophappens.customer.application.port.in;
 
 public interface CreateCustomerProfileUseCase {
-    CustomerReference create(ExternalAccountId accountId);
+    CustomerReference create(
+            ExternalAccountId accountId, String givenName, String familyName, String contactEmail);
 }

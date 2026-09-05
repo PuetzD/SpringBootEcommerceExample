@@ -1,9 +1,7 @@
 package com.springbootecommerce.shophappens.catalog.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminView;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
@@ -30,7 +28,7 @@ class ProductAdministrationQueryServiceTest {
     void returnsEmptyForInvalidProductReferences() {
         ProductRepository products = mock(ProductRepository.class);
         ProductAdministrationQueryService service = new ProductAdministrationQueryService(products);
-
+        verifyNoInteractions(products);
         assertThat(service.findProduct(new ProductReference(0L))).isEmpty();
     }
 }

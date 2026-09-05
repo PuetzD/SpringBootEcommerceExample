@@ -12,20 +12,46 @@ import java.util.Optional;
 public final class Customer {
     private final CustomerId id;
     private final AccountId accountId;
+    private final String givenName;
+    private final String familyName;
+    private final ContactEmail contactEmail;
     private final List<Address> addresses;
 
-    private Customer(CustomerId id, AccountId accountId, List<Address> addresses) {
+    private Customer(
+            CustomerId id,
+            AccountId accountId,
+            String givenName,
+            String familyName,
+            ContactEmail contactEmail,
+            List<Address> addresses) {
         this.id = id;
         this.accountId = Objects.requireNonNull(accountId);
-        this.addresses = new ArrayList<>(addresses);
+        this.givenName = requiredName(givenName, "Given name");
+        this.familyName = requiredName(familyName, "Family name");
+        this.contactEmail = Objects.requireNonNull(contactEmail);
+        this.addresses = new ArrayList<>(Objects.requireNonNull(addresses));
     }
 
-    public static Customer create(AccountId accountId) {
-        return new Customer(null, accountId, new ArrayList<>());
+    public static Customer create(
+            AccountId accountId, String givenName, String familyName, ContactEmail contactEmail) {
+        return new Customer(
+                null, accountId, givenName, familyName, contactEmail, new ArrayList<>());
     }
 
-    public static Customer restore(CustomerId id, AccountId accountId, List<Address> addresses) {
-        return new Customer(Objects.requireNonNull(id), accountId, addresses);
+    public static Customer restore(
+            CustomerId id,
+            AccountId accountId,
+            String givenName,
+            String familyName,
+            ContactEmail contactEmail,
+            List<Address> addresses) {
+        return new Customer(
+                Objects.requireNonNull(id),
+                accountId,
+                givenName,
+                familyName,
+                contactEmail,
+                addresses);
     }
 
     public Optional<CustomerId> id() {
@@ -34,6 +60,18 @@ public final class Customer {
 
     public AccountId accountId() {
         return accountId;
+    }
+
+    public String givenName() {
+        return givenName;
+    }
+
+    public String familyName() {
+        return familyName;
+    }
+
+    public ContactEmail contactEmail() {
+        return contactEmail;
     }
 
     public List<Address> addresses() {
@@ -72,5 +110,12 @@ public final class Customer {
     private void clearDefaults(boolean shipping, boolean billing) {
         if (shipping) addresses.forEach(Address::removeShippingDefault);
         if (billing) addresses.forEach(Address::removeBillingDefault);
+    }
+
+    private static String requiredName(String name, String label) {
+        if (name == null) throw new IllegalArgumentException(label + " must not be null");
+        String normalized = name.strip();
+        if (normalized.isBlank()) throw new IllegalArgumentException(label + " is required");
+        return normalized;
     }
 }

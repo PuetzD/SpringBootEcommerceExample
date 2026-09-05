@@ -15,6 +15,7 @@ import com.springbootecommerce.shophappens.customer.application.port.out.Custome
 import com.springbootecommerce.shophappens.customer.domain.model.Address;
 import com.springbootecommerce.shophappens.customer.domain.model.AddressDetails;
 import com.springbootecommerce.shophappens.customer.domain.model.AddressId;
+import com.springbootecommerce.shophappens.customer.domain.model.ContactEmail;
 import com.springbootecommerce.shophappens.customer.domain.model.Customer;
 import com.springbootecommerce.shophappens.sharedkernel.identity.AccountId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
@@ -22,6 +23,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,12 +39,24 @@ public class CustomerProfileService
 
     @Override
     @Transactional
-    public CustomerReference create(ExternalAccountId accountId) {
+    public CustomerReference create(
+            ExternalAccountId accountId, String givenName, String familyName, String contactEmail) {
         var internalAccountId = new AccountId(accountId.value());
         if (customers.findByAccountId(internalAccountId).isPresent()) {
             throw new CustomerProfileAlreadyExistsException(accountId);
         }
-        var saved = customers.save(Customer.create(internalAccountId));
+        Customer saved;
+        try {
+            saved =
+                    customers.save(
+                            Customer.create(
+                                    internalAccountId,
+                                    givenName,
+                                    familyName,
+                                    new ContactEmail(contactEmail)));
+        } catch (DataIntegrityViolationException exception) {
+            throw new CustomerProfileAlreadyExistsException(accountId);
+        }
         return new CustomerReference(saved.id().orElseThrow().value());
     }
 
