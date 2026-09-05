@@ -1,6 +1,7 @@
 package com.springbootecommerce.shophappens.administration.web;
 
 import com.springbootecommerce.shophappens.administration.web.api.ApiErrorResponse;
+import com.springbootecommerce.shophappens.administration.web.api.CustomerAdminApiController;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryInUseException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryNotFoundException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.DuplicateCategoryException;
@@ -17,13 +18,17 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.method.ParameterValidationResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.HandlerMapping;
 
 @RestControllerAdvice
 public class AdminApiExceptionHandler {
@@ -52,7 +57,11 @@ public class AdminApiExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleMethodValidation(
             HandlerMethodValidationException ex, HttpServletRequest request) {
         String code = isCustomerRequest(request) ? "customer.invalid" : "catalog.invalid";
-        return response("Validation failed", HttpStatus.BAD_REQUEST, code);
+        Map<String, String> fieldErrors = new LinkedHashMap<>();
+        ex.getParameterValidationResults()
+                .forEach(result -> addParameterError(fieldErrors, result));
+        return ResponseEntity.badRequest()
+                .body(new ApiErrorResponse("Validation failed", 400, code, fieldErrors));
     }
 
     @ExceptionHandler(ResponseStatusException.class)
@@ -154,7 +163,21 @@ public class AdminApiExceptionHandler {
     }
 
     private boolean isCustomerRequest(HttpServletRequest request) {
-        return request.getRequestURI().startsWith("/api/admin/customers");
+        Object handler = request.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
+        return handler instanceof HandlerMethod method
+                && method.getBeanType().equals(CustomerAdminApiController.class);
+    }
+
+    private void addParameterError(
+            Map<String, String> fieldErrors, ParameterValidationResult result) {
+        String name = result.getMethodParameter().getParameterName();
+        String message =
+                result.getResolvableErrors().stream()
+                        .map(MessageSourceResolvable::getDefaultMessage)
+                        .filter(value -> value != null && !value.isBlank())
+                        .findFirst()
+                        .orElse("Invalid value");
+        fieldErrors.putIfAbsent(name == null ? "parameter" : name, message);
     }
 
     private String userMessage(int status) {

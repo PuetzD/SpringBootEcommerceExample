@@ -19,10 +19,12 @@ interface SpringDataCustomerRepository extends JpaRepository<CustomerJpaEntity, 
             """
             select c from CustomerJpaEntity c
             where (:query is null or :query = ''
-                   or lower(c.givenName) like lower(concat('%', :query, '%')) escape '\\'
-                   or lower(c.familyName) like lower(concat('%', :query, '%')) escape '\\'
-                   or lower(c.contactEmail) like lower(concat('%', :query, '%')) escape '\\')
+                   or lower(c.givenName) like lower(concat('%', :query, '%')) escape :escapeCharacter
+                   or lower(c.familyName) like lower(concat('%', :query, '%')) escape :escapeCharacter
+                   or lower(c.contactEmail) like lower(concat('%', :query, '%')) escape :escapeCharacter)
             """)
     Page<CustomerJpaEntity> searchForAdministration(
-            @Param("query") String query, Pageable pageable);
+            @Param("query") String query,
+            @Param("escapeCharacter") String escapeCharacter,
+            Pageable pageable);
 }
