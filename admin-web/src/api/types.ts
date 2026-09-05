@@ -93,6 +93,39 @@ export interface Order {
     addresses: OrderAddress[]
 }
 
+export interface CustomerAddress {
+    id: number
+    recipientName: string
+    companyName: string | null
+    addressLine1: string
+    addressLine2: string | null
+    city: string
+    region: string | null
+    postalCode: string
+    countryCode: string
+    phoneNumber: string | null
+    defaultShipping: boolean
+    defaultBilling: boolean
+}
+
+export interface CustomerOrder {
+    orderNumber: string
+    orderId: string
+    total: number
+    placedAt: string
+    orderUrl: string
+}
+
+export interface Customer {
+    id: number
+    givenName: string
+    familyName: string
+    contactEmail: string
+    accountId: number | null
+    addresses: CustomerAddress[]
+    orders: CustomerOrder[]
+}
+
 export interface CreateCategoryInput {
     name: string
 }

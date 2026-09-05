@@ -1,6 +1,6 @@
 import {HttpError} from 'react-admin'
 import {ApiError} from '../../api/client'
-import type {Category, Order, PageResponse, Product} from '../../api/types'
+import type {Category, Customer, Order, PageResponse, Product} from '../../api/types'
 
 const {get, post, put, remove} = vi.hoisted(() => ({
   get: vi.fn(),
@@ -60,6 +60,16 @@ const order: Order = {
   placedAt: '2026-09-05T09:00:00Z',
   items: [],
   addresses: [],
+}
+
+const customer: Customer = {
+  id: 12,
+  givenName: 'Alice',
+  familyName: 'Example',
+  contactEmail: 'alice@example.com',
+  accountId: null,
+  addresses: [],
+  orders: [],
 }
 
 describe('dataProvider', () => {
@@ -134,6 +144,42 @@ describe('dataProvider', () => {
     })
 
     expect(get).toHaveBeenCalledWith(`/api/admin/orders/${order.orderNumber}`)
+  })
+
+  it('loads paged customers with a one-based page and trimmed search query', async () => {
+    get.mockResolvedValue({content: [customer], totalElements: 1})
+
+    await expect(
+      dataProvider.getList('customers', {
+        pagination: {page: 2, perPage: 10},
+        sort: {field: 'familyName', order: 'ASC'},
+        filter: {q: ' Alice '},
+      }),
+    ).resolves.toEqual({data: [customer], total: 1})
+
+    expect(get).toHaveBeenCalledWith('/api/admin/customers', {
+      params: {page: 1, size: 10, q: 'Alice'},
+    })
+  })
+
+  it('loads a customer detail by numeric id', async () => {
+    get.mockResolvedValue(customer)
+
+    await expect(dataProvider.getOne('customers', {id: 12})).resolves.toEqual({data: customer})
+
+    expect(get).toHaveBeenCalledWith('/api/admin/customers/12')
+  })
+
+  it('keeps customer mutations unsupported', async () => {
+    await expect(dataProvider.create('customers', {data: customer})).rejects.toThrow(
+      'Unsupported react-admin method: create for customers',
+    )
+    await expect(dataProvider.update('customers', {id: 12, data: customer})).rejects.toThrow(
+      'Unsupported react-admin method: update for customers',
+    )
+    await expect(dataProvider.delete('customers', {id: 12})).rejects.toThrow(
+      'Unsupported react-admin method: delete for customers',
+    )
   })
 
   it('loads requested records for react-admin reference inputs', async () => {
