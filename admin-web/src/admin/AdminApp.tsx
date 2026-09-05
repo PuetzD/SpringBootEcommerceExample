@@ -1,6 +1,5 @@
 import { Admin, CustomRoutes, type LayoutProps, Resource } from 'react-admin'
 import { Route } from 'react-router-dom'
-import { CustomersPage } from '../pages/CustomersPage'
 import { DashboardPage } from '../pages/DashboardPage'
 import { StorefrontPage } from '../pages/StorefrontPage'
 import { AdminShell } from '../components/admin/AdminShell'
@@ -13,6 +12,8 @@ import {ProductEdit} from './products/ProductEdit'
 import {ProductList} from './products/ProductList'
 import {OrderList} from './orders/OrderList'
 import {OrderShow} from './orders/OrderShow'
+import {CustomerList} from './customers/CustomerList'
+import {CustomerShow} from './customers/CustomerShow'
 
 function AdminLayout({ children }: LayoutProps) {
   return <AdminShell>{children}</AdminShell>
@@ -24,8 +25,8 @@ export function AdminApp() {
       <Resource name="products" list={ProductList} create={ProductCreate} edit={ProductEdit} />
       <Resource name="categories" list={CategoryList} create={CategoryCreate} edit={CategoryEdit} />
       <Resource name="orders" list={OrderList} show={OrderShow} />
+      <Resource name="customers" list={CustomerList} show={CustomerShow} />
       <CustomRoutes>
-        <Route path="customers" element={<CustomersPage />} />
         <Route path="storefront" element={<StorefrontPage />} />
       </CustomRoutes>
     </Admin>
