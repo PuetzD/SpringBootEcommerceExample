@@ -2,6 +2,7 @@ package com.springbootecommerce.shophappens.catalog.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryReference;
@@ -45,7 +46,7 @@ class CategoryQueryServiceTest {
         when(productRepository.countActiveByCategoryId(new CategoryId(2L))).thenReturn(1L);
 
         var result = service.findAllActive();
-
+        verify(productRepository).countActiveByCategoryId(new CategoryId(1L));
         assertThat(result).hasSize(2);
         assertThat(result.get(0).id()).isEqualTo(new CategoryReference(1L));
         assertThat(result.get(0).name()).isEqualTo("Electronics");
