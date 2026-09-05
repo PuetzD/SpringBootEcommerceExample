@@ -294,8 +294,8 @@ export const dataProvider = {
   },
 
   async getMany(resource, params) {
-    if (resource === 'orders') {
-      throw new Error('Unsupported react-admin method: getMany for orders')
+    if (resource === 'orders' || resource === 'customers') {
+      throw new Error(`Unsupported react-admin method: getMany for ${resource}`)
     }
     const path = resourcePath(resource)
     const records = await runWithReactAdminError(() =>
