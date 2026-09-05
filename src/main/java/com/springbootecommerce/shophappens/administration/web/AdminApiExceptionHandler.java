@@ -9,6 +9,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.InvalidCa
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductNotFoundException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.StaleCategoryRevisionException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.StaleProductRevisionException;
+import com.springbootecommerce.shophappens.customer.application.CustomerNotFoundException;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.LinkedHashMap;
@@ -81,6 +82,11 @@ public class AdminApiExceptionHandler {
     @ExceptionHandler(OrderNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleOrderNotFound(OrderNotFoundException ex) {
         return response(ex.getMessage(), HttpStatus.NOT_FOUND, "ordering.order.not-found");
+    }
+
+    @ExceptionHandler(CustomerNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleCustomerNotFound(CustomerNotFoundException ex) {
+        return response(ex.getMessage(), HttpStatus.NOT_FOUND, "customer.not-found");
     }
 
     @ExceptionHandler(DuplicateSkuException.class)
