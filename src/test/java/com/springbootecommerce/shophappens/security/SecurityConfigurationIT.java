@@ -43,10 +43,34 @@ class SecurityConfigurationIT extends AbstractIntegrationTest {
 
     @Test
     void permitsAnonymousPublicRoutes() throws Exception {
-        mockMvc.perform(get("/catalog/security-test")).andExpect(status().isOk());
+        mockMvc.perform(get("/catalog/security-test"))
+                .andExpect(status().isOk())
+                .andExpect(header().exists("X-Correlation-ID"));
         mockMvc.perform(get("/cart/security-test")).andExpect(status().isOk());
         mockMvc.perform(get("/login")).andExpect(status().isOk());
         mockMvc.perform(get("/admin/login")).andExpect(status().isOk());
+    }
+
+    @Test
+    void sendsSecureBrowserHeadersOnPublicAndAdminResponses() throws Exception {
+        mockMvc.perform(get("/catalog/security-test").secure(true))
+                .andExpect(status().isOk())
+                .andExpect(
+                        header().string(
+                                        "Content-Security-Policy",
+                                        containsString("default-src 'self'")))
+                .andExpect(header().string("X-Frame-Options", "DENY"))
+                .andExpect(header().string("Referrer-Policy", "strict-origin-when-cross-origin"))
+                .andExpect(
+                        header().string(
+                                        "Permissions-Policy",
+                                        "geolocation=(), microphone=(), camera=()"))
+                .andExpect(
+                        header().string("Strict-Transport-Security", containsString("max-age=")));
+
+        mockMvc.perform(get("/admin/login").secure(true))
+                .andExpect(status().isOk())
+                .andExpect(header().string("X-Frame-Options", "DENY"));
     }
 
     @Test
@@ -143,7 +167,7 @@ class SecurityConfigurationIT extends AbstractIntegrationTest {
 
         mockMvc.perform(formLogin("/admin/login").user("admin@example.com").password("password"))
                 .andExpect(status().isFound())
-                .andExpect(header().string("Location", "/admin/index"));
+                .andExpect(header().string("Location", "/admin/products"));
     }
 
     @Test
@@ -176,7 +200,9 @@ class SecurityConfigurationIT extends AbstractIntegrationTest {
                         .andExpect(status().isFound())
                         .andReturn();
 
-        mockMvc.perform(get("/admin/index").cookie(loginResult.getResponse().getCookie("SESSION")))
+        mockMvc.perform(
+                        get("/admin/products")
+                                .cookie(loginResult.getResponse().getCookie("SESSION")))
                 .andExpect(status().isForbidden())
                 .andExpect(forwardedUrl("/403"));
     }

@@ -1,9 +1,7 @@
 package com.springbootecommerce.shophappens.ordering.application.port.in;
 
-import com.springbootecommerce.shophappens.customer.application.port.in.AddressReference;
-
 public record CheckoutAddress(
-        AddressReference address,
+        long addressId,
         String recipientName,
         String city,
         String postalCode,

@@ -1,7 +1,4 @@
 spring:
-  docker:
-    compose:
-      enabled: false
   flyway:
     enabled: true
     locations:

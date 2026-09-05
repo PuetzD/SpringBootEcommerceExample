@@ -1,7 +1,7 @@
 package com.springbootecommerce.shophappens.ordering.adapter.out.persistence;
 
+import com.springbootecommerce.shophappens.ordering.application.event.OrderPlacedIntegrationEvent;
 import com.springbootecommerce.shophappens.ordering.application.port.out.IntegrationEventOutbox;
-import com.springbootecommerce.shophappens.ordering.domain.event.OrderPlaced;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
@@ -18,16 +18,16 @@ import tools.jackson.databind.ObjectMapper;
 class JpaIntegrationEventOutbox implements IntegrationEventOutbox {
     private final SpringDataOutboxRepository repository;
     private final ObjectMapper objectMapper;
-    private final Clock clock = Clock.systemUTC();
+    private final Clock clock;
 
     @Override
     @Transactional
-    public void append(OrderPlaced event) {
+    public void append(OrderPlacedIntegrationEvent event) {
         try {
             repository.save(
                     OutboxEventJpaEntity.create(
                             event.eventId(),
-                            OrderPlaced.EVENT_TYPE,
+                            OrderPlacedIntegrationEvent.EVENT_TYPE,
                             event.orderId().toString(),
                             objectMapper.writeValueAsString(event),
                             Instant.now(clock)));

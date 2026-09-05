@@ -5,8 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.springbootecommerce.shophappens.customer.application.port.in.AddressReference;
-import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
+import com.springbootecommerce.shophappens.ordering.application.event.OrderPlacedIntegrationEvent;
 import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutReference;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderCommand;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlacedOrder;
@@ -31,13 +30,16 @@ import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -50,9 +52,24 @@ class CheckoutServiceTest {
     @Mock OrderNumberGenerator numbers;
     @Mock CheckoutLock checkoutLock;
     @Mock IntegrationEventOutbox outbox;
-    @InjectMocks CheckoutService service;
+    CheckoutService service;
 
     private static final UUID CHECKOUT_ID = UUID.randomUUID();
+    private static final Instant PLACED_AT = Instant.parse("2026-08-31T10:15:30Z");
+
+    @BeforeEach
+    void setUp() {
+        service =
+                new CheckoutService(
+                        orders,
+                        addresses,
+                        carts,
+                        catalog,
+                        numbers,
+                        checkoutLock,
+                        outbox,
+                        Clock.fixed(PLACED_AT, ZoneOffset.UTC));
+    }
 
     @Test
     void placesInRequiredOrderAndReturnsPersistedResult() {
@@ -70,6 +87,12 @@ class CheckoutServiceTest {
         PlacedOrder result = service.place(command);
 
         assertThat(result.total()).isEqualTo(new Money(new BigDecimal("39.98")));
+        assertThat(result.placedAt()).isEqualTo(PLACED_AT);
+        ArgumentCaptor<OrderPlacedIntegrationEvent> event =
+                ArgumentCaptor.forClass(OrderPlacedIntegrationEvent.class);
+        org.mockito.Mockito.verify(outbox).append(event.capture());
+        assertThat(OrderPlacedIntegrationEvent.EVENT_TYPE).isEqualTo("ordering.order-placed.v1");
+        assertThat(event.getValue().orderId()).isEqualTo(result.order().value());
     }
 
     @Test
@@ -86,10 +109,7 @@ class CheckoutServiceTest {
     private static PlaceOrderCommand command(
             long customer, UUID checkout, long shipping, long billing) {
         return new PlaceOrderCommand(
-                new CustomerReference(customer),
-                new CheckoutReference(checkout),
-                new AddressReference(shipping),
-                new AddressReference(billing));
+                new CustomerId(customer), new CheckoutReference(checkout), shipping, billing);
     }
 
     private static CheckoutCart cartWith(long productId, int quantity) {

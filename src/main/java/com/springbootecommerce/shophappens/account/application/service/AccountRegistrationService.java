@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class AccountRegistrationService implements RegisterCustomerAccountUseCase {
-
     private final AccountRepository accounts;
     private final PasswordHasher passwordHasher;
     private final CreateCustomerProfilePort profiles;
@@ -39,7 +38,7 @@ public class AccountRegistrationService implements RegisterCustomerAccountUseCas
                                 () ->
                                         new IllegalStateException(
                                                 "Account was persisted without an identifier"));
-        return new RegisteredCustomerAccount(
-                new AccountReference(savedId.value()), profiles.create(savedId));
+        profiles.create(savedId);
+        return new RegisteredCustomerAccount(new AccountReference(savedId.value()));
     }
 }

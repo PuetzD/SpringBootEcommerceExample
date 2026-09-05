@@ -1,11 +1,11 @@
 package com.springbootecommerce.shophappens.ordering.application.service;
 
-import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
-import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutAddress;
 import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutItem;
 import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutPreparation;
+import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAddressView;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderDetail;
+import com.springbootecommerce.shophappens.ordering.application.port.in.OrderItemView;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderQuery;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderReference;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderSummary;
@@ -29,22 +29,17 @@ public class OrderQueryService implements PrepareCheckoutUseCase, OrderQuery {
     private final OrderRepository orders;
 
     @Override
-    public CheckoutPreparation prepare(CustomerReference customer) {
-        CustomerId cid = new CustomerId(customer.value());
+    public CheckoutPreparation prepare(CustomerId cid) {
         List<CheckoutItem> items =
                 carts.load(cid).products().stream()
-                        .map(
-                                p ->
-                                        new CheckoutItem(
-                                                new ProductReference(p.productId().value()),
-                                                p.quantity()))
+                        .map(p -> new CheckoutItem(p.productId(), p.quantity()))
                         .toList();
         List<CheckoutAddress> addressList =
                 addresses.available(cid).stream()
                         .map(
                                 a ->
                                         new CheckoutAddress(
-                                                a.address(),
+                                                a.addressId(),
                                                 a.recipientName(),
                                                 a.city(),
                                                 a.postalCode(),
@@ -52,12 +47,12 @@ public class OrderQueryService implements PrepareCheckoutUseCase, OrderQuery {
                                                 a.defaultShipping(),
                                                 a.defaultBilling()))
                         .toList();
-        return new CheckoutPreparation(customer, items, addressList);
+        return new CheckoutPreparation(cid, items, addressList);
     }
 
     @Override
-    public Optional<OrderDetail> findOwned(CustomerReference customer, String orderNumber) {
-        return orders.findOwnedByOrderNumber(new CustomerId(customer.value()), orderNumber)
+    public Optional<OrderDetail> findOwned(CustomerId customer, String orderNumber) {
+        return orders.findOwnedByOrderNumber(customer, orderNumber)
                 .map(
                         o ->
                                 new OrderDetail(
@@ -65,13 +60,37 @@ public class OrderQueryService implements PrepareCheckoutUseCase, OrderQuery {
                                         o.orderNumber().value(),
                                         o.total(),
                                         o.placedAt(),
-                                        List.copyOf(o.items()),
-                                        List.of(o.shippingAddress(), o.billingAddress())));
+                                        o.items().stream()
+                                                .map(
+                                                        i ->
+                                                                new OrderItemView(
+                                                                        i.productId().value(),
+                                                                        i.sku(),
+                                                                        i.productName(),
+                                                                        i.unitPrice(),
+                                                                        i.quantity(),
+                                                                        i.lineTotal()))
+                                                .toList(),
+                                        List.of(o.shippingAddress(), o.billingAddress()).stream()
+                                                .map(
+                                                        a ->
+                                                                new OrderAddressView(
+                                                                        a.role().name(),
+                                                                        a.recipientName(),
+                                                                        a.companyName(),
+                                                                        a.addressLine1(),
+                                                                        a.addressLine2(),
+                                                                        a.city(),
+                                                                        a.region(),
+                                                                        a.postalCode(),
+                                                                        a.countryCode(),
+                                                                        a.phoneNumber()))
+                                                .toList()));
     }
 
     @Override
-    public List<OrderSummary> findAll(CustomerReference customer) {
-        return orders.findAllByCustomer(new CustomerId(customer.value())).stream()
+    public List<OrderSummary> findAll(CustomerId customer) {
+        return orders.findAllByCustomer(customer).stream()
                 .map(
                         o ->
                                 new OrderSummary(

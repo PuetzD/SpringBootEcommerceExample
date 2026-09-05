@@ -1,6 +1,9 @@
 package com.springbootecommerce.shophappens.cart.application.service;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -15,7 +18,6 @@ import com.springbootecommerce.shophappens.cart.domain.model.CartId;
 import com.springbootecommerce.shophappens.cart.domain.model.CartOwner;
 import com.springbootecommerce.shophappens.cart.domain.model.GuestCartId;
 import com.springbootecommerce.shophappens.cart.domain.model.Quantity;
-import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import java.util.Optional;
@@ -42,21 +44,30 @@ class CartMergeServiceTest {
         when(ledger.claim(guestId, new CustomerId(42L))).thenReturn(true);
         when(customers.findOrCreate(new CustomerId(42L))).thenReturn(customer);
 
-        service.merge(new GuestCartReference(guestId.value()), new CustomerReference(42L));
+        service.merge(new GuestCartReference(guestId.value()), new CustomerId(42L));
 
         verify(customers).save(argThat(cart -> cart.items().getFirst().quantity().value() == 5));
         verify(afterCommit).execute(argThat(action -> action != null));
     }
 
     @Test
-    void repeatedConsumedGuestCartIsANoOp() {
+    void claimedGuestCartDeletesStaleGuestCartAfterCommitWithoutLoadingOrMerging() {
         GuestCartId guestId = GuestCartId.random();
-        when(guests.find(guestId)).thenReturn(Optional.of(guestCart(guestId, 7L, 3)));
         when(ledger.claim(guestId, new CustomerId(42L))).thenReturn(false);
+        doAnswer(
+                        invocation -> {
+                            invocation.<Runnable>getArgument(0).run();
+                            return null;
+                        })
+                .when(afterCommit)
+                .execute(any(Runnable.class));
 
-        service.merge(new GuestCartReference(guestId.value()), new CustomerReference(42L));
+        service.merge(new GuestCartReference(guestId.value()), new CustomerId(42L));
 
-        verifyNoInteractions(customers, afterCommit);
+        verify(guests, never()).find(guestId);
+        verify(guests).delete(guestId);
+        verifyNoInteractions(customers);
+        verify(afterCommit).execute(any(Runnable.class));
     }
 
     private static Cart guestCart(GuestCartId guestId, long product, int quantity) {

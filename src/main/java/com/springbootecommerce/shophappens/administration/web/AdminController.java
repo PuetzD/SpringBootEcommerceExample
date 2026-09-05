@@ -1,24 +1,39 @@
 package com.springbootecommerce.shophappens.administration.web;
 
-import com.springbootecommerce.shophappens.catalog.application.port.in.BrowseCatalogUseCase;
-import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdministrationUseCase;
-import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdministrationUseCase;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
-@RequiredArgsConstructor
 @Controller
+@RequestMapping("/admin")
 public class AdminController {
-    private final BrowseCatalogUseCase catalog;
+    @GetMapping({"", "/"})
+    public String getBackend() {
+        return "forward:/admin/index.html";
+    }
 
-    private final ProductAdministrationUseCase adminProduct;
+    @GetMapping("/products")
+    public String getProductsOverview() {
+        return "forward:/admin/index.html";
+    }
 
-    private final CategoryAdministrationUseCase adminCategory;
+    @GetMapping("/categories")
+    public String getCategoriesOverview() {
+        return "forward:/admin/index.html";
+    }
 
-    @GetMapping("/admin")
-    public String getBackend(Model model) {
-        return "admin/index";
+    @GetMapping("/orders")
+    public String getOrdersOverview() {
+        return "forward:/admin/index.html";
+    }
+
+    @GetMapping("/customers")
+    public String getCustomersOverview() {
+        return "forward:/admin/index.html";
+    }
+
+    @GetMapping("/storefront")
+    public String getStorefrontOverview() {
+        return "forward:/admin/index.html";
     }
 }

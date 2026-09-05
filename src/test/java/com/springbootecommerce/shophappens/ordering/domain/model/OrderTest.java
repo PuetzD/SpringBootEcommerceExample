@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.springbootecommerce.shophappens.ordering.domain.exception.EmptyCheckoutException;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.money.Currency;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -46,6 +47,68 @@ class OrderTest {
                 .isInstanceOf(EmptyCheckoutException.class);
         assertThatThrownBy(() -> placeWithAddresses(billingAddress(), billingAddress()))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void rejectsRestoredOrderWhenPersistedTotalDoesNotMatchItems() {
+        assertThatThrownBy(
+                        () ->
+                                Order.restore(
+                                        OrderId.random(),
+                                        new OrderNumber("ORD-20260828-ABC123DEF456"),
+                                        new CheckoutId(UUID.randomUUID()),
+                                        new CustomerId(42L),
+                                        List.of(
+                                                new OrderItem(
+                                                        new ProductId(7L),
+                                                        "ELEC-001",
+                                                        "Headphones",
+                                                        new Money(new BigDecimal("19.99")),
+                                                        2)),
+                                        shippingAddress(),
+                                        billingAddress(),
+                                        Instant.parse("2026-08-28T08:00:00Z"),
+                                        new Money(new BigDecimal("19.99"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("total");
+    }
+
+    @Test
+    void restoresPersistedOrderWithNoItems() {
+        Order order =
+                Order.restore(
+                        OrderId.random(),
+                        new OrderNumber("ORD-20260828-ABC123DEF456"),
+                        new CheckoutId(UUID.randomUUID()),
+                        new CustomerId(42L),
+                        List.of(),
+                        shippingAddress(),
+                        billingAddress(),
+                        Instant.parse("2026-08-28T08:00:00Z"),
+                        Money.zero());
+
+        assertThat(order.items()).isEmpty();
+    }
+
+    @Test
+    void validatesRestoredOrderTotalsUsingTheOrderCurrency() {
+        Money unitPrice = new Money(new BigDecimal("19.99"), Currency.USD);
+
+        Order order =
+                Order.restore(
+                        OrderId.random(),
+                        new OrderNumber("ORD-20260828-ABC123DEF456"),
+                        new CheckoutId(UUID.randomUUID()),
+                        new CustomerId(42L),
+                        List.of(
+                                new OrderItem(
+                                        new ProductId(7L), "ELEC-001", "Headphones", unitPrice, 2)),
+                        shippingAddress(),
+                        billingAddress(),
+                        Instant.parse("2026-08-28T08:00:00Z"),
+                        new Money(new BigDecimal("39.98"), Currency.USD));
+
+        assertThat(order.total()).isEqualTo(new Money(new BigDecimal("39.98"), Currency.USD));
     }
 
     @Test

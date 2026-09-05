@@ -67,6 +67,38 @@ class ProductTest {
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 
+    @Test
+    void revisesDetailsAndCategoriesWithoutChangingSku() {
+        Product product = productWithStock(5);
+
+        product.reviseDetails(
+                "  New name  ", "New description", new Money(new BigDecimal("12.50")), "/new.png");
+        product.replaceCategories(Set.of(new CategoryId(3L), new CategoryId(4L)));
+
+        assertThat(product.sku()).isEqualTo(new Sku("ELEC-001"));
+        assertThat(product.name()).isEqualTo("New name");
+        assertThat(product.description()).isEqualTo("New description");
+        assertThat(product.price()).isEqualTo(new Money(new BigDecimal("12.50")));
+        assertThat(product.imageUrl()).isEqualTo("/new.png");
+        assertThat(product.categoryIds())
+                .containsExactlyInAnyOrder(new CategoryId(3L), new CategoryId(4L));
+    }
+
+    @Test
+    void validatesAdministrativeChangesAndActivation() {
+        Product product = productWithStock(5);
+
+        assertThatThrownBy(() -> product.reviseDetails(" ", "Description", product.price(), null))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> product.setStockQuantity(-1))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        product.deactivate();
+        product.activate();
+
+        assertThat(product.active()).isTrue();
+    }
+
     private Product productWithStock(int stock) {
         return Product.create(
                 new Sku("ELEC-001"),

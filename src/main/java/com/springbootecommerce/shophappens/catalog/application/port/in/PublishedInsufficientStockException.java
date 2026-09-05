@@ -1,12 +1,32 @@
 package com.springbootecommerce.shophappens.catalog.application.port.in;
 
-import com.springbootecommerce.shophappens.catalog.domain.exception.InsufficientStockException;
-import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
-import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+public final class PublishedInsufficientStockException extends RuntimeException {
+    private final ProductReference product;
+    private final String sku;
+    private final int requestedQuantity;
+    private final int availableQuantity;
 
-public final class PublishedInsufficientStockException extends InsufficientStockException {
     public PublishedInsufficientStockException(
-            ProductId productId, Sku sku, int requestedQuantity, int availableQuantity) {
-        super(productId, sku, requestedQuantity, availableQuantity);
+            ProductReference product, String sku, int requestedQuantity, int availableQuantity) {
+        this.product = product;
+        this.sku = sku;
+        this.requestedQuantity = requestedQuantity;
+        this.availableQuantity = availableQuantity;
+    }
+
+    public ProductReference product() {
+        return product;
+    }
+
+    public String sku() {
+        return sku;
+    }
+
+    public int requestedQuantity() {
+        return requestedQuantity;
+    }
+
+    public int availableQuantity() {
+        return availableQuantity;
     }
 }

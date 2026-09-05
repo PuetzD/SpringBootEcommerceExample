@@ -1,5 +1,6 @@
 package com.springbootecommerce.shophappens.ordering.application.service;
 
+import com.springbootecommerce.shophappens.ordering.application.event.OrderPlacedIntegrationEvent;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderReference;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderCommand;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderUseCase;
@@ -14,7 +15,6 @@ import com.springbootecommerce.shophappens.ordering.application.port.out.OrderNu
 import com.springbootecommerce.shophappens.ordering.application.port.out.OrderRepository;
 import com.springbootecommerce.shophappens.ordering.application.port.out.PurchasedProduct;
 import com.springbootecommerce.shophappens.ordering.application.port.out.RequestedProduct;
-import com.springbootecommerce.shophappens.ordering.domain.event.OrderPlaced;
 import com.springbootecommerce.shophappens.ordering.domain.exception.EmptyCheckoutException;
 import com.springbootecommerce.shophappens.ordering.domain.model.CheckoutId;
 import com.springbootecommerce.shophappens.ordering.domain.model.Order;
@@ -41,16 +41,12 @@ public class CheckoutService implements PlaceOrderUseCase {
     private final OrderNumberGenerator numbers;
     private final CheckoutLock checkoutLock;
     private final IntegrationEventOutbox outbox;
-    private Clock clock = Clock.systemUTC();
-
-    public void setClock(Clock clock) {
-        this.clock = clock;
-    }
+    private final Clock clock;
 
     @Override
     @Transactional
     public PlacedOrder place(PlaceOrderCommand command) {
-        CustomerId cid = new CustomerId(command.customer().value());
+        CustomerId cid = command.customer();
         CheckoutId ckid = new CheckoutId(command.checkout().value());
 
         checkoutLock.acquire(cid, ckid);
@@ -65,8 +61,8 @@ public class CheckoutService implements PlaceOrderUseCase {
             throw new EmptyCheckoutException();
         }
 
-        OrderAddress shipping = addresses.shipping(cid, command.shippingAddress().value());
-        OrderAddress billing = addresses.billing(cid, command.billingAddress().value());
+        OrderAddress shipping = addresses.shipping(cid, command.shippingAddress());
+        OrderAddress billing = addresses.billing(cid, command.billingAddress());
 
         List<RequestedProduct> requested =
                 cart.products().stream()
@@ -93,7 +89,7 @@ public class CheckoutService implements PlaceOrderUseCase {
                 Order.place(
                         OrderId.random(), number, ckid, cid, items, shipping, billing, placedAt);
         Order saved = orders.save(order);
-        outbox.append(OrderPlaced.from(saved));
+        outbox.append(OrderPlacedIntegrationEvent.from(saved));
         carts.clear(cid);
 
         return toPlacedOrder(saved);

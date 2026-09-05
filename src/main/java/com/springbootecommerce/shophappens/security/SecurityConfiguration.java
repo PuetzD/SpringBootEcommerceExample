@@ -4,15 +4,37 @@ import com.springbootecommerce.shophappens.security.service.CartMergingAuthentic
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.HttpStatusAccessDeniedHandler;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
     @Bean
     @Order(1)
+    SecurityFilterChain adminApiSecurityFilterChain(HttpSecurity http) throws Exception {
+        http.securityMatcher("/api/admin/**")
+                .authorizeHttpRequests(auth -> auth.anyRequest().hasRole("ADMIN"))
+                .exceptionHandling(
+                        exception ->
+                                exception
+                                        .authenticationEntryPoint(
+                                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                                        .accessDeniedHandler(
+                                                new HttpStatusAccessDeniedHandler(
+                                                        HttpStatus.FORBIDDEN)));
+        applySecurityHeaders(http);
+
+        return http.build();
+    }
+
+    @Bean
+    @Order(2)
     SecurityFilterChain adminSecurityFilterChain(HttpSecurity http) throws Exception {
         http.securityMatcher("/admin/**")
                 .authorizeHttpRequests(
@@ -25,7 +47,7 @@ public class SecurityConfiguration {
                         form ->
                                 form.loginPage("/admin/login")
                                         .loginProcessingUrl("/admin/login")
-                                        .defaultSuccessUrl("/admin/index", false)
+                                        .defaultSuccessUrl("/admin/products", false)
                                         .permitAll())
                 .logout(
                         logout ->
@@ -33,12 +55,13 @@ public class SecurityConfiguration {
                                         .logoutSuccessUrl("/admin/login?logout")
                                         .permitAll())
                 .exceptionHandling(exception -> exception.accessDeniedPage("/403"));
+        applySecurityHeaders(http);
 
         return http.build();
     }
 
     @Bean
-    @Order(2)
+    @Order(3)
     SecurityFilterChain storefrontSecurityFilterChain(
             HttpSecurity http, CartMergingAuthenticationSuccessHandler successHandler)
             throws Exception {
@@ -52,6 +75,7 @@ public class SecurityConfiguration {
                                                 "/register/**",
                                                 "/error",
                                                 "/403",
+                                                "/actuator/health/**",
                                                 "/css/**",
                                                 "/js/**",
                                                 "/images/**",
@@ -73,7 +97,39 @@ public class SecurityConfiguration {
                                         .logoutSuccessUrl("/login?logout")
                                         .permitAll())
                 .exceptionHandling(exception -> exception.accessDeniedPage("/403"));
+        applySecurityHeaders(http);
 
         return http.build();
+    }
+
+    private static void applySecurityHeaders(HttpSecurity http) throws Exception {
+        http.headers(
+                headers -> {
+                    headers.contentSecurityPolicy(
+                            csp ->
+                                    csp.policyDirectives(
+                                            "default-src 'self'; "
+                                                    + "script-src 'self'; "
+                                                    + "style-src 'self' 'unsafe-inline'; "
+                                                    + "img-src 'self' data:; "
+                                                    + "font-src 'self'; "
+                                                    + "object-src 'none'; "
+                                                    + "base-uri 'self'; "
+                                                    + "frame-ancestors 'none'"));
+                    headers.frameOptions(frame -> frame.deny());
+                    headers.referrerPolicy(
+                            referrer ->
+                                    referrer.policy(
+                                            ReferrerPolicyHeaderWriter.ReferrerPolicy
+                                                    .STRICT_ORIGIN_WHEN_CROSS_ORIGIN));
+                    headers.permissionsPolicyHeader(
+                            permissions ->
+                                    permissions.policy("geolocation=(), microphone=(), camera=()"));
+                    headers.httpStrictTransportSecurity(
+                            hsts ->
+                                    hsts.includeSubDomains(true)
+                                            .preload(true)
+                                            .maxAgeInSeconds(31536000));
+                });
     }
 }

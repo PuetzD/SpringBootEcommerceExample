@@ -1,12 +1,12 @@
 package com.springbootecommerce.shophappens.ordering.application.port.out;
 
-import com.springbootecommerce.shophappens.ordering.domain.event.OrderPlaced;
+import com.springbootecommerce.shophappens.ordering.application.event.OrderPlacedIntegrationEvent;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 public interface IntegrationEventOutbox {
-    void append(OrderPlaced event);
+    void append(OrderPlacedIntegrationEvent event);
 
     List<PendingIntegrationEvent> pending(int batchSize);
 

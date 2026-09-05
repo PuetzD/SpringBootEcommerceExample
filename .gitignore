@@ -1,9 +1,9 @@
 ### Maven ###
 /target/
 .mvn/wrapper/maven-wrapper.jar
-
 ### Gradle ###
 .gradle/
+
 
 ### STS ###
 .apt_generated
@@ -15,6 +15,7 @@
 .sts4-cache
 
 ### IntelliJ IDEA ###
+/out/
 *.iws
 *.iml
 *.ipr
@@ -41,12 +42,20 @@ build/
 node/
 node_modules/
 src/main/resources/static/css/output.css
-
+src/main/resources/static/admin/
 ### ai
 /.agents/
 .worktrees/
 .superpowers/
 /docs/superpowers/
+/docs/superpowers/plans/
 .codex/config.toml
 .qwen/skills/
 .kilo/
+.claude/
+.codex/
+.cursor/
+.gemini/
+.kiro/
+GEMINI.md
+opencode.jsonc

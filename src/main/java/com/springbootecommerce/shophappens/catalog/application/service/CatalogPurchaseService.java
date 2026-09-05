@@ -7,6 +7,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.PurchaseL
 import com.springbootecommerce.shophappens.catalog.application.port.in.PurchaseProductsUseCase;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PurchasedProductSnapshot;
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductRepository;
+import com.springbootecommerce.shophappens.catalog.domain.exception.ProductUnavailableException;
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
 import com.springbootecommerce.shophappens.catalog.domain.model.PurchasedFacts;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
@@ -38,24 +39,32 @@ public class CatalogPurchaseService implements PurchaseProductsUseCase {
                         line -> {
                             Product product =
                                     productRepository
-                                            .findById(new ProductId(line.product().value()))
+                                            .findForPurchase(new ProductId(line.product().value()))
                                             .orElseThrow(
                                                     () ->
                                                             new PublishedProductUnavailableException(
-                                                                    new ProductId(
+                                                                    new ProductReference(
                                                                             line.product().value()),
                                                                     null));
                             try {
                                 PurchasedFacts facts = product.purchase(line.quantity());
                                 productRepository.save(product);
                                 return toSnapshot(facts);
+                            } catch (ProductUnavailableException exception) {
+                                throw new PublishedProductUnavailableException(
+                                        new ProductReference(exception.getProductId().value()),
+                                        exception.getSku() == null
+                                                ? null
+                                                : exception.getSku().value());
                             } catch (
                                     com.springbootecommerce.shophappens.catalog.domain.exception
                                                     .InsufficientStockException
                                             exception) {
                                 throw new PublishedInsufficientStockException(
-                                        exception.getProductId(),
-                                        exception.getSku(),
+                                        new ProductReference(exception.getProductId().value()),
+                                        exception.getSku() == null
+                                                ? null
+                                                : exception.getSku().value(),
                                         exception.getRequestedQuantity(),
                                         exception.getAvailableQuantity());
                             }

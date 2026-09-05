@@ -15,7 +15,6 @@ import com.springbootecommerce.shophappens.account.domain.model.Account;
 import com.springbootecommerce.shophappens.account.domain.model.Email;
 import com.springbootecommerce.shophappens.account.domain.model.PasswordHash;
 import com.springbootecommerce.shophappens.account.domain.model.Role;
-import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.sharedkernel.identity.AccountId;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,14 +43,10 @@ class AccountRegistrationServiceTest {
                                         new PasswordHash("{bcrypt}encoded"),
                                         Role.CUSTOMER,
                                         true));
-        when(profiles.create(new AccountId(42L))).thenReturn(new CustomerReference(7L));
-
         RegisteredCustomerAccount result =
                 service.register(
                         new RegisterCustomerAccount(" Customer@Example.com ", "plain-password"));
-
-        assertThat(result.account()).isEqualTo(new AccountReference(42L));
-        assertThat(result.customer()).isEqualTo(new CustomerReference(7L));
+        assertThat(result).isEqualTo(new RegisteredCustomerAccount(new AccountReference(42L)));
         InOrder order = inOrder(accounts, profiles);
         order.verify(accounts).save(any(Account.class));
         order.verify(profiles).create(new AccountId(42L));

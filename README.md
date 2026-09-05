@@ -11,6 +11,7 @@ development. I'm also learning DDD here.
 - Spring MVC, Thymeleaf, and Spring Security
 - Spring Data JPA, PostgreSQL, Flyway, and Redis
 - Tailwind CSS and daisyUI
+- React 19, React Admin, and Vite for Catalog administration
 - Maven, Docker Compose, and Testcontainers
 
 ## Current Architecture
@@ -41,22 +42,42 @@ work.
 ### Prerequisites
 
 - Java 21
+- Node 22
 - Docker and Docker Compose
 
-The application uses PostgreSQL and Redis. Spring Boot starts the services in
-`docker-compose.yml` automatically when Docker is available.
+Use `./mvnw` for backend work, so you do not need a globally installed Maven.
+Frontend dependencies and assets are managed separately with npm; the Docker
+build composes the frontend and backend stages into the deployment image.
+
+The simplest local setup on Windows, WSL, macOS, or Linux is:
+
+1. Install Java 21 and Node 22.
+2. Start PostgreSQL and Redis with Docker Compose.
+3. Run the app with Maven from the host.
+
+To run PostgreSQL, Redis, and the Java application in containers:
 
 ```bash
+docker compose up --build
+```
+
+Open <http://localhost:8080> after the application starts. Stop the stack with
+`docker compose down`.
+
+The application uses PostgreSQL and Redis. When running the application directly
+on the host, start those services first with Docker Compose:
+
+```bash
+docker compose up -d postgres redis
 ./mvnw spring-boot:run
 ```
 
 Open <http://localhost:8080> after the application starts.
 
-To manage the supporting services manually instead:
+To run the containerized application with verbose development diagnostics:
 
 ```bash
-docker compose up -d
-./mvnw spring-boot:run
+SPRING_PROFILES_ACTIVE=dev docker compose up --build
 ```
 
 By default the application logs quietly and hides SQL bindings. To opt into
@@ -89,10 +110,11 @@ Run the backend test suite with:
 ./mvnw test
 ```
 
-`./mvnw verify` runs the complete lifecycle, including CSS generation,
-formatting, Checkstyle, PMD, unit tests, architecture tests, and Testcontainers
-integration tests. The integration tests start disposable PostgreSQL and Redis
-containers; Docker must be available for those tests.
+`./mvnw verify` runs the backend lifecycle, including formatting, Checkstyle,
+PMD, unit tests, architecture tests, and integration tests. The integration
+tests start disposable PostgreSQL and Redis
+containers; Docker must be available for those tests. It also generates the JaCoCo coverage report at
+`target/site/jacoco/index.html`.
 
 Format Java sources with:
 
@@ -108,9 +130,8 @@ checked against the JPA entities at startup via `ddl-auto: validate`:
 - `V1__create_account_schema.sql` — accounts
 - `V2__create_catalog_schema.sql` — categories and products
 - `V3__create_cart_schema.sql` — customer carts
-- `V4__create_ordering_schema.sql` — orders and checkout idempotency
+- `V4__create_ordering_schema.sql` — orders, checkout idempotency, and order query indexes
 - `V5__create_integration_outbox.sql` — transactional integration events
-- `V6__add_order_query_indexes.sql` — ownership and deterministic-history indexes
 
 The optional seed is maintained in `scripts/demo-data.sql`, outside Flyway's
 migration locations. Use the Compose import command above instead of copying it
@@ -128,7 +149,7 @@ application with:
 ```bash
 ORDERING_EVENTS_KAFKA_ENABLED=true \
 SPRING_KAFKA_BOOTSTRAP_SERVERS=localhost:9092 \
-./mvnw spring-boot:run
+./mvnw generate-resources spring-boot:run
 ```
 
 The publisher reads unpublished rows from `integration_outbox`, sends them to
@@ -169,8 +190,7 @@ is not a recovery procedure.
 
 ## Frontend CSS
 
-The Maven build installs the frontend dependencies and builds CSS
-automatically. To rebuild Tailwind CSS directly:
+To rebuild Tailwind CSS directly:
 
 ```bash
 npm run build:css
@@ -181,6 +201,29 @@ During UI development, watch for CSS changes with:
 ```bash
 npm run dev:css
 ```
+
+## Administration frontend
+
+The `/admin` application uses React Admin resources for Catalog-owned Products
+and flat Categories. It preserves the existing `/api/admin/products`,
+`/api/admin/categories`, and `/api/admin/categories/options` contracts.
+
+The typed Catalog data provider is the sole resource transport adapter. It
+delegates to the shared API client, which owns same-origin credentials and the
+`X-XSRF-TOKEN` CSRF header. Product and Category updates/deletes send the
+current revision through `If-Match`; stale revisions and category-in-use
+conflicts are surfaced without automatic retries.
+
+Manage frontend dependencies and the production bundle separately from Maven:
+
+```bash
+npm ci
+npm run test:admin
+npm run build:admin
+```
+
+The generated bundle is written to `src/main/resources/static/admin/` and is
+ignored by Git.
 
 ## AI Skills
 
