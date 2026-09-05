@@ -84,6 +84,7 @@ export interface OrderAddress {
 
 export interface Order {
     id: string
+    orderId: string
     orderNumber: string
     customerId: number
     total: number

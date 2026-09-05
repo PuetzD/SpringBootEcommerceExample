@@ -48,6 +48,8 @@ class OrderAdminApiControllerTest {
                                 .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").value(summary.orderNumber()))
+                .andExpect(
+                        jsonPath("$.content[0].orderId").value(summary.order().value().toString()))
                 .andExpect(jsonPath("$.content[0].orderNumber").value(summary.orderNumber()))
                 .andExpect(jsonPath("$.totalElements").value(1));
     }
@@ -63,6 +65,7 @@ class OrderAdminApiControllerTest {
                                 .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(orderNumber))
+                .andExpect(jsonPath("$.orderId").isNotEmpty())
                 .andExpect(jsonPath("$.orderNumber").value(orderNumber))
                 .andExpect(jsonPath("$.customerId").value(7));
     }
