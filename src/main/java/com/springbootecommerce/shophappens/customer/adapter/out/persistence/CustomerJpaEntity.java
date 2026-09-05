@@ -30,6 +30,15 @@ class CustomerJpaEntity {
     @Column(name = "account_id", nullable = false, unique = true)
     private Long accountId;
 
+    @Column(name = "given_name", nullable = false, length = 100)
+    private String givenName;
+
+    @Column(name = "family_name", nullable = false, length = 100)
+    private String familyName;
+
+    @Column(name = "contact_email", nullable = false, length = 254)
+    private String contactEmail;
+
     @Version
     @Column(name = "version")
     private long version;
@@ -37,9 +46,13 @@ class CustomerJpaEntity {
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AddressJpaEntity> addresses = new ArrayList<>();
 
-    static CustomerJpaEntity create(Long accountId) {
+    static CustomerJpaEntity create(
+            Long accountId, String givenName, String familyName, String contactEmail) {
         var entity = new CustomerJpaEntity();
         entity.accountId = accountId;
+        entity.givenName = givenName;
+        entity.familyName = familyName;
+        entity.contactEmail = contactEmail;
         return entity;
     }
 

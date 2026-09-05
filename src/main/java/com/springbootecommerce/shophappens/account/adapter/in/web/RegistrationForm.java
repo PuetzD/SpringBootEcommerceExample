@@ -10,6 +10,12 @@ import lombok.Setter;
 @Setter
 public class RegistrationForm {
 
+    @NotBlank(message = "First name is required")
+    private String givenName;
+
+    @NotBlank(message = "Last name is required")
+    private String familyName;
+
     @NotBlank(message = "Email is required")
     @Email(message = "Enter a valid email address")
     private String email;

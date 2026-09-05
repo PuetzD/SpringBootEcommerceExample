@@ -15,6 +15,7 @@ import com.springbootecommerce.shophappens.customer.application.port.out.Custome
 import com.springbootecommerce.shophappens.customer.domain.model.Address;
 import com.springbootecommerce.shophappens.customer.domain.model.AddressDetails;
 import com.springbootecommerce.shophappens.customer.domain.model.AddressId;
+import com.springbootecommerce.shophappens.customer.domain.model.ContactEmail;
 import com.springbootecommerce.shophappens.customer.domain.model.Customer;
 import com.springbootecommerce.shophappens.sharedkernel.identity.AccountId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
@@ -37,12 +38,19 @@ public class CustomerProfileService
 
     @Override
     @Transactional
-    public CustomerReference create(ExternalAccountId accountId) {
+    public CustomerReference create(
+            ExternalAccountId accountId, String givenName, String familyName, String contactEmail) {
         var internalAccountId = new AccountId(accountId.value());
         if (customers.findByAccountId(internalAccountId).isPresent()) {
             throw new CustomerProfileAlreadyExistsException(accountId);
         }
-        var saved = customers.save(Customer.create(internalAccountId));
+        var saved =
+                customers.save(
+                        Customer.create(
+                                internalAccountId,
+                                givenName,
+                                familyName,
+                                new ContactEmail(contactEmail)));
         return new CustomerReference(saved.id().orElseThrow().value());
     }
 

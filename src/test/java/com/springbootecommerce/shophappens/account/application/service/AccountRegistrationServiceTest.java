@@ -45,10 +45,12 @@ class AccountRegistrationServiceTest {
                                         true));
         RegisteredCustomerAccount result =
                 service.register(
-                        new RegisterCustomerAccount(" Customer@Example.com ", "plain-password"));
+                        new RegisterCustomerAccount(
+                                " Customer@Example.com ", "plain-password", " Ada ", " Lovelace "));
         assertThat(result).isEqualTo(new RegisteredCustomerAccount(new AccountReference(42L)));
         InOrder order = inOrder(accounts, profiles);
         order.verify(accounts).save(any(Account.class));
-        order.verify(profiles).create(new AccountId(42L));
+        order.verify(profiles)
+                .create(new AccountId(42L), " Ada ", " Lovelace ", "customer@example.com");
     }
 }

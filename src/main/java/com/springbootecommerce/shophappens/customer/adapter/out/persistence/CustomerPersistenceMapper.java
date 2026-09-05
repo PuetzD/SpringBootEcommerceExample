@@ -3,6 +3,7 @@ package com.springbootecommerce.shophappens.customer.adapter.out.persistence;
 import com.springbootecommerce.shophappens.customer.domain.model.Address;
 import com.springbootecommerce.shophappens.customer.domain.model.AddressDetails;
 import com.springbootecommerce.shophappens.customer.domain.model.AddressId;
+import com.springbootecommerce.shophappens.customer.domain.model.ContactEmail;
 import com.springbootecommerce.shophappens.customer.domain.model.Customer;
 import com.springbootecommerce.shophappens.sharedkernel.identity.AccountId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
@@ -12,7 +13,12 @@ import org.springframework.stereotype.Component;
 @Component
 class CustomerPersistenceMapper {
     CustomerJpaEntity toJpa(Customer customer) {
-        var jpa = CustomerJpaEntity.create(customer.accountId().value());
+        var jpa =
+                CustomerJpaEntity.create(
+                        customer.accountId().value(),
+                        customer.givenName(),
+                        customer.familyName(),
+                        customer.contactEmail().value());
         customer.id().ifPresent(id -> jpa.setId(id.value()));
         for (Address address : customer.addresses()) {
             jpa.addAddress(toJpa(address));
@@ -23,7 +29,12 @@ class CustomerPersistenceMapper {
     Customer toDomain(CustomerJpaEntity jpa) {
         List<Address> addresses = jpa.getAddresses().stream().map(this::toDomain).toList();
         return Customer.restore(
-                new CustomerId(jpa.getId()), new AccountId(jpa.getAccountId()), addresses);
+                new CustomerId(jpa.getId()),
+                new AccountId(jpa.getAccountId()),
+                jpa.getGivenName(),
+                jpa.getFamilyName(),
+                new ContactEmail(jpa.getContactEmail()),
+                addresses);
     }
 
     private AddressJpaEntity toJpa(Address address) {

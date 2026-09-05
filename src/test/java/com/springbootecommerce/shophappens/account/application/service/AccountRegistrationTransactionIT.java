@@ -25,12 +25,17 @@ class AccountRegistrationTransactionIT extends AbstractIntegrationTest {
         String email = "rollback-profile@example.com";
         doThrow(new IllegalStateException("profile unavailable"))
                 .when(profiles)
-                .create(any(AccountId.class));
+                .create(
+                        any(AccountId.class),
+                        any(String.class),
+                        any(String.class),
+                        any(String.class));
 
         assertThatThrownBy(
                         () ->
                                 registration.register(
-                                        new RegisterCustomerAccount(email, "twelve-chars!")))
+                                        new RegisterCustomerAccount(
+                                                email, "twelve-chars!", "Ada", "Lovelace")))
                 .isInstanceOf(IllegalStateException.class);
         assertThat(
                         jdbc.queryForObject(
