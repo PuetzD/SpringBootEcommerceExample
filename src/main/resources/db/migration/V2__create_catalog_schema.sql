@@ -41,5 +41,5 @@ CREATE TABLE product_category
     CONSTRAINT fk_product_category_product
         FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE CASCADE,
     CONSTRAINT fk_product_category_category
-        FOREIGN KEY (category_id) REFERENCES category (id) ON DELETE CASCADE
+        FOREIGN KEY (category_id) REFERENCES category (id)
 );

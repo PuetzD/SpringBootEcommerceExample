@@ -28,5 +28,17 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Build frontend (CSS + admin-web)
+        run: npm ci && npm test && npm run build:frontend
+
+      - name: Audit production frontend dependencies
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Verify with Maven
         run: ./mvnw -B verify

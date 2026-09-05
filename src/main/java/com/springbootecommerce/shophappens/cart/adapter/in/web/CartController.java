@@ -7,9 +7,12 @@ import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartUse
 import com.springbootecommerce.shophappens.catalog.application.port.in.BrowseCatalogUseCase;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductSummary;
+import com.springbootecommerce.shophappens.customer.application.port.in.CurrentCustomerIdentity;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
 import com.springbootecommerce.shophappens.shared.web.SeoMetadata;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import jakarta.servlet.http.HttpSession;
 import java.util.List;
 import java.util.Optional;
@@ -29,7 +32,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/cart")
 public class CartController {
 
-    private final CartOwnerResolver owners;
+    private final CurrentCustomerIdentity currentCustomer;
     private final GuestCartSession guestSessions;
     private final GuestCartUseCase guestCart;
     private final CustomerCartUseCase customerCart;
@@ -38,9 +41,9 @@ public class CartController {
 
     @GetMapping
     public String view(HttpSession session, Model model) {
-        Optional<CustomerReference> customer = owners.resolve();
+        Optional<CustomerReference> customer = currentCustomer.current();
         List<CartItemSnapshot> items =
-                customer.map(customerCart::getSnapshot)
+                customer.map(c -> customerCart.getSnapshot(new CustomerId(c.value())))
                         .map(snapshot -> snapshot.items())
                         .orElseGet(
                                 () ->
@@ -53,7 +56,9 @@ public class CartController {
                 items.stream()
                         .map(
                                 item ->
-                                        catalog.findActiveById(item.product())
+                                        catalog.findActiveById(
+                                                        new ProductReference(
+                                                                item.product().value()))
                                                 .map(p -> new CartLine(item, p)))
                         .flatMap(Optional::stream)
                         .toList();
@@ -71,24 +76,24 @@ public class CartController {
             @RequestParam("product") long productId,
             @RequestParam("quantity") String rawQuantity) {
         int quantity = parseQuantity(rawQuantity);
-        ProductReference product = new ProductReference(productId);
-        Optional<CustomerReference> customer = owners.resolve();
+        Optional<CustomerReference> customer = currentCustomer.current();
         if (customer.isPresent()) {
-            customerCart.changeQuantity(customer.get(), product, quantity);
+            customerCart.changeQuantity(
+                    new CustomerId(customer.get().value()), new ProductId(productId), quantity);
         } else {
-            guestCart.changeQuantity(guestSessions.getOrCreate(session), product, quantity);
+            guestCart.changeQuantity(
+                    guestSessions.getOrCreate(session), new ProductId(productId), quantity);
         }
         return "redirect:/cart";
     }
 
     @PostMapping("/items/{productId}/remove")
     public String remove(HttpSession session, @PathVariable long productId) {
-        ProductReference product = new ProductReference(productId);
-        Optional<CustomerReference> customer = owners.resolve();
+        Optional<CustomerReference> customer = currentCustomer.current();
         if (customer.isPresent()) {
-            customerCart.remove(customer.get(), product);
+            customerCart.remove(new CustomerId(customer.get().value()), new ProductId(productId));
         } else {
-            guestCart.remove(guestSessions.getOrCreate(session), product);
+            guestCart.remove(guestSessions.getOrCreate(session), new ProductId(productId));
         }
         return "redirect:/cart";
     }

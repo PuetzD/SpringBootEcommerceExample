@@ -2,12 +2,32 @@
   "name": "spring-boot-ecommerce",
   "version": "1.0.0",
   "private": true,
+  "overrides": {
+    "@mui/icons-material": "7.3.5",
+    "@mui/material": "7.3.5",
+    "react-admin": {
+      "@mui/icons-material": "7.3.5",
+      "@mui/material": "7.3.5",
+      "ra-ui-materialui": {
+        "@mui/icons-material": "7.3.5",
+        "@mui/material": "7.3.5"
+      }
+    }
+  },
+  "workspaces": [
+    "admin-web"
+  ],
   "scripts": {
     "build:css": "npx @tailwindcss/cli -i ./src/main/resources/static/css/input.css -o ./src/main/resources/static/css/output.css --minify",
     "dev:css": "npx @tailwindcss/cli -i ./src/main/resources/static/css/input.css -o ./src/main/resources/static/css/output.css --watch",
-    "test": "echo \"No frontend tests configured\""
+    "build:admin": "npm run -w admin-web build",
+    "test:admin": "npm run -w admin-web test",
+    "build:frontend": "npm run build:css && npm run build:admin",
+    "test": "npm run test:admin"
   },
   "devDependencies": {
+    "@mui/icons-material": "7.3.5",
+    "@mui/material": "7.3.5",
     "tailwindcss": "^4.3.3",
     "@tailwindcss/cli": "^4.3.3",
     "daisyui": "^5.7.22",

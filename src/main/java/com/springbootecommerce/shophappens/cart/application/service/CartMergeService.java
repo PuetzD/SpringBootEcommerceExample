@@ -8,7 +8,6 @@ import com.springbootecommerce.shophappens.cart.application.port.out.CustomerCar
 import com.springbootecommerce.shophappens.cart.application.port.out.GuestCartRepository;
 import com.springbootecommerce.shophappens.cart.domain.model.Cart;
 import com.springbootecommerce.shophappens.cart.domain.model.GuestCartId;
-import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -25,14 +24,15 @@ public class CartMergeService implements MergeGuestCartUseCase {
 
     @Override
     @Transactional
-    public void merge(GuestCartReference guest, CustomerReference customer) {
+    public void merge(GuestCartReference guest, CustomerId customer) {
         GuestCartId guestId = new GuestCartId(guest.value());
-        Optional<Cart> guestCart = guests.find(guestId);
-        if (guestCart.isEmpty()) {
+        CustomerId customerId = customer;
+        if (!ledger.claim(guestId, customerId)) {
+            afterCommit.execute(() -> guests.delete(guestId));
             return;
         }
-        CustomerId customerId = new CustomerId(customer.value());
-        if (!ledger.claim(guestId, customerId)) {
+        Optional<Cart> guestCart = guests.find(guestId);
+        if (guestCart.isEmpty()) {
             return;
         }
         Cart customerCart = customers.findOrCreate(customerId);

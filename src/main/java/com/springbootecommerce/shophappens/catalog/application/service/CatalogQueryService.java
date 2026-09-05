@@ -1,6 +1,7 @@
 package com.springbootecommerce.shophappens.catalog.application.service;
 
 import com.springbootecommerce.shophappens.catalog.application.port.in.BrowseCatalogUseCase;
+import com.springbootecommerce.shophappens.catalog.application.port.in.CatalogPage;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductSummary;
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductRepository;
@@ -17,7 +18,25 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class CatalogQueryService implements BrowseCatalogUseCase {
+    private static final int MAX_PAGE_SIZE = 20;
     private final ProductRepository productRepository;
+
+    @Override
+    public CatalogPage findActivePage(int page, int size) {
+        if (page < 0) {
+            throw new IllegalArgumentException("Page must not be negative");
+        }
+        if (size < 1 || size > MAX_PAGE_SIZE) {
+            throw new IllegalArgumentException("Page size must be between 1 and 20");
+        }
+        var result = productRepository.findActivePage(page, size);
+        return new CatalogPage(
+                result.products().stream().map(this::toSummary).toList(),
+                result.page(),
+                result.size(),
+                result.totalElements(),
+                result.totalPages());
+    }
 
     @Override
     public List<ProductSummary> findAllActive() {

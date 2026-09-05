@@ -1,5 +1,6 @@
 package com.springbootecommerce.shophappens.architecture;
 
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,6 +27,7 @@ class ArchitectureRulesTest {
     private static final List<String> PROTECTED_SLICES =
             List.of(
                     "sharedkernel",
+                    "configuration",
                     "storefront",
                     "security",
                     "administration",
@@ -81,7 +83,45 @@ class ArchitectureRulesTest {
                         "org.springframework..",
                         "jakarta.persistence..",
                         "org.hibernate..",
-                        "org.springframework.data.redis..")
+                        "org.springframework.data.redis..",
+                        "lombok..")
+                .check(imported);
+    }
+
+    @Test
+    void boundedContextDomainsDependOnlyOnOwnDomainSharedKernelAndJavaTypes() {
+        for (String context : BOUNDED_CONTEXTS) {
+            classes()
+                    .that()
+                    .resideInAPackage(ROOT + "." + context + ".domain..")
+                    .should()
+                    .onlyDependOnClassesThat()
+                    .resideInAnyPackage(
+                            ROOT + "." + context + ".domain..", ROOT + ".sharedkernel..", "java..")
+                    .check(imported);
+        }
+    }
+
+    @Test
+    void sharedKernelDoesNotDependOnBoundedContextsFrameworksOrWebTypes() {
+        noClasses()
+                .that()
+                .resideInAPackage(ROOT + ".sharedkernel..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage(
+                        ROOT + ".account..",
+                        ROOT + ".customer..",
+                        ROOT + ".catalog..",
+                        ROOT + ".cart..",
+                        ROOT + ".ordering..",
+                        "org.springframework..",
+                        "jakarta.persistence..",
+                        "org.hibernate..",
+                        "jakarta.servlet..",
+                        "jakarta.ws.rs..",
+                        "org.thymeleaf..",
+                        "..web..")
                 .check(imported);
     }
 
@@ -184,13 +224,6 @@ class ArchitectureRulesTest {
                 if (to == null || from.equals(to)) {
                     continue;
                 }
-                // Cross-context published-contract usage (another context's application.port.in)
-                // is the spec-sanctioned collaboration channel and is excluded from the cycle
-                // check.
-                if (dependency.getPackageName().endsWith(".application.port.in")) {
-                    continue;
-                }
-
                 graph.get(from).add(to);
             }
         }
@@ -231,6 +264,101 @@ class ArchitectureRulesTest {
     }
 
     @Test
+    void publishedContractsDoNotDependOnAnotherContextContractOrDomain() {
+        List<String> violations = new java.util.ArrayList<>();
+        for (JavaClass clazz : imported) {
+            String from = publishedContextOf(clazz);
+            if (from == null) {
+                continue;
+            }
+            for (var dependency : clazz.getDirectDependenciesFromSelf()) {
+                JavaClass target = dependency.getTargetClass();
+                String to = sliceOf(target);
+                if (to == null || to.equals(from) || to.equals("sharedkernel")) {
+                    continue;
+                }
+                if (BOUNDED_CONTEXTS.contains(to)) {
+                    violations.add(clazz.getName() + " -> " + target.getName());
+                }
+            }
+        }
+        assertThat(violations).isEmpty();
+    }
+
+    @Test
+    void publishedInputPortsDoNotExposeDomainTypes() {
+        noClasses()
+                .that()
+                .resideInAPackage("..application.port.in..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage("..domain..", "..adapter..", "..web..")
+                .check(imported);
+    }
+
+    @Test
+    void administrationUsesOnlyCatalogPublishedInputPorts() {
+        noClasses()
+                .that()
+                .resideInAnyPackage("..administration..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage(
+                        "..catalog.application.service..",
+                        "..catalog.application.port.out..",
+                        "..catalog.domain..",
+                        "..catalog.adapter..")
+                .check(imported);
+    }
+
+    @Test
+    void publishedQueryContractsDoNotExposeDomainOrPersistenceTypes() {
+        List<String> violations = new java.util.ArrayList<>();
+        for (JavaClass clazz : imported) {
+            if (!clazz.getPackageName().contains(".application.port.in")) {
+                continue;
+            }
+            if (clazz.getSimpleName().endsWith("Exception")) {
+                continue;
+            }
+            for (var dependency : clazz.getDirectDependenciesFromSelf()) {
+                JavaClass target = dependency.getTargetClass();
+                if (target.getPackageName().contains(".domain.")
+                        || target.getPackageName().contains(".adapter.out.persistence")
+                        || target.getPackageName().startsWith("jakarta.persistence.")) {
+                    violations.add(clazz.getName() + " -> " + target.getName());
+                }
+            }
+        }
+        assertThat(violations).isEmpty();
+    }
+
+    @Test
+    void inboundWebAdaptersDoNotUseAnotherContextsDomainOrExceptionTypes() {
+        List<String> violations = new java.util.ArrayList<>();
+        for (JavaClass clazz : imported) {
+            String from = sliceOf(clazz);
+            if (from == null
+                    || !BOUNDED_CONTEXTS.contains(from)
+                    || !clazz.getPackageName().contains(".adapter.in.web")) {
+                continue;
+            }
+            for (var dependency : clazz.getDirectDependenciesFromSelf()) {
+                JavaClass target = dependency.getTargetClass();
+                String to = sliceOf(target);
+                if (to == null || from.equals(to) || !BOUNDED_CONTEXTS.contains(to)) {
+                    continue;
+                }
+                if (target.getPackageName().contains(".domain.")
+                        || target.getSimpleName().endsWith("Exception")) {
+                    violations.add(clazz.getName() + " -> " + target.getName());
+                }
+            }
+        }
+        assertThat(violations).isEmpty();
+    }
+
+    @Test
     void domainDoesNotDependOnAdapters() {
         noClasses()
                 .that()
@@ -248,12 +376,7 @@ class ArchitectureRulesTest {
                 .resideInAnyPackage("..application..")
                 .should()
                 .dependOnClassesThat()
-                .resideInAnyPackage(
-                        "..adapter..",
-                        "..web..",
-                        "..security..",
-                        "..storefront..",
-                        "..administration..")
+                .resideInAnyPackage("..adapter..", "..web..", "..security..", "..storefront..")
                 .check(imported);
     }
 
@@ -275,6 +398,14 @@ class ArchitectureRulesTest {
             }
         }
         return null;
+    }
+
+    private static String publishedContextOf(JavaClass clazz) {
+        if (!clazz.getPackageName().contains(".application.port.in")) {
+            return null;
+        }
+        String slice = sliceOf(clazz);
+        return BOUNDED_CONTEXTS.contains(slice) ? slice : null;
     }
 
     private static void assertThatNoCycles(Map<String, Set<String>> graph) {

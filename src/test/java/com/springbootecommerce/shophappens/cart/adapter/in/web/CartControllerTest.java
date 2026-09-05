@@ -21,10 +21,13 @@ import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartUse
 import com.springbootecommerce.shophappens.catalog.application.port.in.BrowseCatalogUseCase;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductSummary;
+import com.springbootecommerce.shophappens.customer.application.port.in.CurrentCustomerIdentity;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.security.SecurityConfiguration;
 import com.springbootecommerce.shophappens.security.service.CartMergingAuthenticationSuccessHandler;
 import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
 import java.util.List;
@@ -43,7 +46,7 @@ import org.springframework.test.web.servlet.MockMvc;
 class CartControllerTest {
     @Autowired MockMvc mvc;
 
-    @MockitoBean CartOwnerResolver owners;
+    @MockitoBean CurrentCustomerIdentity currentCustomer;
     @MockitoBean GuestCartUseCase guestCart;
     @MockitoBean CustomerCartUseCase customerCart;
     @MockitoBean BrowseCatalogUseCase catalog;
@@ -55,7 +58,7 @@ class CartControllerTest {
     @Test
     void anonymousPostToCartItemsCreatesGuestCartInSessionAndInvokesGuestUseCase()
             throws Exception {
-        when(owners.resolve()).thenReturn(Optional.empty());
+        when(currentCustomer.current()).thenReturn(Optional.empty());
 
         MockHttpSession session = new MockHttpSession();
         mvc.perform(
@@ -72,14 +75,15 @@ class CartControllerTest {
 
         ArgumentCaptor<GuestCartReference> guest =
                 ArgumentCaptor.forClass(GuestCartReference.class);
-        verify(guestCart).changeQuantity(guest.capture(), eq(PRODUCT), eq(2));
+        verify(guestCart)
+                .changeQuantity(guest.capture(), eq(new ProductId(PRODUCT.value())), eq(2));
         org.assertj.core.api.Assertions.assertThat(guest.getValue().value().toString())
                 .isEqualTo(stored);
     }
 
     @Test
     void authenticatedPostToCartItemsResolvesCustomerAndInvokesCustomerUseCase() throws Exception {
-        when(owners.resolve()).thenReturn(Optional.of(CUSTOMER));
+        when(currentCustomer.current()).thenReturn(Optional.of(CUSTOMER));
 
         mvc.perform(
                         post("/cart/items")
@@ -90,14 +94,16 @@ class CartControllerTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/cart"));
 
-        verify(customerCart).changeQuantity(CUSTOMER, PRODUCT, 2);
+        verify(customerCart)
+                .changeQuantity(
+                        new CustomerId(CUSTOMER.value()), new ProductId(PRODUCT.value()), 2);
         verify(guestCart, never())
                 .changeQuantity(any(), any(), org.mockito.ArgumentMatchers.anyInt());
     }
 
     @Test
     void anonymousCanRemoveFromGuestCart() throws Exception {
-        when(owners.resolve()).thenReturn(Optional.empty());
+        when(currentCustomer.current()).thenReturn(Optional.empty());
 
         MockHttpSession session = new MockHttpSession();
         mvc.perform(post("/cart/items/3/remove").session(session).with(csrf()))
@@ -106,16 +112,17 @@ class CartControllerTest {
 
         ArgumentCaptor<GuestCartReference> guest =
                 ArgumentCaptor.forClass(GuestCartReference.class);
-        verify(guestCart).remove(guest.capture(), eq(PRODUCT));
+        verify(guestCart).remove(guest.capture(), eq(new ProductId(PRODUCT.value())));
     }
 
     @Test
     void rendersTheCartViewForAnAuthenticatedCustomer() throws Exception {
-        when(owners.resolve()).thenReturn(Optional.of(CUSTOMER));
-        when(customerCart.getSnapshot(CUSTOMER))
+        when(currentCustomer.current()).thenReturn(Optional.of(CUSTOMER));
+        when(customerCart.getSnapshot(new CustomerId(CUSTOMER.value())))
                 .thenReturn(
                         new CustomerCartSnapshot(
-                                CUSTOMER, List.of(new CartItemSnapshot(PRODUCT, 2))));
+                                new CustomerId(CUSTOMER.value()),
+                                List.of(new CartItemSnapshot(new ProductId(PRODUCT.value()), 2))));
         when(catalog.findActiveById(PRODUCT)).thenReturn(Optional.of(productSummary()));
 
         mvc.perform(get("/cart").with(user("alex").roles("CUSTOMER")))
@@ -125,7 +132,7 @@ class CartControllerTest {
 
     @Test
     void rendersEmptyCartForAnonymousWithoutGuestUuid() throws Exception {
-        when(owners.resolve()).thenReturn(Optional.empty());
+        when(currentCustomer.current()).thenReturn(Optional.empty());
 
         MockHttpSession session = new MockHttpSession();
         mvc.perform(get("/cart").session(session))

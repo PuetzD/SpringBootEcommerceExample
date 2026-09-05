@@ -27,7 +27,7 @@ public class CatalogController {
         var seo = new SeoMetadata(LIST_TITLE, LIST_DESCRIPTION, "/catalog", "index,follow");
         model.addAttribute("seo", seo);
         model.addAttribute("canonicalUrl", canonicalUrlFactory.forPath(seo.canonicalPath()));
-        model.addAttribute("products", catalog.findAllActive());
+        model.addAttribute("products", catalog.findActivePage(0, 20).products());
         return "catalog/list";
     }
 

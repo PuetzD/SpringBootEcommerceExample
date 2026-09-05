@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 import com.springbootecommerce.shophappens.catalog.application.port.in.BrowseCatalogUseCase;
+import com.springbootecommerce.shophappens.catalog.application.port.in.CatalogPage;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductSummary;
 import com.springbootecommerce.shophappens.security.SecurityConfiguration;
@@ -34,7 +35,8 @@ class CatalogControllerTest {
     @Test
     void rendersCatalogAndProductDetail() throws Exception {
         var product = productSummary(7L, "WEAP-002", "Rubber Duck of Debugging", "18.99");
-        when(catalog.findAllActive()).thenReturn(List.of(product));
+        when(catalog.findActivePage(0, 20))
+                .thenReturn(new CatalogPage(List.of(product), 0, 20, 1, 1));
         when(catalog.findActiveBySku("WEAP-002")).thenReturn(Optional.of(product));
 
         mockMvc.perform(get("/catalog"))

@@ -12,7 +12,6 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.ProductRe
 import com.springbootecommerce.shophappens.catalog.application.port.in.PurchaseLine;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PurchaseProductsUseCase;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PurchasedProductSnapshot;
-import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.ordering.adapter.out.cart.CustomerCartGatewayAdapter;
 import com.springbootecommerce.shophappens.ordering.adapter.out.catalog.CatalogPurchaseGatewayAdapter;
 import com.springbootecommerce.shophappens.ordering.application.port.out.CheckoutCart;
@@ -38,11 +37,11 @@ class ContextGatewayContractTest {
     @Test
     void mapsCartProductReferencesWithoutImportingCartDomain() {
         var cartGateway = new CustomerCartGatewayAdapter(cartQuery, cartClear);
-        when(cartQuery.get(new CustomerReference(42L)))
+        when(cartQuery.get(new CustomerId(42L)))
                 .thenReturn(
                         new CustomerCartSnapshot(
-                                new CustomerReference(42L),
-                                List.of(new CartItemSnapshot(new ProductReference(7L), 2))));
+                                new CustomerId(42L),
+                                List.of(new CartItemSnapshot(new ProductId(7L), 2))));
 
         CheckoutCart result = cartGateway.load(new CustomerId(42L));
 

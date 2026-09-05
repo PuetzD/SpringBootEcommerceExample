@@ -1,13 +1,12 @@
 package com.springbootecommerce.shophappens.ordering.adapter.in.web;
 
-import com.springbootecommerce.shophappens.account.application.port.in.AuthenticatedAccountIdentity;
+import com.springbootecommerce.shophappens.customer.application.port.in.CurrentCustomerIdentity;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
-import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReferenceQuery;
-import com.springbootecommerce.shophappens.customer.application.port.in.ExternalAccountId;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderDetail;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderQuery;
 import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
 import com.springbootecommerce.shophappens.shared.web.SeoMetadata;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -22,23 +21,22 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/orders")
 public class OrderController {
     private final OrderQuery orders;
-    private final AuthenticatedAccountIdentity authenticatedAccount;
-    private final CustomerReferenceQuery customers;
+    private final CurrentCustomerIdentity currentCustomer;
     private final CanonicalUrlFactory canonicalUrlFactory;
 
     @GetMapping
     public String list(Model model) {
-        CustomerReference customer = currentCustomer();
-        model.addAttribute("orders", orders.findAll(customer));
+        CustomerReference customer = currentCustomerOrThrow();
+        model.addAttribute("orders", orders.findAll(new CustomerId(customer.value())));
         addSeo(model, "Your orders", "/orders");
         return "ordering/order-list";
     }
 
     @GetMapping("/{orderNumber}")
     public String detail(@PathVariable String orderNumber, Model model) {
-        CustomerReference customer = currentCustomer();
+        CustomerReference customer = currentCustomerOrThrow();
         OrderDetail order =
-                orders.findOwned(customer, orderNumber)
+                orders.findOwned(new CustomerId(customer.value()), orderNumber)
                         .orElseThrow(
                                 () ->
                                         new ResponseStatusException(
@@ -48,10 +46,9 @@ public class OrderController {
         return "ordering/order-detail";
     }
 
-    private CustomerReference currentCustomer() {
-        return customers
-                .findByExternalAccountId(
-                        new ExternalAccountId(authenticatedAccount.account().value()))
+    private CustomerReference currentCustomerOrThrow() {
+        return currentCustomer
+                .current()
                 .orElseThrow(
                         () ->
                                 new ResponseStatusException(

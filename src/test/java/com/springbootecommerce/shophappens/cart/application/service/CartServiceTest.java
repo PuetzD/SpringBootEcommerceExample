@@ -15,8 +15,6 @@ import com.springbootecommerce.shophappens.cart.domain.model.CartId;
 import com.springbootecommerce.shophappens.cart.domain.model.CartOwner;
 import com.springbootecommerce.shophappens.cart.domain.model.GuestCartId;
 import com.springbootecommerce.shophappens.cart.domain.model.Quantity;
-import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
-import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import java.util.Optional;
@@ -38,8 +36,7 @@ class CartServiceTest {
         Cart cart = cartWith(guestId, 5);
         when(guests.find(guestId)).thenReturn(Optional.of(cart));
 
-        service.changeQuantity(
-                new GuestCartReference(guestId.value()), new ProductReference(7L), 2);
+        service.changeQuantity(new GuestCartReference(guestId.value()), new ProductId(7L), 2);
 
         verify(guests).save(cart);
     }
@@ -49,8 +46,7 @@ class CartServiceTest {
         GuestCartId guestId = GuestCartId.random();
         when(guests.find(guestId)).thenReturn(Optional.empty());
 
-        service.changeQuantity(
-                new GuestCartReference(guestId.value()), new ProductReference(7L), 2);
+        service.changeQuantity(new GuestCartReference(guestId.value()), new ProductId(7L), 2);
 
         verify(guests)
                 .save(
@@ -70,7 +66,7 @@ class CartServiceTest {
         Cart cart = Cart.empty(CartId.random(), new CartOwner.Customer(customerId));
         when(customers.findOrCreate(customerId)).thenReturn(cart);
 
-        service.changeQuantity(new CustomerReference(42L), new ProductReference(7L), 3);
+        service.changeQuantity(new CustomerId(42L), new ProductId(7L), 3);
 
         verify(customers).save(cart);
     }
@@ -100,7 +96,7 @@ class CartServiceTest {
         cart.changeQuantity(new ProductId(7L), new Quantity(4));
         when(customers.find(customerId)).thenReturn(Optional.of(cart));
 
-        CustomerCartSnapshot snapshot = service.getSnapshot(new CustomerReference(42L));
+        CustomerCartSnapshot snapshot = service.getSnapshot(new CustomerId(42L));
 
         assertThat(snapshot.customer().value()).isEqualTo(42L);
         assertThat(snapshot.items()).extracting(item -> item.product().value()).containsExactly(7L);

@@ -28,6 +28,14 @@ _Avoid_: Inventory, warehouse stock
 A Product eligible to appear in customer-facing Catalog results and to be purchased. Active does not imply that the Product is currently in stock.
 _Avoid_: Published Product, available Product
 
+**Inactive Product**:
+A Product retained in the Catalog but not eligible to appear in customer-facing results or be purchased. Deactivation preserves its identity, SKU, history, and category membership.
+_Avoid_: Deleted Product, unavailable Product
+
+**Category membership**:
+The relationship between a Product and a Category. A Product may have multiple memberships, and membership counts include both active and inactive Products.
+_Avoid_: Product ownership, category inventory
+
 **Money**:
-A non-negative monetary amount with two-decimal precision. Amount determines monetary equality because this shop uses one implicit currency.
-_Avoid_: Decimal, currency-specific Money
+A non-negative EUR monetary amount with two-decimal precision. New commercial records carry explicit EUR currency metadata, and amounts from another currency cannot be combined.
+_Avoid_: Decimal, implicit currency, exchange rate

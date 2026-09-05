@@ -5,6 +5,7 @@ import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartRef
 import com.springbootecommerce.shophappens.cart.application.port.in.MergeGuestCartUseCase;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReferenceQuery;
 import com.springbootecommerce.shophappens.customer.application.port.in.ExternalAccountId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -38,7 +39,24 @@ public class CartMergingAuthenticationSuccessHandler
             @NonNull Authentication authentication)
             throws IOException, ServletException {
         Object stored = request.getSession().getAttribute(GuestCartReference.SESSION_ATTRIBUTE);
-        if (stored instanceof String guestUuid) {
+        if (stored == null) {
+            super.onAuthenticationSuccess(request, response, authentication);
+            return;
+        }
+        if (!(stored instanceof String guestUuid)) {
+            request.getSession().removeAttribute(GuestCartReference.SESSION_ATTRIBUTE);
+            super.onAuthenticationSuccess(request, response, authentication);
+            return;
+        }
+        {
+            GuestCartReference guest;
+            try {
+                guest = new GuestCartReference(UUID.fromString(guestUuid));
+            } catch (IllegalArgumentException malformed) {
+                request.getSession().removeAttribute(GuestCartReference.SESSION_ATTRIBUTE);
+                super.onAuthenticationSuccess(request, response, authentication);
+                return;
+            }
             try {
                 if (authentication.getPrincipal()
                         instanceof AuthenticatedAccountIdentity identity) {
@@ -46,16 +64,19 @@ public class CartMergingAuthenticationSuccessHandler
                             .findByExternalAccountId(
                                     new ExternalAccountId(identity.account().value()))
                             .ifPresent(
-                                    customer ->
-                                            mergeGuestCart.merge(
-                                                    new GuestCartReference(
-                                                            UUID.fromString(guestUuid)),
-                                                    customer));
+                                    customer -> {
+                                        mergeGuestCart.merge(
+                                                guest, new CustomerId(customer.value()));
+                                        request.getSession()
+                                                .removeAttribute(
+                                                        GuestCartReference.SESSION_ATTRIBUTE);
+                                    });
                 }
             } catch (RuntimeException ex) {
-                log.warn("Could not merge guest cart after login; guest cart will be dropped.", ex);
+                log.warn(
+                        "Could not merge guest cart after login; guest cart identifier will be retained for retry.",
+                        ex);
             }
-            request.getSession().removeAttribute(GuestCartReference.SESSION_ATTRIBUTE);
         }
         super.onAuthenticationSuccess(request, response, authentication);
     }

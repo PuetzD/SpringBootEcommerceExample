@@ -28,8 +28,12 @@ public record Order(
         Objects.requireNonNull(placedAt, "placedAt must not be null");
         Objects.requireNonNull(total, "total must not be null");
         items = List.copyOf(items);
-        if (items.isEmpty()) {
-            throw new EmptyCheckoutException();
+        Money calculatedTotal =
+                items.stream()
+                        .map(OrderItem::lineTotal)
+                        .reduce(Money.zero(total.currency()), Money::add);
+        if (!calculatedTotal.equals(total)) {
+            throw new IllegalArgumentException("Order total does not match item totals");
         }
         if (shippingAddress.role() != AddressRole.SHIPPING) {
             throw new IllegalArgumentException("Shipping address must have role SHIPPING");
@@ -48,7 +52,13 @@ public record Order(
             OrderAddress shippingAddress,
             OrderAddress billingAddress,
             Instant placedAt) {
-        Money total = items.stream().map(OrderItem::lineTotal).reduce(Money.zero(), Money::add);
+        if (items.isEmpty()) {
+            throw new EmptyCheckoutException();
+        }
+        Money total =
+                items.stream()
+                        .map(OrderItem::lineTotal)
+                        .reduce(Money.zero(items.get(0).lineTotal().currency()), Money::add);
         return new Order(
                 orderId,
                 orderNumber,
