@@ -11,6 +11,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryR
 import com.springbootecommerce.shophappens.catalog.application.port.in.CreateCategoryCommand;
 import com.springbootecommerce.shophappens.catalog.application.port.in.RenameCategoryCommand;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import java.net.URI;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -58,7 +59,7 @@ public class CategoryAdminApiController {
     }
 
     @GetMapping("/categories/{id}")
-    public CategoryResponse getCategory(@PathVariable long id) {
+    public CategoryResponse getCategory(@PathVariable @Positive long id) {
         return categoryAdminQuery
                 .findCategory(new CategoryReference(id))
                 .map(this::toResponse)
@@ -83,7 +84,7 @@ public class CategoryAdminApiController {
 
     @PutMapping("/categories/{id}")
     public CategoryResponse updateCategory(
-            @PathVariable long id,
+            @PathVariable @Positive long id,
             @RequestHeader("If-Match") String ifMatch,
             @Valid @RequestBody UpdateCategoryRequest request) {
         return toResponse(
@@ -95,7 +96,7 @@ public class CategoryAdminApiController {
 
     @DeleteMapping("/categories/{id}")
     public ResponseEntity<Void> deleteCategory(
-            @PathVariable long id, @RequestHeader("If-Match") String ifMatch) {
+            @PathVariable @Positive long id, @RequestHeader("If-Match") String ifMatch) {
         categoryAdministrationUseCase.deleteCategory(
                 new CategoryReference(id),
                 new CategoryRevision(ExpectedRevisionParser.parse(ifMatch)));

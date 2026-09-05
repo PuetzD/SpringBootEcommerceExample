@@ -10,6 +10,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.ProductNo
 import com.springbootecommerce.shophappens.catalog.application.port.in.StaleCategoryRevisionException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.StaleProductRevisionException;
 import com.springbootecommerce.shophappens.customer.application.CustomerNotFoundException;
+import com.springbootecommerce.shophappens.customer.application.CustomerProfileAlreadyExistsException;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.LinkedHashMap;
@@ -21,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
@@ -46,6 +48,13 @@ public class AdminApiExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ApiErrorResponse> handleMethodValidation(
+            HandlerMethodValidationException ex, HttpServletRequest request) {
+        String code = isCustomerRequest(request) ? "customer.invalid" : "catalog.invalid";
+        return response("Validation failed", HttpStatus.BAD_REQUEST, code);
+    }
+
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ApiErrorResponse> handleResponseStatus(
             ResponseStatusException ex, HttpServletRequest request) {
@@ -65,8 +74,16 @@ public class AdminApiExceptionHandler {
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
-        return response(ex.getMessage(), HttpStatus.BAD_REQUEST, "catalog.invalid");
+    public ResponseEntity<ApiErrorResponse> handleIllegalArgument(
+            IllegalArgumentException ex, HttpServletRequest request) {
+        String code = isCustomerRequest(request) ? "customer.invalid" : "catalog.invalid";
+        return response(ex.getMessage(), HttpStatus.BAD_REQUEST, code);
+    }
+
+    @ExceptionHandler(CustomerProfileAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorResponse> handleCustomerProfileAlreadyExists(
+            CustomerProfileAlreadyExistsException ex) {
+        return response(ex.getMessage(), HttpStatus.CONFLICT, "customer.conflict");
     }
 
     @ExceptionHandler(ProductNotFoundException.class)
@@ -134,6 +151,10 @@ public class AdminApiExceptionHandler {
             String message, HttpStatus status, String code) {
         return ResponseEntity.status(status)
                 .body(new ApiErrorResponse(message, status.value(), code));
+    }
+
+    private boolean isCustomerRequest(HttpServletRequest request) {
+        return request.getRequestURI().startsWith("/api/admin/customers");
     }
 
     private String userMessage(int status) {

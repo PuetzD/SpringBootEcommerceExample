@@ -155,6 +155,16 @@ class CustomerRepositoryAdapterIT extends AbstractIntegrationTest {
     }
 
     @Test
+    void treatsLikeWildcardsAsLiteralSearchText() {
+        saveCustomer("Percent%Name", "Example", "literal@example.com");
+        saveCustomer("Plain", "Example", "other@example.com");
+
+        var page = customers.searchForAdministration(new CustomerAdminSearch(0, 20, "%"));
+
+        assertThat(page.content()).extracting("givenName").containsExactly("Percent%Name");
+    }
+
+    @Test
     void mapsCustomerDetailAndAddressesWithoutOrderingData() {
         var accountId = newAccount("detail-account@example.com");
         var customer =

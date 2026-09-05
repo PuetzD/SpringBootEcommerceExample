@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,13 +45,18 @@ public class CustomerProfileService
         if (customers.findByAccountId(internalAccountId).isPresent()) {
             throw new CustomerProfileAlreadyExistsException(accountId);
         }
-        var saved =
-                customers.save(
-                        Customer.create(
-                                internalAccountId,
-                                givenName,
-                                familyName,
-                                new ContactEmail(contactEmail)));
+        Customer saved;
+        try {
+            saved =
+                    customers.save(
+                            Customer.create(
+                                    internalAccountId,
+                                    givenName,
+                                    familyName,
+                                    new ContactEmail(contactEmail)));
+        } catch (DataIntegrityViolationException exception) {
+            throw new CustomerProfileAlreadyExistsException(accountId);
+        }
         return new CustomerReference(saved.id().orElseThrow().value());
     }
 

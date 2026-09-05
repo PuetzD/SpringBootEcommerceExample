@@ -10,6 +10,9 @@ import com.springbootecommerce.shophappens.customer.application.port.in.Customer
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminSummary;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdministrationQuery;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,8 +30,8 @@ public class CustomerAdminApiController {
 
     @GetMapping
     public PageResponse<CustomerResponse> list(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String q) {
         var result =
                 customerAdministrationQuery.searchCustomers(new CustomerAdminSearch(page, size, q));
@@ -41,7 +44,7 @@ public class CustomerAdminApiController {
     }
 
     @GetMapping("/{customerId}")
-    public CustomerResponse detail(@PathVariable long customerId) {
+    public CustomerResponse detail(@PathVariable @Positive long customerId) {
         var id = new CustomerId(customerId);
         var customer =
                 customerAdministrationQuery
