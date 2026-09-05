@@ -1,12 +1,12 @@
 package com.springbootecommerce.shophappens.customer.adapter.out.persistence;
 
+import com.springbootecommerce.shophappens.customer.application.port.in.AddressReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerAdminAddressView;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerAdminDetail;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerAdminPage;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerAdminSearch;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerAdminSummary;
 import com.springbootecommerce.shophappens.customer.application.port.out.CustomerRepository;
-import com.springbootecommerce.shophappens.customer.domain.model.AddressId;
 import com.springbootecommerce.shophappens.customer.domain.model.Customer;
 import com.springbootecommerce.shophappens.sharedkernel.identity.AccountId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
@@ -77,7 +77,7 @@ class CustomerRepositoryAdapter implements CustomerRepository {
 
     private CustomerAdminAddressView toAdminAddress(AddressJpaEntity address) {
         return new CustomerAdminAddressView(
-                new AddressId(address.getId()),
+                new AddressReference(address.getId()),
                 address.getRecipientName(),
                 address.getCompanyName(),
                 address.getAddressLine1(),

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.springbootecommerce.shophappens.customer.application.port.in.AddressReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerAdminAddressView;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerAdminDetail;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerAdminPage;
@@ -43,7 +44,7 @@ class CustomerAdministrationQueryServiceTest {
         var customerId = new CustomerId(7);
         var address =
                 new CustomerAdminAddressView(
-                        new com.springbootecommerce.shophappens.customer.domain.model.AddressId(3),
+                        new AddressReference(3),
                         "Ada Lovelace",
                         null,
                         "1 Main Street",
@@ -85,7 +86,7 @@ class CustomerAdministrationQueryServiceTest {
 
         addresses.add(
                 new CustomerAdminAddressView(
-                        new com.springbootecommerce.shophappens.customer.domain.model.AddressId(3),
+                        new AddressReference(3),
                         "Ada Lovelace",
                         null,
                         "1 Main Street",
