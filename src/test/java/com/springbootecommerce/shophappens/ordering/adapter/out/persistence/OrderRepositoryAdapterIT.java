@@ -6,6 +6,7 @@ import com.springbootecommerce.shophappens.integration.AbstractIntegrationTest;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminDetail;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminSearch;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminSummary;
+import com.springbootecommerce.shophappens.ordering.application.port.in.OrderReference;
 import com.springbootecommerce.shophappens.ordering.application.port.out.OrderRepository;
 import com.springbootecommerce.shophappens.ordering.domain.model.AddressRole;
 import com.springbootecommerce.shophappens.ordering.domain.model.CheckoutId;
@@ -131,6 +132,45 @@ class OrderRepositoryAdapterIT extends AbstractIntegrationTest {
         assertThat(detail.addresses())
                 .extracting(address -> address.role())
                 .containsExactlyInAnyOrder("SHIPPING", "BILLING");
+    }
+
+    @Test
+    void findsAdministrationOrderSummariesForCustomerNewestFirst() {
+        CustomerId customer = new CustomerId(4343L);
+        Order newest =
+                sampleOrder(
+                        "ORD-20260905-CUSTOMERNEW1",
+                        customer,
+                        new CheckoutId(UUID.randomUUID()),
+                        Instant.parse("2026-09-05T10:00:00Z"));
+        Order older =
+                sampleOrder(
+                        "ORD-20260904-CUSTOMEROLD1",
+                        customer,
+                        new CheckoutId(UUID.randomUUID()),
+                        Instant.parse("2026-09-04T10:00:00Z"));
+        Order unrelated =
+                sampleOrder(
+                        "ORD-20260906-OTHERORDER1",
+                        new CustomerId(4344L),
+                        new CheckoutId(UUID.randomUUID()),
+                        Instant.parse("2026-09-06T10:00:00Z"));
+        repository.save(older);
+        repository.save(unrelated);
+        repository.save(newest);
+
+        List<OrderAdminSummary> summaries = repository.findOrdersForCustomer(customer);
+
+        assertThat(summaries)
+                .extracting(OrderAdminSummary::orderNumber)
+                .containsExactly(newest.orderNumber().value(), older.orderNumber().value());
+        assertThat(summaries)
+                .extracting(OrderAdminSummary::order, OrderAdminSummary::customerId)
+                .containsExactly(
+                        org.assertj.core.groups.Tuple.tuple(
+                                new OrderReference(newest.orderId().value()), customer),
+                        org.assertj.core.groups.Tuple.tuple(
+                                new OrderReference(older.orderId().value()), customer));
     }
 
     @Test

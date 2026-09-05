@@ -84,6 +84,14 @@ class JpaOrderRepositoryAdapter implements OrderRepository {
         return springData.findByOrderNumber(orderNumber).map(this::toAdminDetail);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrderAdminSummary> findOrdersForCustomer(CustomerId customerId) {
+        return springData.findByCustomerIdOrderByPlacedAtDescIdDesc(customerId.value()).stream()
+                .map(this::toAdminSummary)
+                .toList();
+    }
+
     private OrderAdminSummary toAdminSummary(OrderJpaEntity order) {
         return new OrderAdminSummary(
                 new OrderReference(order.getId()),
