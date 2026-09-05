@@ -5,8 +5,12 @@ Customer Profile holds the shopping identity and reusable contact destinations b
 ## Language
 
 **Customer**:
-The shopping identity associated with one Customer-role Account. A Customer owns saved Addresses but does not contain authentication credentials.
+The shopping identity associated with one Customer-role Account. A Customer owns its given name, family name, contact Email, and saved Addresses but does not contain authentication credentials.
 _Avoid_: Account, buyer, shopper, user
+
+**Contact Email**:
+The Email a Customer wants to use for order confirmations, fulfillment updates, and support communication. It may differ from the Account's sign-in Email.
+_Avoid_: login Email, Account Email
 
 **Address**:
 A mutable postal destination saved by a Customer for reuse during checkout. It identifies a recipient and the location where billing correspondence or goods may be directed.
