@@ -151,7 +151,7 @@ class OrderRepositoryAdapterIT extends AbstractIntegrationTest {
                         Instant.parse("2026-09-04T10:00:00Z"));
         Order unrelated =
                 sampleOrder(
-                        "ORD-20260906-OTHERORDER1",
+                        "ORD-20260906-OTHERORDER01",
                         new CustomerId(4344L),
                         new CheckoutId(UUID.randomUUID()),
                         Instant.parse("2026-09-06T10:00:00Z"));
