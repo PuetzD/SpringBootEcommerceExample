@@ -1,5 +1,8 @@
 package com.springbootecommerce.shophappens.ordering.application.port.out;
 
+import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminDetail;
+import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminPage;
+import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminSearch;
 import com.springbootecommerce.shophappens.ordering.domain.model.CheckoutId;
 import com.springbootecommerce.shophappens.ordering.domain.model.Order;
 import com.springbootecommerce.shophappens.ordering.domain.model.OrderId;
@@ -17,4 +20,8 @@ public interface OrderRepository {
     List<Order> findAllByCustomer(CustomerId customerId);
 
     Order save(Order order);
+
+    OrderAdminPage searchForAdministration(OrderAdminSearch search);
+
+    Optional<OrderAdminDetail> findForAdministration(String orderNumber);
 }

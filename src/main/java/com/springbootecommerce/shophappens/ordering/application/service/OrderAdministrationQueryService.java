@@ -4,16 +4,26 @@ import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdm
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminPage;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminSearch;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdministrationQuery;
+import com.springbootecommerce.shophappens.ordering.application.port.out.OrderRepository;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+@Service
+@Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class OrderAdministrationQueryService implements OrderAdministrationQuery {
+
+    private final OrderRepository orderRepository;
+
     @Override
     public OrderAdminPage searchOrders(OrderAdminSearch search) {
-        return null;
+        return orderRepository.searchForAdministration(search);
     }
 
     @Override
     public Optional<OrderAdminDetail> findOrder(String orderNumber) {
-        return Optional.empty();
+        return orderRepository.findForAdministration(orderNumber);
     }
 }
