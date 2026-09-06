@@ -87,7 +87,8 @@ export const ApiClient = {
         return handleResponse<T>(response)
     },
 
-    async post<T>(path: string, body: unknown): Promise<T> {
+    async post<T>(path: string, body: unknown, revisionOrOptions?: number | ApiRequestOptions): Promise<T> {
+        const {revision} = normalizeMutationOptions(revisionOrOptions)
         const response = await fetch(path, {
             method: 'POST',
             credentials: 'same-origin',
@@ -95,6 +96,7 @@ export const ApiClient = {
                 'Content-Type': 'application/json',
                 Accept: 'application/json',
                 ...csrfHeaders(),
+                ...revisionHeaders(revision),
             },
             body: JSON.stringify(body),
         })

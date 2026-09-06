@@ -228,6 +228,59 @@ describe('dataProvider', () => {
     ).resolves.toEqual({data: normalizedProduct})
   })
 
+  it('loads product variants through the nested catalog endpoint', async () => {
+    const variant = {
+      id: 12,
+      productId: 9,
+      sku: 'SKU-9-BLUE',
+      price: 209.99,
+      stockQuantity: 4,
+      imageUrl: null,
+      active: true,
+      defaultVariant: false,
+      productRevision: 4,
+    }
+    get.mockResolvedValue([variant])
+
+    await expect(
+      dataProvider.getList('productVariants', {
+        pagination: {page: 1, perPage: 100},
+        filter: {productId: 9},
+      }),
+    ).resolves.toEqual({data: [variant], total: 1})
+
+    expect(get).toHaveBeenCalledWith('/api/admin/products/9/variants')
+  })
+
+  it('updates a product variant with the product revision', async () => {
+    const variant = {
+      id: 12,
+      productId: 9,
+      sku: 'SKU-9-BLUE',
+      price: 209.99,
+      stockQuantity: 4,
+      imageUrl: null,
+      active: true,
+      defaultVariant: false,
+      productRevision: 5,
+    }
+    put.mockResolvedValue(variant)
+
+    await expect(
+      dataProvider.update('productVariants', {
+        id: variant.id,
+        data: {...variant, price: 219.99, revision: 4},
+        previousData: variant,
+      }),
+    ).resolves.toEqual({data: variant})
+
+    expect(put).toHaveBeenCalledWith(
+      '/api/admin/products/9/variants/12',
+      expect.objectContaining({revision: 4, price: 219.99}),
+      {revision: 4},
+    )
+  })
+
   it('updates products with body revision and the shared If-Match transport option', async () => {
     put.mockResolvedValue(product)
 

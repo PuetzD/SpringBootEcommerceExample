@@ -7,7 +7,7 @@ import java.util.Optional;
 
 public final class ProductVariant {
     private final ProductVariantId id;
-    private final Sku sku;
+    private Sku sku;
     private Money price;
     private int stockQuantity;
     private String imageUrl;
@@ -91,6 +91,13 @@ public final class ProductVariant {
     public void reviseCommercialDetails(Money price, String imageUrl) {
         this.price = Objects.requireNonNull(price, "price");
         this.imageUrl = imageUrl;
+    }
+
+    public void revise(Sku sku, Money price, int stockQuantity, String imageUrl, boolean active) {
+        this.sku = Objects.requireNonNull(sku, "sku");
+        reviseCommercialDetails(price, imageUrl);
+        setStockQuantity(stockQuantity);
+        this.active = active;
     }
 
     public void setStockQuantity(int stockQuantity) {

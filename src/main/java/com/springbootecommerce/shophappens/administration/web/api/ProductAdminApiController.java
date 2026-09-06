@@ -2,6 +2,7 @@ package com.springbootecommerce.shophappens.administration.web.api;
 
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CreateProductCommand;
+import com.springbootecommerce.shophappens.catalog.application.port.in.CreateProductVariantCommand;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminSearch;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminView;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdministrationQuery;
@@ -10,7 +11,10 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.ProductCa
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductNotFoundException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductRevision;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductVariantAdminView;
 import com.springbootecommerce.shophappens.catalog.application.port.in.UpdateProductCommand;
+import com.springbootecommerce.shophappens.catalog.application.port.in.UpdateProductVariantCommand;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -117,6 +121,62 @@ public class ProductAdminApiController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/products/{id}/variants")
+    public List<ProductVariantResponse> listVariants(@PathVariable @Positive long id) {
+        return productAdministrationUseCase.listVariants(new ProductReference(id)).stream()
+                .map(this::toVariantResponse)
+                .toList();
+    }
+
+    @PostMapping("/products/{id}/variants")
+    public ProductVariantResponse createVariant(
+            @PathVariable @Positive long id,
+            @Valid @RequestBody CreateProductVariantRequest request,
+            @RequestHeader("If-Match") String ifMatch) {
+        ProductVariantAdminView created =
+                productAdministrationUseCase.createVariant(
+                        new ProductReference(id),
+                        new ProductRevision(ExpectedRevisionParser.parse(ifMatch)),
+                        new CreateProductVariantCommand(
+                                request.sku(),
+                                new Money(request.price()),
+                                request.stockQuantity(),
+                                request.imageUrl(),
+                                request.active()));
+        return toVariantResponse(created);
+    }
+
+    @PutMapping("/products/{productId}/variants/{variantId}")
+    public ProductVariantResponse updateVariant(
+            @PathVariable @Positive long productId,
+            @PathVariable @Positive long variantId,
+            @Valid @RequestBody UpdateProductVariantRequest request) {
+        ProductVariantAdminView updated =
+                productAdministrationUseCase.updateVariant(
+                        new ProductReference(productId),
+                        new ProductVariantId(variantId),
+                        new ProductRevision(request.revision()),
+                        new UpdateProductVariantCommand(
+                                request.sku(),
+                                new Money(request.price()),
+                                request.stockQuantity(),
+                                request.imageUrl(),
+                                request.active()));
+        return toVariantResponse(updated);
+    }
+
+    @DeleteMapping("/products/{productId}/variants/{variantId}")
+    public ResponseEntity<Void> deleteVariant(
+            @PathVariable @Positive long productId,
+            @PathVariable @Positive long variantId,
+            @RequestHeader("If-Match") String ifMatch) {
+        productAdministrationUseCase.deleteVariant(
+                new ProductReference(productId),
+                new ProductVariantId(variantId),
+                new ProductRevision(ExpectedRevisionParser.parse(ifMatch)));
+        return ResponseEntity.noContent().build();
+    }
+
     private Set<CategoryReference> references(Set<Long> ids) {
         return ids == null
                 ? Set.of()
@@ -150,5 +210,18 @@ public class ProductAdminApiController {
                                         category.name(),
                                         category.slug()))
                 .toList();
+    }
+
+    private ProductVariantResponse toVariantResponse(ProductVariantAdminView variant) {
+        return new ProductVariantResponse(
+                variant.variant().value(),
+                variant.product().value(),
+                variant.sku(),
+                variant.price().amount(),
+                variant.stockQuantity(),
+                variant.imageUrl(),
+                variant.active(),
+                variant.defaultVariant(),
+                variant.productRevision().value());
     }
 }

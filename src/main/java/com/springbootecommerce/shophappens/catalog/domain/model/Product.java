@@ -139,6 +139,29 @@ public final class Product {
         return List.copyOf(variants);
     }
 
+    public ProductVariant variant(ProductVariantId variantId) {
+        return variants.stream()
+                .filter(variant -> variant.id().filter(variantId::equals).isPresent())
+                .findFirst()
+                .orElseThrow(
+                        () -> new IllegalArgumentException("Variant does not belong to product"));
+    }
+
+    public void reviseVariant(
+            ProductVariantId variantId,
+            Sku sku,
+            Money price,
+            int stockQuantity,
+            String imageUrl,
+            boolean active) {
+        ProductVariant variant = variant(variantId);
+        if (variants.stream()
+                .anyMatch(existing -> !existing.equals(variant) && existing.sku().equals(sku))) {
+            throw new IllegalArgumentException("Variant SKU must be unique within Product");
+        }
+        variant.revise(sku, price, stockQuantity, imageUrl, active);
+    }
+
     public ProductVariant defaultVariant() {
         return variants.stream().filter(ProductVariant::isDefault).findFirst().orElseThrow();
     }

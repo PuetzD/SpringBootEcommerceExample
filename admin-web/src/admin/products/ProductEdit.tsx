@@ -1,8 +1,10 @@
 import {AutocompleteArrayInput, BooleanInput, Edit, NumberInput, ReferenceArrayInput, SimpleForm, TextInput} from 'react-admin'
+import {ProductVariantsPanel} from './ProductVariantsPanel'
 
 export function ProductEdit() {
   return (
     <Edit mutationMode="pessimistic">
+      <>
       <SimpleForm>
         <TextInput source="sku" disabled />
         <TextInput source="name" isRequired />
@@ -16,6 +18,8 @@ export function ProductEdit() {
           <AutocompleteArrayInput optionText="name" />
         </ReferenceArrayInput>
       </SimpleForm>
+      <ProductVariantsPanel />
+      </>
     </Edit>
   )
 }

@@ -46,6 +46,18 @@ export interface Product {
     categories: CategorySummary[]
 }
 
+export interface ProductVariant {
+    id: number
+    productId: number
+    sku: string
+    price: number
+    stockQuantity: number
+    imageUrl: string | null
+    active: boolean
+    defaultVariant: boolean
+    productRevision: number
+}
+
 export interface CategoryOption {
     id: number
     name: string
