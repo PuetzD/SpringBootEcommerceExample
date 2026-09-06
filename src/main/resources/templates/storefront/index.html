@@ -32,7 +32,7 @@
           <article
               class="bg-base-100 rounded-2xl shadow-md overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 relative"
               th:each="product, iteration : ${featuredProducts}">
-            <span class="absolute top-4 left-4 bg-secondary text-white text-xs font-semibold px-3 py-1 rounded-full z-10" th:if="${iteration.index == 0}">Featured</span>
+            <span class="absolute top-4 left-4 bg-secondary text-white text-xs font-semibold px-3 py-1 rounded-full z-10">Featured</span>
             <div class="h-48 bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
               <img
                   th:if="${product.imageUrl() != null}"

@@ -203,7 +203,7 @@
       "source": "googlechrome/modern-web-guidance",
       "sourceType": "github",
       "skillPath": "skills/modern-web-guidance/SKILL.md",
-      "computedHash": "647209d360295e26b6b994395743ea860e36f5d2b16d706cbb5ce4a3e5f5ec26"
+      "computedHash": "c75f98ef13e63bcf0c074f6e7651ecb567ffcd78f2527d085a7cddd530073c4f"
     },
     "playwright-cli": {
       "source": "microsoft/playwright-cli",
