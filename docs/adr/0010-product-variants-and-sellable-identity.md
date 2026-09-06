@@ -20,7 +20,7 @@ Variant option combinations are derived from controlled Catalog attribute assign
 
 ## Migration and rollback
 
-V6 is additive and backfills one default Variant for every existing Product. It enforces foreign keys, non-negative price and stock, one default Variant per Product, and unique Variant SKUs. Flyway history prevents normal re-execution; failed migration repair must be followed by a retry and verification. The migration does not provide an automatic down script. Rolling back application code remains compatible because legacy Product columns are retained and the schema additions are additive; destructive column removal requires a separate approved contraction migration after the compatibility window.
+The fresh local schema creates `product_variant` directly in the original catalog migration, with one default Variant created atomically by the Catalog application path. Flyway history prevents normal re-execution; local rollback means dropping and recreating the database. There is no deployed-data backfill or down migration in this local-only change. If the shape is promoted to a shared database, an additive expand/backfill rollout must be designed separately before any contraction of legacy Product columns.
 
 ## Consequences
 
