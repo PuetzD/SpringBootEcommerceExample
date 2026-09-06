@@ -1,6 +1,7 @@
 package com.springbootecommerce.shophappens.catalog.application.service;
 
 import com.springbootecommerce.shophappens.catalog.application.port.in.AssignCatalogAttributeCommand;
+import com.springbootecommerce.shophappens.catalog.application.port.in.CatalogAttributeAssignmentUseCase;
 import com.springbootecommerce.shophappens.catalog.application.port.out.CatalogAttributeAssignmentRepository;
 import com.springbootecommerce.shophappens.catalog.application.port.out.CatalogAttributeDefinitionRepository;
 import com.springbootecommerce.shophappens.catalog.domain.model.CatalogAttributeAssignment;
@@ -16,12 +17,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class CatalogAttributeAssignmentService {
+public class CatalogAttributeAssignmentService implements CatalogAttributeAssignmentUseCase {
     private final CatalogAttributeDefinitionRepository definitions;
     private final CatalogAttributeAssignmentRepository assignments;
 
     @Transactional
-    public void assignToProduct(ProductId product, AssignCatalogAttributeCommand command) {
+    public void assignToProduct(long productId, AssignCatalogAttributeCommand command) {
+        ProductId product = new ProductId(productId);
         CatalogAttributeDefinition definition = definition(command);
         CatalogAttributeAssignment assignment =
                 productAssignment(definition, product, command.value());
@@ -29,7 +31,8 @@ public class CatalogAttributeAssignmentService {
     }
 
     @Transactional
-    public void assignToVariant(ProductVariantId variant, AssignCatalogAttributeCommand command) {
+    public void assignToVariant(long variantId, AssignCatalogAttributeCommand command) {
+        ProductVariantId variant = new ProductVariantId(variantId);
         CatalogAttributeDefinition definition = definition(command);
         if (definition.type() != CatalogAttributeType.SELECT) {
             throw new IllegalArgumentException(
