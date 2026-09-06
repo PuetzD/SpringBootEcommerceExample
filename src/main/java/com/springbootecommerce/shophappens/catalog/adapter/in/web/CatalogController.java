@@ -1,6 +1,7 @@
 package com.springbootecommerce.shophappens.catalog.adapter.in.web;
 
 import com.springbootecommerce.shophappens.catalog.application.port.in.BrowseCatalogUseCase;
+import com.springbootecommerce.shophappens.catalog.application.port.in.BrowseCategoriesUseCase;
 import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
 import com.springbootecommerce.shophappens.shared.web.SeoMetadata;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class CatalogController {
     private static final String LIST_DESCRIPTION = "Browse the E-Shop catalog.";
 
     private final BrowseCatalogUseCase catalog;
+    private final BrowseCategoriesUseCase categories;
     private final CanonicalUrlFactory canonicalUrlFactory;
 
     @GetMapping
@@ -42,5 +44,22 @@ public class CatalogController {
         model.addAttribute("canonicalUrl", canonicalUrlFactory.forPath(seo.canonicalPath()));
         model.addAttribute("product", product);
         return "catalog/detail";
+    }
+
+    @GetMapping("/categories/{slug}")
+    public String category(@PathVariable String slug, Model model) {
+        var category =
+                categories
+                        .findBySlug(slug)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        var path = "/catalog/categories/" + slug;
+        var seo =
+                new SeoMetadata(
+                        category.name(), "Browse " + category.name() + ".", path, "index,follow");
+        model.addAttribute("seo", seo);
+        model.addAttribute("canonicalUrl", canonicalUrlFactory.forPath(seo.canonicalPath()));
+        model.addAttribute("category", category);
+        model.addAttribute("products", categories.findActiveProductsByCategorySlug(slug));
+        return "catalog/category";
     }
 }

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: page(${seo}, ~{::main}, ~{::#page-scripts})}">
+<head></head>
+<body>
+<main class="flex-grow py-12">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="mb-8">
+      <h1 class="text-2xl font-bold">Your account</h1>
+      <p class="text-base-content/60 mt-2">Manage your saved information and purchases.</p>
+    </div>
+
+    <div class="grid gap-6 md:grid-cols-2">
+      <a th:href="@{/account/addresses}" class="card bg-base-100 shadow-sm hover:shadow-md transition">
+        <div class="card-body">
+          <span class="icon-[mdi--map-marker-outline] text-3xl text-primary" aria-hidden="true"></span>
+          <h2 class="card-title">Addresses</h2>
+          <p class="text-base-content/60">Add, edit, and manage your delivery and billing addresses.</p>
+          <span class="link link-primary mt-2">Manage addresses</span>
+        </div>
+      </a>
+
+      <a th:href="@{/orders}" class="card bg-base-100 shadow-sm hover:shadow-md transition">
+        <div class="card-body">
+          <span class="icon-[mdi--clipboard-text-outline] text-3xl text-primary" aria-hidden="true"></span>
+          <h2 class="card-title">Orders</h2>
+          <p class="text-base-content/60">View your order history and review individual orders.</p>
+          <span class="link link-primary mt-2">View orders</span>
+        </div>
+      </a>
+    </div>
+  </div>
+</main>
+<th:block id="page-scripts"></th:block>
+</body>
+</html>

@@ -11,7 +11,8 @@ INSERT INTO account (id, email, password_hash, role)
 VALUES (1, 'customer@shop-happens.com', '{noop}123', 'CUSTOMER'),
        (2, 'admin@shop-happens.com', '{noop}123', 'ADMIN');
 
-INSERT INTO customer (account_id) VALUES (1);
+INSERT INTO customer (account_id, given_name, family_name, contact_email)
+VALUES (1, 'Bard', 'the Magnificent Debugger', 'customer@shop-happens.com');
 
 INSERT INTO address (customer_id, recipient_name, address_line_1, city,
                      postal_code, country_code, is_default_shipping, is_default_billing)

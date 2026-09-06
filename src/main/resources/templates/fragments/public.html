@@ -7,20 +7,33 @@
         <div class="flex-shrink-0">
           <a th:href="@{/}" class="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent hover:opacity-80 transition">E-Shop</a>
         </div>
-        <div class="hidden md:flex space-x-8">
+        <div class="hidden md:flex items-center space-x-8">
           <a th:href="@{/}" class="text-base-content hover:text-primary font-medium transition">Home</a>
-          <a th:href="@{/catalog}" class="text-base-content hover:text-primary font-medium transition">Products</a>
-          <a th:href="@{/account/addresses}" sec:authorize="hasRole('CUSTOMER')" class="text-base-content hover:text-primary font-medium transition">Addresses</a>
+          <details class="dropdown">
+            <summary class="cursor-pointer text-base-content hover:text-primary font-medium transition">Categories</summary>
+            <ul class="dropdown-content menu bg-base-100 rounded-box z-10 mt-3 w-64 p-2 shadow-lg border border-base-300">
+              <li th:each="category : ${categories}">
+                <a th:href="@{/catalog/categories/{slug}(slug=${category.slug()})}">
+                  <span th:text="${category.name()}">Category</span>
+                  <span class="badge badge-ghost" th:text="${category.productCount()}">0</span>
+                </a>
+              </li>
+            </ul>
+          </details>
           <a href="#" class="text-base-content hover:text-primary font-medium transition">About</a>
           <a href="#" class="text-base-content hover:text-primary font-medium transition">Contact</a>
-          <nav aria-label="Product category tree"></nav>
         </div>
         <div class="flex items-center space-x-4">
+          <a
+                  th:href="@{/account}"
+                  sec:authorize="hasRole('CUSTOMER')"
+                  class="text-base-content hover:text-primary transition"
+                  aria-label="Account"
+          >
+            <span class="icon-[mdi--account-outline] h-6 w-6" aria-hidden="true"></span>
+          </a>
           <a th:href="@{/cart}" class="text-base-content hover:text-primary transition" aria-label="Shopping cart">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/>
-            </svg>
+            <span class="icon-[mdi--cart-outline] h-6 w-6" aria-hidden="true"></span>
           </a>
           <a
                   sec:authorize="!isAuthenticated()"

@@ -1,0 +1,48 @@
+<!doctype html>
+<html
+    lang="en"
+    xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{fragments/layout :: page(${seo}, ~{::main}, ~{::#page-scripts})}">
+<head></head>
+<body>
+  <main class="flex-grow container mx-auto px-4 sm:px-6 py-12">
+    <nav aria-label="Breadcrumb" class="mb-6">
+      <ul class="flex items-center gap-2 text-sm text-base-content/70">
+        <li><a th:href="@{/}" class="link">Home</a></li>
+        <li aria-hidden="true">/</li>
+        <li><a th:href="@{/catalog}" class="link">Catalog</a></li>
+        <li aria-hidden="true">/</li>
+        <li aria-current="page" th:text="${category.name()}">Category</li>
+      </ul>
+    </nav>
+
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold" th:text="${category.name()}">Category</h1>
+      <p class="mt-2 text-base-content/70" th:text="${category.productCount() + ' products'}">0 products</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <article class="card card-border bg-base-100" th:each="product, iteration : ${products}">
+        <figure th:if="${product.imageUrl() != null}">
+          <img
+              th:src="${product.imageUrl()}"
+              alt=""
+              width="640"
+              height="360"
+              th:attr="fetchpriority=${iteration.first} ? 'high' : null,
+                       loading=${iteration.first} ? null : 'lazy'">
+        </figure>
+        <div class="card-body">
+          <h2 class="card-title" th:text="${product.name()}">Product</h2>
+          <p class="text-base-content/70" th:text="${product.description()}">Description</p>
+          <p class="font-semibold" th:text="${#numbers.formatDecimal(product.price().amount(), 1, 2)}">0.00</p>
+          <div class="card-actions justify-end">
+            <a class="btn" th:href="@{/catalog/products/{sku}(sku=${product.sku()})}">View product</a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </main>
+  <th:block id="page-scripts"></th:block>
+</body>
+</html>

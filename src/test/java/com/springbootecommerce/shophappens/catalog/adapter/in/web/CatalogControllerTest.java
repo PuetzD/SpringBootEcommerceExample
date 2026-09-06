@@ -7,7 +7,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 import com.springbootecommerce.shophappens.catalog.application.port.in.BrowseCatalogUseCase;
+import com.springbootecommerce.shophappens.catalog.application.port.in.BrowseCategoriesUseCase;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CatalogPage;
+import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryReference;
+import com.springbootecommerce.shophappens.catalog.application.port.in.CategorySummary;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductSummary;
 import com.springbootecommerce.shophappens.security.SecurityConfiguration;
@@ -30,11 +33,16 @@ class CatalogControllerTest {
     @Autowired MockMvc mockMvc;
 
     @MockitoBean BrowseCatalogUseCase catalog;
+
+    @MockitoBean(name = "categoryQueryService")
+    BrowseCategoriesUseCase categories;
+
     @MockitoBean CartMergingAuthenticationSuccessHandler successHandler;
 
     @Test
     void rendersCatalogAndProductDetail() throws Exception {
         var product = productSummary(7L, "WEAP-002", "Rubber Duck of Debugging", "18.99");
+        when(categories.findAllActive()).thenReturn(List.of());
         when(catalog.findActivePage(0, 20))
                 .thenReturn(new CatalogPage(List.of(product), 0, 20, 1, 1));
         when(catalog.findActiveBySku("WEAP-002")).thenReturn(Optional.of(product));
@@ -55,6 +63,28 @@ class CatalogControllerTest {
         when(catalog.findActiveBySku("MISSING")).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/catalog/products/MISSING")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void rendersProductsForCategorySlug() throws Exception {
+        var category = new CategorySummary(new CategoryReference(1L), "Weapons", "weapons", 1);
+        var product = productSummary(7L, "WEAP-002", "Rubber Duck of Debugging", "18.99");
+        when(categories.findAllActive()).thenReturn(List.of(category));
+        when(categories.findBySlug("weapons")).thenReturn(Optional.of(category));
+        when(categories.findActiveProductsByCategorySlug("weapons")).thenReturn(List.of(product));
+
+        mockMvc.perform(get("/catalog/categories/weapons"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("catalog/category"))
+                .andExpect(model().attribute("category", category))
+                .andExpect(model().attribute("products", List.of(product)));
+    }
+
+    @Test
+    void returnsNotFoundForUnknownCategorySlug() throws Exception {
+        when(categories.findBySlug("unknown")).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/catalog/categories/unknown")).andExpect(status().isNotFound());
     }
 
     private ProductSummary productSummary(Long id, String sku, String name, String price) {
