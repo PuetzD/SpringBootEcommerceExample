@@ -8,6 +8,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.out.ProductR
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
 import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +52,11 @@ public class CatalogQueryService implements BrowseCatalogUseCase {
     }
 
     @Override
+    public Optional<ProductSummary> findActiveByVariantId(ProductVariantId variant) {
+        return productRepository.findActiveByVariantId(variant).map(this::toSummary);
+    }
+
+    @Override
     public Optional<ProductSummary> findActiveBySku(String sku) {
         return productRepository.findActiveBySku(new Sku(sku)).map(this::toSummary);
     }
@@ -63,6 +69,9 @@ public class CatalogQueryService implements BrowseCatalogUseCase {
                 product.description(),
                 product.price(),
                 product.stockQuantity(),
-                product.imageUrl());
+                product.imageUrl(),
+                product.defaultVariant()
+                        .id()
+                        .orElse(new ProductVariantId(product.id().orElseThrow().value())));
     }
 }

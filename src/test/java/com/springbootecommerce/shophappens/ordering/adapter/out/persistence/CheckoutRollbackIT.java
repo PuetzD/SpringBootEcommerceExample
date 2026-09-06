@@ -14,7 +14,7 @@ import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrd
 import com.springbootecommerce.shophappens.ordering.application.port.out.CheckoutCart;
 import com.springbootecommerce.shophappens.ordering.application.port.out.RequestedProduct;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
-import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -41,7 +41,7 @@ class CheckoutRollbackIT extends AbstractIntegrationTest {
 
         List<RequestedProduct> cartItems =
                 jdbc.query(
-                        "select product_id, quantity from customer_cart_item where cart_id = ?",
+                        "select variant_id, quantity from customer_cart_item where cart_id = ?",
                         cartRowMapper(),
                         seed.cartId());
         when(cartGateway.load(org.mockito.ArgumentMatchers.any()))
@@ -65,7 +65,7 @@ class CheckoutRollbackIT extends AbstractIntegrationTest {
                 .isZero();
         assertThat(
                         jdbc.queryForObject(
-                                "select stock_quantity from product where id = ?",
+                                "select stock_quantity from product_variant where product_id = ? and is_default = true",
                                 Integer.class,
                                 seed.productId()))
                 .isEqualTo(seed.initialStock());
@@ -74,6 +74,6 @@ class CheckoutRollbackIT extends AbstractIntegrationTest {
     private static RowMapper<RequestedProduct> cartRowMapper() {
         return (rs, rowNum) ->
                 new RequestedProduct(
-                        new ProductId(rs.getLong("product_id")), rs.getInt("quantity"));
+                        new ProductVariantId(rs.getLong("variant_id")), rs.getInt("quantity"));
     }
 }

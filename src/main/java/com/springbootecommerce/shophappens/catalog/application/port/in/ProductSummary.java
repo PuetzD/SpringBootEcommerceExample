@@ -1,5 +1,6 @@
 package com.springbootecommerce.shophappens.catalog.application.port.in;
 
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 
 public record ProductSummary(
@@ -9,7 +10,19 @@ public record ProductSummary(
         String description,
         Money price,
         int stockQuantity,
-        String imageUrl) {
+        String imageUrl,
+        ProductVariantId variant) {
+    public ProductSummary(
+            ProductReference product,
+            String sku,
+            String name,
+            String description,
+            Money price,
+            int stockQuantity,
+            String imageUrl) {
+        this(product, sku, name, description, price, stockQuantity, imageUrl, null);
+    }
+
     public boolean inStock() {
         return stockQuantity > 0;
     }

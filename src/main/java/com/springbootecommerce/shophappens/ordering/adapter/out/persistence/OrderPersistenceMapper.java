@@ -8,6 +8,7 @@ import com.springbootecommerce.shophappens.ordering.domain.model.OrderItem;
 import com.springbootecommerce.shophappens.ordering.domain.model.OrderNumber;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.util.Comparator;
 import java.util.List;
@@ -23,6 +24,7 @@ class OrderPersistenceMapper {
                         .map(
                                 item ->
                                         new OrderItem(
+                                                new ProductVariantId(item.getVariantId()),
                                                 new ProductId(item.getProductId()),
                                                 item.getSku(),
                                                 item.getProductName(),
@@ -77,6 +79,7 @@ class OrderPersistenceMapper {
                     OrderItemJpaEntity.create(
                             entity,
                             i,
+                            item.variantId().value(),
                             item.productId().value(),
                             item.sku(),
                             item.productName(),

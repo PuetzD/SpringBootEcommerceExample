@@ -10,31 +10,45 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 interface SpringDataProductRepository extends JpaRepository<ProductJpaEntity, Long> {
-    @EntityGraph(attributePaths = "categories")
+    @EntityGraph(attributePaths = {"categories", "variants"})
     Optional<ProductJpaEntity> findDetailedById(Long id);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @EntityGraph(attributePaths = {"categories", "variants"})
     @Query("select p from ProductJpaEntity p where p.id = :id")
     Optional<ProductJpaEntity> findForPurchaseById(@Param("id") Long id);
 
-    @EntityGraph(attributePaths = "categories")
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @EntityGraph(attributePaths = {"categories", "variants"})
+    @Query("select p from ProductJpaEntity p join p.variants v where v.id = :variantId")
+    Optional<ProductJpaEntity> findForPurchaseByVariantId(@Param("variantId") Long variantId);
+
+    @Query(
+            value = "select id from product_variant where id = :variantId for update",
+            nativeQuery = true)
+    Optional<Long> lockVariantForPurchase(@Param("variantId") Long variantId);
+
+    @EntityGraph(attributePaths = {"categories", "variants"})
     Optional<ProductJpaEntity> findByIdAndActiveTrue(Long id);
 
-    @EntityGraph(attributePaths = "categories")
+    @EntityGraph(attributePaths = {"categories", "variants"})
+    Optional<ProductJpaEntity> findByVariantsIdAndActiveTrue(Long variantId);
+
+    @EntityGraph(attributePaths = {"categories", "variants"})
     Optional<ProductJpaEntity> findBySkuAndActiveTrue(String sku);
 
-    @EntityGraph(attributePaths = "categories")
+    @EntityGraph(attributePaths = {"categories", "variants"})
     List<ProductJpaEntity> findByActiveTrueOrderByNameAscIdAsc();
 
-    @EntityGraph(attributePaths = "categories")
+    @EntityGraph(attributePaths = {"categories", "variants"})
     org.springframework.data.domain.Page<ProductJpaEntity> findByActiveTrue(
             org.springframework.data.domain.Pageable pageable);
 
-    @EntityGraph(attributePaths = "categories")
+    @EntityGraph(attributePaths = {"categories", "variants"})
     org.springframework.data.domain.Page<ProductJpaEntity> findByCategoriesIdAndActiveTrue(
             Long categoryId, org.springframework.data.domain.Pageable pageable);
 
-    @EntityGraph(attributePaths = "categories")
+    @EntityGraph(attributePaths = {"categories", "variants"})
     List<ProductJpaEntity> findAllByOrderByNameAscIdAsc();
 
     @Query(
@@ -49,7 +63,7 @@ interface SpringDataProductRepository extends JpaRepository<ProductJpaEntity, Lo
             @Param("active") Boolean active,
             org.springframework.data.domain.Pageable pageable);
 
-    @EntityGraph(attributePaths = "categories")
+    @EntityGraph(attributePaths = {"categories", "variants"})
     @Query("select distinct p from ProductJpaEntity p where p.id in :ids")
     List<ProductJpaEntity> findDetailedByIdIn(@Param("ids") List<Long> ids);
 

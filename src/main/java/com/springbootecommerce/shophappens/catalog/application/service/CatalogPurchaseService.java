@@ -10,7 +10,6 @@ import com.springbootecommerce.shophappens.catalog.application.port.out.ProductR
 import com.springbootecommerce.shophappens.catalog.domain.exception.ProductUnavailableException;
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
 import com.springbootecommerce.shophappens.catalog.domain.model.PurchasedFacts;
-import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -30,7 +29,7 @@ public class CatalogPurchaseService implements PurchaseProductsUseCase {
     public List<PurchasedProductSnapshot> purchase(List<PurchaseLine> lines) {
         List<PurchaseLine> sorted =
                 lines.stream()
-                        .sorted(Comparator.comparingLong(line -> line.product().value()))
+                        .sorted(Comparator.comparingLong(line -> line.variant().value()))
                         .toList();
         rejectDuplicates(sorted);
 
@@ -39,15 +38,25 @@ public class CatalogPurchaseService implements PurchaseProductsUseCase {
                         line -> {
                             Product product =
                                     productRepository
-                                            .findForPurchase(new ProductId(line.product().value()))
+                                            .findForPurchase(line.variant())
+                                            .or(
+                                                    () ->
+                                                            productRepository.findForPurchase(
+                                                                    new com.springbootecommerce
+                                                                            .shophappens
+                                                                            .sharedkernel.identity
+                                                                            .ProductId(
+                                                                            line.variant()
+                                                                                    .value())))
                                             .orElseThrow(
                                                     () ->
                                                             new PublishedProductUnavailableException(
-                                                                    new ProductReference(
-                                                                            line.product().value()),
-                                                                    null));
+                                                                    null, null));
                             try {
-                                PurchasedFacts facts = product.purchase(line.quantity());
+                                PurchasedFacts facts =
+                                        product.defaultVariant().id().isPresent()
+                                                ? product.purchase(line.variant(), line.quantity())
+                                                : product.purchase(line.quantity());
                                 productRepository.save(product);
                                 return toSnapshot(facts);
                             } catch (ProductUnavailableException exception) {
@@ -75,7 +84,7 @@ public class CatalogPurchaseService implements PurchaseProductsUseCase {
     private void rejectDuplicates(List<PurchaseLine> lines) {
         Set<Long> seen = new HashSet<>();
         for (PurchaseLine line : lines) {
-            long value = line.product().value();
+            long value = line.variant().value();
             if (!seen.add(value)) {
                 throw new IllegalArgumentException("Duplicate product reference: " + value);
             }
@@ -84,6 +93,7 @@ public class CatalogPurchaseService implements PurchaseProductsUseCase {
 
     private PurchasedProductSnapshot toSnapshot(PurchasedFacts facts) {
         return new PurchasedProductSnapshot(
+                facts.variantId(),
                 new ProductReference(facts.id().value()),
                 facts.sku().value(),
                 facts.name(),

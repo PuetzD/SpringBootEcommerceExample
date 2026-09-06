@@ -12,7 +12,7 @@ import com.springbootecommerce.shophappens.customer.application.port.in.Customer
 import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
 import com.springbootecommerce.shophappens.shared.web.SeoMetadata;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
-import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import jakarta.servlet.http.HttpSession;
 import java.util.List;
 import java.util.Optional;
@@ -56,9 +56,7 @@ public class CartController {
                 items.stream()
                         .map(
                                 item ->
-                                        catalog.findActiveById(
-                                                        new ProductReference(
-                                                                item.product().value()))
+                                        catalog.findActiveByVariantId(item.variant())
                                                 .map(p -> new CartLine(item, p)))
                         .flatMap(Optional::stream)
                         .toList();
@@ -76,26 +74,33 @@ public class CartController {
             @RequestParam("product") long productId,
             @RequestParam("quantity") String rawQuantity) {
         int quantity = parseQuantity(rawQuantity);
+        ProductVariantId variant = resolveDefaultVariant(productId);
         Optional<CustomerReference> customer = currentCustomer.current();
         if (customer.isPresent()) {
-            customerCart.changeQuantity(
-                    new CustomerId(customer.get().value()), new ProductId(productId), quantity);
+            customerCart.changeQuantity(new CustomerId(customer.get().value()), variant, quantity);
         } else {
-            guestCart.changeQuantity(
-                    guestSessions.getOrCreate(session), new ProductId(productId), quantity);
+            guestCart.changeQuantity(guestSessions.getOrCreate(session), variant, quantity);
         }
         return "redirect:/cart";
     }
 
     @PostMapping("/items/{productId}/remove")
     public String remove(HttpSession session, @PathVariable long productId) {
+        ProductVariantId variant = resolveDefaultVariant(productId);
         Optional<CustomerReference> customer = currentCustomer.current();
         if (customer.isPresent()) {
-            customerCart.remove(new CustomerId(customer.get().value()), new ProductId(productId));
+            customerCart.remove(new CustomerId(customer.get().value()), variant);
         } else {
-            guestCart.remove(guestSessions.getOrCreate(session), new ProductId(productId));
+            guestCart.remove(guestSessions.getOrCreate(session), variant);
         }
         return "redirect:/cart";
+    }
+
+    private ProductVariantId resolveDefaultVariant(long productId) {
+        return catalog.findActiveById(new ProductReference(productId))
+                .map(ProductSummary::variant)
+                .filter(java.util.Objects::nonNull)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     private static int parseQuantity(String rawQuantity) {

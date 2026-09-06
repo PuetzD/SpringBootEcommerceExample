@@ -30,15 +30,15 @@ class CustomerCartItemJpaEntity {
     private CustomerCartJpaEntity cart;
 
     static CustomerCartItemJpaEntity create(
-            CustomerCartJpaEntity cart, long productId, int quantity) {
+            CustomerCartJpaEntity cart, long variantId, int quantity) {
         var entity = new CustomerCartItemJpaEntity();
         entity.cart = cart;
-        entity.key = new CartItemKey(cart.getId(), productId);
+        entity.key = new CartItemKey(cart.getId(), variantId);
         entity.quantity = quantity;
         return entity;
     }
 
-    long getProductId() {
-        return key.getProductId();
+    long getVariantId() {
+        return key.getVariantId();
     }
 }

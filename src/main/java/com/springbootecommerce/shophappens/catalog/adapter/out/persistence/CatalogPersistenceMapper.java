@@ -2,11 +2,17 @@ package com.springbootecommerce.shophappens.catalog.adapter.out.persistence;
 
 import com.springbootecommerce.shophappens.catalog.domain.model.CategoryId;
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
+import com.springbootecommerce.shophappens.catalog.domain.model.ProductVariant;
 import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 
@@ -24,6 +30,7 @@ public class CatalogPersistenceMapper {
                         product.active());
         product.id().ifPresent(id -> jpa.setId(id.value()));
         jpa.setCategories(categories);
+        jpa.setVariants(toJpaVariants(product, jpa));
         return jpa;
     }
 
@@ -36,6 +43,7 @@ public class CatalogPersistenceMapper {
         jpa.setImageUrl(product.imageUrl());
         jpa.setActive(product.active());
         jpa.setCategories(new LinkedHashSet<>(categories));
+        applyVariantsToJpa(jpa, product);
     }
 
     Product toDomain(ProductJpaEntity jpa) {
@@ -43,15 +51,91 @@ public class CatalogPersistenceMapper {
                 jpa.getCategories().stream()
                         .map(category -> new CategoryId(category.getId()))
                         .collect(Collectors.toSet());
+        List<ProductVariant> variants =
+                jpa.getVariants().stream()
+                        .map(
+                                variant ->
+                                        ProductVariant.restore(
+                                                new ProductVariantId(variant.getId()),
+                                                new Sku(variant.getSku()),
+                                                new Money(variant.getPrice()),
+                                                variant.getStockQuantity(),
+                                                variant.getImageUrl(),
+                                                variant.isActive(),
+                                                variant.isDefaultVariant()))
+                        .toList();
         return Product.restore(
                 new ProductId(jpa.getId()),
-                new Sku(jpa.getSku()),
                 jpa.getName(),
                 jpa.getDescription(),
-                new Money(jpa.getPrice()),
-                jpa.getStockQuantity(),
-                jpa.getImageUrl(),
                 jpa.isActive(),
-                categoryIds);
+                categoryIds,
+                variants);
+    }
+
+    private LinkedHashSet<ProductVariantJpaEntity> toJpaVariants(
+            Product product, ProductJpaEntity owner) {
+        LinkedHashSet<ProductVariantJpaEntity> variants = new LinkedHashSet<>();
+        product.variants()
+                .forEach(
+                        variant -> {
+                            ProductVariantJpaEntity entity =
+                                    ProductVariantJpaEntity.create(
+                                            variant.sku().value(),
+                                            variant.price().amount(),
+                                            variant.stockQuantity(),
+                                            variant.imageUrl(),
+                                            variant.active(),
+                                            variant.isDefault());
+                            variant.id().ifPresent(id -> entity.setId(id.value()));
+                            entity.setProduct(owner);
+                            variants.add(entity);
+                        });
+        return variants;
+    }
+
+    private void applyVariantsToJpa(ProductJpaEntity jpa, Product product) {
+        Map<String, ProductVariantJpaEntity> existing =
+                jpa.getVariants().stream()
+                        .collect(
+                                Collectors.toMap(
+                                        ProductVariantJpaEntity::getSku, Function.identity()));
+        Map<Long, ProductVariantJpaEntity> existingById =
+                jpa.getVariants().stream()
+                        .collect(
+                                Collectors.toMap(
+                                        ProductVariantJpaEntity::getId, Function.identity()));
+        LinkedHashSet<ProductVariantJpaEntity> updated = new LinkedHashSet<>();
+        product.variants()
+                .forEach(
+                        variant -> {
+                            ProductVariantJpaEntity entity =
+                                    variant.id()
+                                            .map(id -> existingById.get(id.value()))
+                                            .or(
+                                                    () ->
+                                                            Optional.ofNullable(
+                                                                    existing.get(
+                                                                            variant.sku().value())))
+                                            .orElseGet(
+                                                    () ->
+                                                            ProductVariantJpaEntity.create(
+                                                                    variant.sku().value(),
+                                                                    variant.price().amount(),
+                                                                    variant.stockQuantity(),
+                                                                    variant.imageUrl(),
+                                                                    variant.active(),
+                                                                    variant.isDefault()));
+                            entity.setSku(variant.sku().value());
+                            entity.setPrice(variant.price().amount());
+                            entity.setStockQuantity(variant.stockQuantity());
+                            entity.setImageUrl(variant.imageUrl());
+                            entity.setActive(variant.active());
+                            entity.setDefaultVariant(variant.isDefault());
+                            entity.setProduct(jpa);
+                            updated.add(entity);
+                        });
+        jpa.getVariants().clear();
+        jpa.getVariants().addAll(updated);
     }
 }

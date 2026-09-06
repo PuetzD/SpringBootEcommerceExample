@@ -17,6 +17,7 @@ import com.springbootecommerce.shophappens.cart.domain.model.GuestCartId;
 import com.springbootecommerce.shophappens.cart.domain.model.Quantity;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,23 +34,31 @@ public class CartService
     private final GuestCartRepository guests;
     private final CustomerCartRepository customers;
 
-    @Override
     public void changeQuantity(GuestCartReference guest, ProductId product, int quantity) {
+        changeQuantity(guest, new ProductVariantId(product.value()), quantity);
+    }
+
+    public void changeQuantity(CustomerId customer, ProductId product, int quantity) {
+        changeQuantity(customer, new ProductVariantId(product.value()), quantity);
+    }
+
+    @Override
+    public void changeQuantity(GuestCartReference guest, ProductVariantId variant, int quantity) {
         GuestCartId guestId = new GuestCartId(guest.value());
         Cart cart =
                 guests.find(guestId)
                         .orElseGet(() -> Cart.empty(CartId.random(), new CartOwner.Guest(guestId)));
-        cart.changeQuantity(product, new Quantity(quantity));
+        cart.changeQuantity(variant, new Quantity(quantity));
         guests.save(cart);
     }
 
     @Override
-    public void remove(GuestCartReference guest, ProductId product) {
+    public void remove(GuestCartReference guest, ProductVariantId variant) {
         GuestCartId guestId = new GuestCartId(guest.value());
         Cart cart =
                 guests.find(guestId)
                         .orElseGet(() -> Cart.empty(CartId.random(), new CartOwner.Guest(guestId)));
-        cart.remove(product);
+        cart.remove(variant);
         guests.save(cart);
     }
 
@@ -68,17 +77,17 @@ public class CartService
 
     @Override
     @Transactional
-    public void changeQuantity(CustomerId customer, ProductId product, int quantity) {
+    public void changeQuantity(CustomerId customer, ProductVariantId variant, int quantity) {
         Cart cart = customers.findOrCreate(customer);
-        cart.changeQuantity(product, new Quantity(quantity));
+        cart.changeQuantity(variant, new Quantity(quantity));
         customers.save(cart);
     }
 
     @Override
     @Transactional
-    public void remove(CustomerId customer, ProductId product) {
+    public void remove(CustomerId customer, ProductVariantId variant) {
         Cart cart = customers.findOrCreate(customer);
-        cart.remove(product);
+        cart.remove(variant);
         customers.save(cart);
     }
 
@@ -107,7 +116,7 @@ public class CartService
 
     private List<CartItemSnapshot> toItemSnapshots(Cart cart) {
         return cart.items().stream()
-                .map(item -> new CartItemSnapshot(item.productId(), item.quantity().value()))
+                .map(item -> new CartItemSnapshot(item.variantId(), item.quantity().value()))
                 .toList();
     }
 }

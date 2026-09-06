@@ -1,6 +1,5 @@
 package com.springbootecommerce.shophappens.ordering.adapter.out.catalog;
 
-import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PublishedInsufficientStockException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PublishedProductUnavailableException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PurchaseLine;
@@ -10,7 +9,6 @@ import com.springbootecommerce.shophappens.ordering.application.exception.Checko
 import com.springbootecommerce.shophappens.ordering.application.port.out.CatalogPurchaseGateway;
 import com.springbootecommerce.shophappens.ordering.application.port.out.PurchasedProduct;
 import com.springbootecommerce.shophappens.ordering.application.port.out.RequestedProduct;
-import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,13 +23,7 @@ public class CatalogPurchaseGatewayAdapter implements CatalogPurchaseGateway {
     @Override
     public List<PurchasedProduct> purchase(List<RequestedProduct> products) {
         List<PurchaseLine> lines =
-                products.stream()
-                        .map(
-                                p ->
-                                        new PurchaseLine(
-                                                new ProductReference(p.productId().value()),
-                                                p.quantity()))
-                        .toList();
+                products.stream().map(p -> new PurchaseLine(p.variantId(), p.quantity())).toList();
         List<PurchasedProductSnapshot> snapshots;
         try {
             snapshots = purchaseProducts.purchase(lines);
@@ -44,7 +36,13 @@ public class CatalogPurchaseGatewayAdapter implements CatalogPurchaseGateway {
                 .map(
                         s ->
                                 new PurchasedProduct(
-                                        new ProductId(s.product().value()),
+                                        s.variant() == null
+                                                ? new com.springbootecommerce.shophappens
+                                                        .sharedkernel.identity.ProductVariantId(
+                                                        s.product().value())
+                                                : s.variant(),
+                                        new com.springbootecommerce.shophappens.sharedkernel
+                                                .identity.ProductId(s.product().value()),
                                         s.sku(),
                                         s.name(),
                                         s.unitPrice(),
@@ -57,12 +55,18 @@ public class CatalogPurchaseGatewayAdapter implements CatalogPurchaseGateway {
         Map<Long, Integer> requestedByProduct =
                 byProduct(
                         requested.stream()
-                                .map(p -> Map.entry(p.productId().value(), p.quantity()))
+                                .map(p -> Map.entry(p.variantId().value(), p.quantity()))
                                 .toList());
         Map<Long, Integer> purchasedByProduct =
                 byProduct(
                         purchased.stream()
-                                .map(s -> Map.entry(s.product().value(), s.quantity()))
+                                .map(
+                                        s ->
+                                                Map.entry(
+                                                        s.variant() == null
+                                                                ? s.product().value()
+                                                                : s.variant().value(),
+                                                        s.quantity()))
                                 .toList());
         if (!requestedByProduct.equals(purchasedByProduct)) {
             throw new IllegalArgumentException("Catalog returned products that were not requested");

@@ -14,6 +14,7 @@ CREATE TABLE customer_order (
 CREATE TABLE order_item (
     order_id UUID NOT NULL,
     line_number INTEGER NOT NULL,
+    variant_id BIGINT NOT NULL,
     product_id BIGINT NOT NULL,
     sku VARCHAR(50) NOT NULL,
     product_name VARCHAR(255) NOT NULL,

@@ -1,12 +1,30 @@
 package com.springbootecommerce.shophappens.ordering.domain.model;
 
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.util.Objects;
 
 public record OrderItem(
-        ProductId productId, String sku, String productName, Money unitPrice, int quantity) {
+        ProductVariantId variantId,
+        ProductId productId,
+        String sku,
+        String productName,
+        Money unitPrice,
+        int quantity) {
+    public OrderItem(
+            ProductId productId, String sku, String productName, Money unitPrice, int quantity) {
+        this(
+                new ProductVariantId(productId.value()),
+                productId,
+                sku,
+                productName,
+                unitPrice,
+                quantity);
+    }
+
     public OrderItem {
+        Objects.requireNonNull(variantId);
         Objects.requireNonNull(productId);
         Objects.requireNonNull(unitPrice);
         if (sku == null || sku.isBlank() || productName == null || productName.isBlank()) {

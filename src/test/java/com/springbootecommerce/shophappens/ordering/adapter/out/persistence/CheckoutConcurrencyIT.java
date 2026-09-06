@@ -69,7 +69,7 @@ class CheckoutConcurrencyIT extends AbstractIntegrationTest {
                 .isOne();
         assertThat(
                         jdbc.queryForObject(
-                                "select stock_quantity from product where id = ?",
+                                "select stock_quantity from product_variant where product_id = ? and is_default = true",
                                 Integer.class,
                                 productId))
                 .isZero();

@@ -66,7 +66,7 @@ public class CheckoutService implements PlaceOrderUseCase {
 
         List<RequestedProduct> requested =
                 cart.products().stream()
-                        .map(p -> new RequestedProduct(p.productId(), p.quantity()))
+                        .map(p -> new RequestedProduct(p.variantId(), p.quantity()))
                         .toList();
         List<PurchasedProduct> purchased = catalog.purchase(requested);
 
@@ -75,6 +75,7 @@ public class CheckoutService implements PlaceOrderUseCase {
                         .map(
                                 p ->
                                         new OrderItem(
+                                                p.variantId(),
                                                 p.productId(),
                                                 p.sku(),
                                                 p.name(),

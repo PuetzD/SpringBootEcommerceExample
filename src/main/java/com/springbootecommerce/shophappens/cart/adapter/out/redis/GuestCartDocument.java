@@ -5,5 +5,5 @@ import java.util.UUID;
 
 record GuestCartDocument(UUID cartId, UUID guestCartId, List<Item> items) {
 
-    record Item(long productId, int quantity) {}
+    record Item(long variantId, int quantity) {}
 }

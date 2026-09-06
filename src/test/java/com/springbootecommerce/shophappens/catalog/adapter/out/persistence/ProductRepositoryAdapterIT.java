@@ -33,6 +33,31 @@ class ProductRepositoryAdapterIT extends AbstractIntegrationTest {
     }
 
     @Test
+    void persistsAndRestoresOneDefaultVariantForSimpleProduct() {
+        Product saved =
+                seedProduct(
+                        "FIX-VARIANT", "Variant fixture", new Money(new BigDecimal("12.34")), 7);
+
+        Long variantCount =
+                jdbc.queryForObject(
+                        "select count(*) from product_variant where product_id = ?",
+                        Long.class,
+                        saved.id().orElseThrow().value());
+        Long defaultCount =
+                jdbc.queryForObject(
+                        "select count(*) from product_variant where product_id = ? and is_default",
+                        Long.class,
+                        saved.id().orElseThrow().value());
+        Product restored = products.findById(saved.id().orElseThrow()).orElseThrow();
+
+        assertThat(variantCount).isEqualTo(1L);
+        assertThat(defaultCount).isEqualTo(1L);
+        assertThat(restored.variants()).hasSize(1);
+        assertThat(restored.defaultVariant().id()).isPresent();
+        assertThat(restored.defaultVariant().sku()).isEqualTo(new Sku("FIX-VARIANT"));
+    }
+
+    @Test
     void persistsPermanentStockDecrease() {
         seedProduct("FIX-002", "Smart Watch", new Money(new BigDecimal("199.99")), 15);
         Product product = products.findActiveBySku(new Sku("FIX-002")).orElseThrow();

@@ -9,6 +9,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.out.ProductR
 import com.springbootecommerce.shophappens.catalog.domain.model.Category;
 import com.springbootecommerce.shophappens.catalog.domain.model.CategoryId;
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
@@ -69,6 +70,9 @@ public class CategoryQueryService implements BrowseCategoriesUseCase {
                 product.description(),
                 product.price(),
                 product.stockQuantity(),
-                product.imageUrl());
+                product.imageUrl(),
+                product.defaultVariant()
+                        .id()
+                        .orElse(new ProductVariantId(product.id().orElseThrow().value())));
     }
 }

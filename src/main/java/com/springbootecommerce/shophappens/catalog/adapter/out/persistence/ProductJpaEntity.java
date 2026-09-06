@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.math.BigDecimal;
@@ -56,6 +57,12 @@ public class ProductJpaEntity {
             joinColumns = @JoinColumn(name = "product_id"),
             inverseJoinColumns = @JoinColumn(name = "category_id"))
     private Set<CategoryJpaEntity> categories = new LinkedHashSet<>();
+
+    @OneToMany(
+            mappedBy = "product",
+            cascade = jakarta.persistence.CascadeType.ALL,
+            orphanRemoval = true)
+    private Set<ProductVariantJpaEntity> variants = new LinkedHashSet<>();
 
     @Version private Long version;
 

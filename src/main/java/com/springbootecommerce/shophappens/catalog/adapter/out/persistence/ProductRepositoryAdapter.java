@@ -18,6 +18,7 @@ import com.springbootecommerce.shophappens.catalog.domain.model.CategoryId;
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
 import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -52,9 +53,22 @@ class ProductRepositoryAdapter implements ProductRepository {
     }
 
     @Override
+    @Transactional
+    public Optional<Product> findForPurchase(ProductVariantId id) {
+        springData.lockVariantForPurchase(id.value());
+        return springData.findForPurchaseByVariantId(id.value()).map(mapper::toDomain);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Optional<Product> findActiveById(ProductId id) {
         return springData.findByIdAndActiveTrue(id.value()).map(mapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Product> findActiveByVariantId(ProductVariantId id) {
+        return springData.findByVariantsIdAndActiveTrue(id.value()).map(mapper::toDomain);
     }
 
     @Override
@@ -207,8 +221,8 @@ class ProductRepositoryAdapter implements ProductRepository {
         }
         try {
             mapper.applyToJpa(entity, product, loadCategories(product));
-            ProductJpaEntity saved = springData.saveAndFlush(entity);
-            return new VersionedProduct(mapper.toDomain(saved), saved.getVersion());
+            springData.flush();
+            return new VersionedProduct(mapper.toDomain(entity), entity.getVersion());
         } catch (ObjectOptimisticLockingFailureException exception) {
             throw new StaleProductRevisionException(new ProductReference(id), expectedRevision);
         } catch (DataIntegrityViolationException exception) {
@@ -260,14 +274,14 @@ class ProductRepositoryAdapter implements ProductRepository {
     @Transactional
     public Product save(Product product) {
         Set<CategoryJpaEntity> categoryRefs = loadCategoryRefs(product.categoryIds());
-        ProductJpaEntity jpa = toJpaForSave(product, categoryRefs);
-        return mapper.toDomain(springData.save(jpa));
-    }
-
-    private ProductJpaEntity toJpaForSave(Product product, Set<CategoryJpaEntity> categories) {
-        return product.id()
-                .map(id -> mergeForUpdate(id.value(), product, categories))
-                .orElseGet(() -> mapper.toJpa(product, categories));
+        if (product.id().isEmpty()) {
+            ProductJpaEntity jpa = mapper.toJpa(product, categoryRefs);
+            return mapper.toDomain(springData.save(jpa));
+        }
+        ProductJpaEntity jpa =
+                mergeForUpdate(product.id().orElseThrow().value(), product, categoryRefs);
+        springData.flush();
+        return mapper.toDomain(jpa);
     }
 
     private ProductJpaEntity mergeForUpdate(

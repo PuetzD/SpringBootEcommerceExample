@@ -17,6 +17,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.out.ProductR
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
 import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
 import java.util.List;
@@ -44,8 +45,8 @@ class CatalogPurchaseServiceTest {
         Product seven = restoredProduct(7L, "WEAP-002", "Rubber Duck of Debugging", "18.99", 5);
         Product eight =
                 restoredProduct(8L, "MAGI-006", "Staff of Dependency Injection", "89.99", 5);
-        when(products.findForPurchase(new ProductId(7L))).thenReturn(Optional.of(seven));
-        when(products.findForPurchase(new ProductId(8L))).thenReturn(Optional.of(eight));
+        when(products.findForPurchase(new ProductVariantId(7L))).thenReturn(Optional.of(seven));
+        when(products.findForPurchase(new ProductVariantId(8L))).thenReturn(Optional.of(eight));
 
         List<PurchasedProductSnapshot> result =
                 service.purchase(
@@ -57,15 +58,15 @@ class CatalogPurchaseServiceTest {
                 .extracting(snapshot -> snapshot.product().value())
                 .containsExactly(7L, 8L);
         InOrder order = inOrder(products);
-        order.verify(products).findForPurchase(new ProductId(7L));
-        order.verify(products).findForPurchase(new ProductId(8L));
+        order.verify(products).findForPurchase(new ProductVariantId(7L));
+        order.verify(products).findForPurchase(new ProductVariantId(8L));
         verify(products, never()).findById(any(ProductId.class));
     }
 
     @Test
     void purchaseReturnsSnapshotsWithSkuNameUnitPriceQuantityAndLineTotal() {
         Product product = restoredProduct(7L, "WEAP-002", "Rubber Duck of Debugging", "18.99", 10);
-        when(products.findForPurchase(new ProductId(7L))).thenReturn(Optional.of(product));
+        when(products.findForPurchase(new ProductVariantId(7L))).thenReturn(Optional.of(product));
 
         List<PurchasedProductSnapshot> result =
                 service.purchase(List.of(new PurchaseLine(new ProductReference(7L), 3)));
@@ -82,7 +83,7 @@ class CatalogPurchaseServiceTest {
 
     @Test
     void purchaseThrowsProductUnavailableWhenProductMissing() {
-        when(products.findForPurchase(new ProductId(7L))).thenReturn(Optional.empty());
+        when(products.findForPurchase(new ProductVariantId(7L))).thenReturn(Optional.empty());
 
         assertThatThrownBy(
                         () ->
@@ -96,7 +97,7 @@ class CatalogPurchaseServiceTest {
     void purchaseThrowsPublishedProductUnavailableWhenProductInactive() {
         Product product = restoredProduct(7L, "WEAP-002", "Rubber Duck of Debugging", "18.99", 5);
         product.deactivate();
-        when(products.findForPurchase(new ProductId(7L))).thenReturn(Optional.of(product));
+        when(products.findForPurchase(new ProductVariantId(7L))).thenReturn(Optional.of(product));
 
         assertThatThrownBy(
                         () ->
@@ -109,7 +110,7 @@ class CatalogPurchaseServiceTest {
     @Test
     void purchaseThrowsInsufficientStockWhenStockTooLow() {
         Product product = restoredProduct(7L, "WEAP-002", "Rubber Duck of Debugging", "18.99", 1);
-        when(products.findForPurchase(new ProductId(7L))).thenReturn(Optional.of(product));
+        when(products.findForPurchase(new ProductVariantId(7L))).thenReturn(Optional.of(product));
 
         assertThatThrownBy(
                         () ->

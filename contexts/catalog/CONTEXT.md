@@ -13,8 +13,12 @@ A distinct sellable form of a Product, identified by a stable SKU. It owns the c
 _Avoid_: Option, configuration, child product
 
 **SKU**:
-The stable, human-recognizable business identifier assigned to a Product.
+The stable, human-recognizable business identifier assigned to a Product Variant. A Product family may be addressed through its Product identifier, but SKU identifies the sellable form.
 _Avoid_: Product code, item number
+
+**Product Variant identifier**:
+The stable identity of a sellable Product Variant across Catalog, Cart, and Ordering. It is distinct from the human-recognizable SKU, which may be changed only under Catalog policy.
+_Avoid_: SKU as foreign identity, option combination
 
 **Category**:
 A flat grouping used to organize Products in the Catalog. A Product may belong to multiple Categories.

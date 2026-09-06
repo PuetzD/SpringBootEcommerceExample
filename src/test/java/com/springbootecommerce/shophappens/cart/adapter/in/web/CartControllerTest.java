@@ -28,10 +28,12 @@ import com.springbootecommerce.shophappens.security.service.CartMergingAuthentic
 import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +57,11 @@ class CartControllerTest {
     private static final CustomerReference CUSTOMER = new CustomerReference(7L);
     private static final ProductReference PRODUCT = new ProductReference(3L);
 
+    @BeforeEach
+    void stubLegacyProductLookup() {
+        when(catalog.findActiveById(PRODUCT)).thenReturn(Optional.of(productSummary()));
+    }
+
     @Test
     void anonymousPostToCartItemsCreatesGuestCartInSessionAndInvokesGuestUseCase()
             throws Exception {
@@ -76,7 +83,7 @@ class CartControllerTest {
         ArgumentCaptor<GuestCartReference> guest =
                 ArgumentCaptor.forClass(GuestCartReference.class);
         verify(guestCart)
-                .changeQuantity(guest.capture(), eq(new ProductId(PRODUCT.value())), eq(2));
+                .changeQuantity(guest.capture(), eq(new ProductVariantId(PRODUCT.value())), eq(2));
         org.assertj.core.api.Assertions.assertThat(guest.getValue().value().toString())
                 .isEqualTo(stored);
     }
@@ -96,7 +103,7 @@ class CartControllerTest {
 
         verify(customerCart)
                 .changeQuantity(
-                        new CustomerId(CUSTOMER.value()), new ProductId(PRODUCT.value()), 2);
+                        new CustomerId(CUSTOMER.value()), new ProductVariantId(PRODUCT.value()), 2);
         verify(guestCart, never())
                 .changeQuantity(any(), any(), org.mockito.ArgumentMatchers.anyInt());
     }
@@ -112,7 +119,7 @@ class CartControllerTest {
 
         ArgumentCaptor<GuestCartReference> guest =
                 ArgumentCaptor.forClass(GuestCartReference.class);
-        verify(guestCart).remove(guest.capture(), eq(new ProductId(PRODUCT.value())));
+        verify(guestCart).remove(guest.capture(), eq(new ProductVariantId(PRODUCT.value())));
     }
 
     @Test
@@ -123,7 +130,8 @@ class CartControllerTest {
                         new CustomerCartSnapshot(
                                 new CustomerId(CUSTOMER.value()),
                                 List.of(new CartItemSnapshot(new ProductId(PRODUCT.value()), 2))));
-        when(catalog.findActiveById(PRODUCT)).thenReturn(Optional.of(productSummary()));
+        when(catalog.findActiveByVariantId(new ProductVariantId(PRODUCT.value())))
+                .thenReturn(Optional.of(productSummary()));
 
         mvc.perform(get("/cart").with(user("alex").roles("CUSTOMER")))
                 .andExpect(status().isOk())
@@ -155,6 +163,7 @@ class CartControllerTest {
                 "Descriptive text",
                 new Money(new BigDecimal("18.99")),
                 10,
-                "/images/product-placeholder.svg");
+                "/images/product-placeholder.svg",
+                new ProductVariantId(PRODUCT.value()));
     }
 }

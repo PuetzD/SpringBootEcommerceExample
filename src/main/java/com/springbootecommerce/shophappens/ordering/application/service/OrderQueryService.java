@@ -32,7 +32,7 @@ public class OrderQueryService implements PrepareCheckoutUseCase, OrderQuery {
     public CheckoutPreparation prepare(CustomerId cid) {
         List<CheckoutItem> items =
                 carts.load(cid).products().stream()
-                        .map(p -> new CheckoutItem(p.productId(), p.quantity()))
+                        .map(p -> new CheckoutItem(p.variantId(), p.quantity()))
                         .toList();
         List<CheckoutAddress> addressList =
                 addresses.available(cid).stream()

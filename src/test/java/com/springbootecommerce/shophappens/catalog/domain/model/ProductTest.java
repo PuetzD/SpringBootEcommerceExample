@@ -99,6 +99,46 @@ class ProductTest {
         assertThat(product.active()).isTrue();
     }
 
+    @Test
+    void createsOneDefaultVariantFromSimpleProductFields() {
+        Product product = productWithStock(5);
+
+        assertThat(product.variants()).hasSize(1);
+        assertThat(product.defaultVariant().sku()).isEqualTo(new Sku("ELEC-001"));
+        assertThat(product.defaultVariant().price()).isEqualTo(new Money(new BigDecimal("19.99")));
+        assertThat(product.defaultVariant().stockQuantity()).isEqualTo(5);
+        assertThat(product.defaultVariant().isDefault()).isTrue();
+    }
+
+    @Test
+    void cannotDeleteTheLastVariant() {
+        Product product = productWithStock(5);
+
+        assertThatThrownBy(() -> product.removeVariant(product.defaultVariant()))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void addingVariantKeepsExactlyOneDefaultVariant() {
+        Product product = productWithStock(5);
+        ProductVariant additional =
+                ProductVariant.create(
+                        new Sku("ELEC-002"),
+                        new Money(new BigDecimal("24.99")),
+                        2,
+                        "/blue.png",
+                        true,
+                        false);
+
+        product.addVariant(additional);
+
+        assertThat(product.variants()).hasSize(2);
+        assertThat(product.variants()).filteredOn(ProductVariant::isDefault).hasSize(1);
+        assertThat(product.variants())
+                .extracting(ProductVariant::sku)
+                .containsExactlyInAnyOrder(new Sku("ELEC-001"), new Sku("ELEC-002"));
+    }
+
     private Product productWithStock(int stock) {
         return Product.create(
                 new Sku("ELEC-001"),

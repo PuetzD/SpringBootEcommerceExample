@@ -16,18 +16,18 @@ class CartItemKey {
     @Column(name = "cart_id")
     private UUID cartId;
 
-    @Column(name = "product_id")
-    private long productId;
+    @Column(name = "variant_id")
+    private long variantId;
 
     @Override
     public boolean equals(Object o) {
         return o instanceof CartItemKey key
                 && Objects.equals(cartId, key.cartId)
-                && productId == key.productId;
+                && variantId == key.variantId;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(cartId, productId);
+        return Objects.hash(cartId, variantId);
     }
 }
