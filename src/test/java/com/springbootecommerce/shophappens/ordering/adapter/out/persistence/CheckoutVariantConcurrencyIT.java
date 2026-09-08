@@ -2,7 +2,6 @@ package com.springbootecommerce.shophappens.ordering.adapter.out.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doAnswer;
 
@@ -51,20 +50,7 @@ class CheckoutVariantConcurrencyIT extends AbstractIntegrationTest {
     @Test
     void interleavedVariantsDoNotDeadlock() throws Exception {
         var commands = interleavedCarts();
-        var parentsHeld = new CyclicBarrier(2);
         var start = new CyclicBarrier(2);
-        var firstCall = ThreadLocal.withInitial(() -> true);
-        doAnswer(
-                        call -> {
-                            Object result = call.callRealMethod();
-                            if (firstCall.get()) {
-                                firstCall.set(false);
-                                parentsHeld.await(10, TimeUnit.SECONDS);
-                            }
-                            return result;
-                        })
-                .when(products)
-                .findForPurchase(any(ProductVariantId.class));
         ExecutorService pool = Executors.newFixedThreadPool(2);
         try {
             Future<PlacedOrder> a =

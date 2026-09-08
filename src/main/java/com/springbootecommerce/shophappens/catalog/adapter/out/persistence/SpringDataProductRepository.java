@@ -1,32 +1,15 @@
 package com.springbootecommerce.shophappens.catalog.adapter.out.persistence;
 
-import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 interface SpringDataProductRepository extends JpaRepository<ProductJpaEntity, Long> {
     @EntityGraph(attributePaths = {"categories", "variants"})
     Optional<ProductJpaEntity> findDetailedById(Long id);
-
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @EntityGraph(attributePaths = {"categories", "variants"})
-    @Query("select p from ProductJpaEntity p where p.id = :id")
-    Optional<ProductJpaEntity> findForPurchaseById(@Param("id") Long id);
-
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @EntityGraph(attributePaths = {"categories", "variants"})
-    @Query("select p from ProductJpaEntity p join p.variants v where v.id = :variantId")
-    Optional<ProductJpaEntity> findForPurchaseByVariantId(@Param("variantId") Long variantId);
-
-    @Query(
-            value = "select id from product_variant where id = :variantId for update",
-            nativeQuery = true)
-    Optional<Long> lockVariantForPurchase(@Param("variantId") Long variantId);
 
     @Query(
             value = "select distinct product_id from product_variant where id in :ids",

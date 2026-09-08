@@ -227,13 +227,20 @@ class ProductTest {
     }
 
     private Product productWithStock(int stock) {
-        return Product.create(
-                new Sku("ELEC-001"),
+        return Product.restore(
+                new ProductId(7L),
                 "Headphones",
                 "Description",
-                new Money(new BigDecimal("19.99")),
-                stock,
-                "/images/product-placeholder.svg",
-                Set.of(new CategoryId(3L)));
+                true,
+                Set.of(new CategoryId(3L)),
+                List.of(
+                        ProductVariant.restore(
+                                new ProductVariantId(701L),
+                                new Sku("ELEC-001"),
+                                new Money(new BigDecimal("19.99")),
+                                stock,
+                                "/images/product-placeholder.svg",
+                                true,
+                                true)));
     }
 }

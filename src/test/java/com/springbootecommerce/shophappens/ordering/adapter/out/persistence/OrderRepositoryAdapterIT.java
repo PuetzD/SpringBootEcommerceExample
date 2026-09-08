@@ -17,6 +17,7 @@ import com.springbootecommerce.shophappens.ordering.domain.model.OrderItem;
 import com.springbootecommerce.shophappens.ordering.domain.model.OrderNumber;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -229,12 +230,14 @@ class OrderRepositoryAdapterIT extends AbstractIntegrationTest {
                 customer,
                 List.of(
                         new OrderItem(
+                                new ProductVariantId(701L),
                                 new ProductId(7L),
                                 "ELEC-001",
                                 "Headphones",
                                 new Money(new BigDecimal("19.99")),
                                 2),
                         new OrderItem(
+                                new ProductVariantId(901L),
                                 new ProductId(9L),
                                 "TOY-003",
                                 "Building Blocks",

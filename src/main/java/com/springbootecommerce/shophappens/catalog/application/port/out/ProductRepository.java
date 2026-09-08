@@ -15,10 +15,6 @@ import java.util.Optional;
 public interface ProductRepository {
     Optional<Product> findById(ProductId id);
 
-    Optional<Product> findForPurchase(ProductId id);
-
-    Optional<Product> findForPurchase(ProductVariantId id);
-
     List<Product> findAllForPurchase(List<ProductVariantId> ids);
 
     Optional<Product> findActiveById(ProductId id);

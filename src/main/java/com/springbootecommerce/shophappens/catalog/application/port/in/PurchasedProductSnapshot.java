@@ -10,11 +10,6 @@ public record PurchasedProductSnapshot(
         String name,
         Money unitPrice,
         int quantity) {
-    public PurchasedProductSnapshot(
-            ProductReference product, String sku, String name, Money unitPrice, int quantity) {
-        this(null, product, sku, name, unitPrice, quantity);
-    }
-
     public Money lineTotal() {
         return unitPrice.multiply(quantity);
     }

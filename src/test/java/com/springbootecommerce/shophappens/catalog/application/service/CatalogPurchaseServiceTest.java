@@ -9,7 +9,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PublishedInsufficientStockException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PublishedProductUnavailableException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PurchaseLine;
@@ -47,21 +46,22 @@ class CatalogPurchaseServiceTest {
         Product eight =
                 restoredProduct(8L, "MAGI-006", "Staff of Dependency Injection", "89.99", 5);
         when(products.findAllForPurchase(
-                        List.of(new ProductVariantId(7L), new ProductVariantId(8L))))
+                        List.of(new ProductVariantId(701L), new ProductVariantId(801L))))
                 .thenReturn(List.of(seven, eight));
 
         List<PurchasedProductSnapshot> result =
                 service.purchase(
                         List.of(
-                                new PurchaseLine(new ProductReference(8L), 1),
-                                new PurchaseLine(new ProductReference(7L), 2)));
+                                new PurchaseLine(new ProductVariantId(801L), 1),
+                                new PurchaseLine(new ProductVariantId(701L), 2)));
 
         assertThat(result)
                 .extracting(snapshot -> snapshot.product().value())
                 .containsExactly(7L, 8L);
         InOrder order = inOrder(products);
         order.verify(products)
-                .findAllForPurchase(List.of(new ProductVariantId(7L), new ProductVariantId(8L)));
+                .findAllForPurchase(
+                        List.of(new ProductVariantId(701L), new ProductVariantId(801L)));
         order.verify(products).save(seven);
         order.verify(products).save(eight);
         verify(products, never()).findById(any(ProductId.class));
@@ -70,11 +70,11 @@ class CatalogPurchaseServiceTest {
     @Test
     void purchaseReturnsSnapshotsWithSkuNameUnitPriceQuantityAndLineTotal() {
         Product product = restoredProduct(7L, "WEAP-002", "Rubber Duck of Debugging", "18.99", 10);
-        when(products.findAllForPurchase(List.of(new ProductVariantId(7L))))
+        when(products.findAllForPurchase(List.of(new ProductVariantId(701L))))
                 .thenReturn(List.of(product));
 
         List<PurchasedProductSnapshot> result =
-                service.purchase(List.of(new PurchaseLine(new ProductReference(7L), 3)));
+                service.purchase(List.of(new PurchaseLine(new ProductVariantId(701L), 3)));
 
         assertThat(result).hasSize(1);
         PurchasedProductSnapshot snapshot = result.get(0);
@@ -88,13 +88,13 @@ class CatalogPurchaseServiceTest {
 
     @Test
     void purchaseThrowsProductUnavailableWhenProductMissing() {
-        when(products.findAllForPurchase(List.of(new ProductVariantId(7L))))
+        when(products.findAllForPurchase(List.of(new ProductVariantId(701L))))
                 .thenThrow(new PublishedProductUnavailableException(null, null));
 
         assertThatThrownBy(
                         () ->
                                 service.purchase(
-                                        List.of(new PurchaseLine(new ProductReference(7L), 1))))
+                                        List.of(new PurchaseLine(new ProductVariantId(701L), 1))))
                 .isInstanceOf(PublishedProductUnavailableException.class);
         verify(products, never()).save(any());
     }
@@ -103,13 +103,13 @@ class CatalogPurchaseServiceTest {
     void purchaseThrowsPublishedProductUnavailableWhenProductInactive() {
         Product product = restoredProduct(7L, "WEAP-002", "Rubber Duck of Debugging", "18.99", 5);
         product.deactivate();
-        when(products.findAllForPurchase(List.of(new ProductVariantId(7L))))
+        when(products.findAllForPurchase(List.of(new ProductVariantId(701L))))
                 .thenReturn(List.of(product));
 
         assertThatThrownBy(
                         () ->
                                 service.purchase(
-                                        List.of(new PurchaseLine(new ProductReference(7L), 1))))
+                                        List.of(new PurchaseLine(new ProductVariantId(701L), 1))))
                 .isInstanceOf(PublishedProductUnavailableException.class);
         verify(products, never()).save(any());
     }
@@ -117,13 +117,13 @@ class CatalogPurchaseServiceTest {
     @Test
     void purchaseThrowsInsufficientStockWhenStockTooLow() {
         Product product = restoredProduct(7L, "WEAP-002", "Rubber Duck of Debugging", "18.99", 1);
-        when(products.findAllForPurchase(List.of(new ProductVariantId(7L))))
+        when(products.findAllForPurchase(List.of(new ProductVariantId(701L))))
                 .thenReturn(List.of(product));
 
         assertThatThrownBy(
                         () ->
                                 service.purchase(
-                                        List.of(new PurchaseLine(new ProductReference(7L), 5))))
+                                        List.of(new PurchaseLine(new ProductVariantId(701L), 5))))
                 .isInstanceOf(PublishedInsufficientStockException.class);
         verify(products, never()).save(any());
     }
@@ -134,15 +134,15 @@ class CatalogPurchaseServiceTest {
         Product eight =
                 restoredProduct(8L, "MAGI-006", "Staff of Dependency Injection", "89.99", 0);
         when(products.findAllForPurchase(
-                        List.of(new ProductVariantId(7L), new ProductVariantId(8L))))
+                        List.of(new ProductVariantId(701L), new ProductVariantId(801L))))
                 .thenReturn(List.of(seven, eight));
 
         assertThatThrownBy(
                         () ->
                                 service.purchase(
                                         List.of(
-                                                new PurchaseLine(new ProductReference(7L), 1),
-                                                new PurchaseLine(new ProductReference(8L), 1))))
+                                                new PurchaseLine(new ProductVariantId(701L), 1),
+                                                new PurchaseLine(new ProductVariantId(801L), 1))))
                 .isInstanceOf(PublishedInsufficientStockException.class);
 
         verify(products, never()).save(any());
@@ -194,10 +194,9 @@ class CatalogPurchaseServiceTest {
                         () ->
                                 service.purchase(
                                         List.of(
-                                                new PurchaseLine(new ProductReference(7L), 1),
-                                                new PurchaseLine(new ProductReference(7L), 2))))
+                                                new PurchaseLine(new ProductVariantId(701L), 1),
+                                                new PurchaseLine(new ProductVariantId(701L), 2))))
                 .isInstanceOf(IllegalArgumentException.class);
-        verify(products, never()).findForPurchase(any(ProductId.class));
         verify(products, never()).findAllForPurchase(any());
         verify(products, never()).findById(any(ProductId.class));
         verify(products, never()).save(any());
@@ -212,7 +211,7 @@ class CatalogPurchaseServiceTest {
                 Set.of(),
                 List.of(
                         ProductVariant.restore(
-                                new ProductVariantId(id),
+                                new ProductVariantId(id * 100 + 1),
                                 new Sku(sku),
                                 new Money(new BigDecimal(price)),
                                 stock,

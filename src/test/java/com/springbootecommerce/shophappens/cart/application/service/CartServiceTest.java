@@ -18,7 +18,6 @@ import com.springbootecommerce.shophappens.cart.domain.model.CartOwner;
 import com.springbootecommerce.shophappens.cart.domain.model.GuestCartId;
 import com.springbootecommerce.shophappens.cart.domain.model.Quantity;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
-import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -39,7 +38,8 @@ class CartServiceTest {
         Cart cart = cartWith(guestId, 5);
         when(guests.find(guestId)).thenReturn(Optional.of(cart));
 
-        service.changeQuantity(new GuestCartReference(guestId.value()), new ProductId(7L), 2);
+        service.changeQuantity(
+                new GuestCartReference(guestId.value()), new ProductVariantId(701L), 2);
 
         verify(guests).save(cart);
     }
@@ -102,7 +102,8 @@ class CartServiceTest {
         GuestCartId guestId = GuestCartId.random();
         when(guests.find(guestId)).thenReturn(Optional.empty());
 
-        service.changeQuantity(new GuestCartReference(guestId.value()), new ProductId(7L), 2);
+        service.changeQuantity(
+                new GuestCartReference(guestId.value()), new ProductVariantId(701L), 2);
 
         verify(guests)
                 .save(
@@ -111,7 +112,7 @@ class CartServiceTest {
                                         c.items().stream()
                                                 .anyMatch(
                                                         item ->
-                                                                item.productId().value() == 7L
+                                                                item.variantId().value() == 701L
                                                                         && item.quantity().value()
                                                                                 == 2)));
     }
@@ -122,7 +123,7 @@ class CartServiceTest {
         Cart cart = Cart.empty(CartId.random(), new CartOwner.Customer(customerId));
         when(customers.findOrCreate(customerId)).thenReturn(cart);
 
-        service.changeQuantity(new CustomerId(42L), new ProductId(7L), 3);
+        service.changeQuantity(new CustomerId(42L), new ProductVariantId(701L), 3);
 
         verify(customers).save(cart);
     }
@@ -131,8 +132,8 @@ class CartServiceTest {
     void guestSnapshotMapsGuestItems() {
         GuestCartId guestId = GuestCartId.random();
         Cart cart = cartWith(guestId, 0);
-        cart.changeQuantity(new ProductId(7L), new Quantity(2));
-        cart.changeQuantity(new ProductId(8L), new Quantity(1));
+        cart.changeQuantity(new ProductVariantId(701L), new Quantity(2));
+        cart.changeQuantity(new ProductVariantId(801L), new Quantity(1));
         when(guests.find(guestId)).thenReturn(Optional.of(cart));
         GuestCartReference reference = new GuestCartReference(guestId.value());
 
@@ -140,8 +141,8 @@ class CartServiceTest {
 
         assertThat(snapshot.guest()).isEqualTo(reference);
         assertThat(snapshot.items())
-                .extracting(item -> item.product().value())
-                .containsExactly(7L, 8L);
+                .extracting(item -> item.variant().value())
+                .containsExactly(701L, 801L);
         assertThat(snapshot.items()).extracting(item -> item.quantity()).containsExactly(2, 1);
     }
 
@@ -149,13 +150,15 @@ class CartServiceTest {
     void customerSnapshotMapsCustomerAndItems() {
         CustomerId customerId = new CustomerId(42L);
         Cart cart = Cart.empty(CartId.random(), new CartOwner.Customer(customerId));
-        cart.changeQuantity(new ProductId(7L), new Quantity(4));
+        cart.changeQuantity(new ProductVariantId(701L), new Quantity(4));
         when(customers.find(customerId)).thenReturn(Optional.of(cart));
 
         CustomerCartSnapshot snapshot = service.getSnapshot(new CustomerId(42L));
 
         assertThat(snapshot.customer().value()).isEqualTo(42L);
-        assertThat(snapshot.items()).extracting(item -> item.product().value()).containsExactly(7L);
+        assertThat(snapshot.items())
+                .extracting(item -> item.variant().value())
+                .containsExactly(701L);
         assertThat(snapshot.empty()).isFalse();
     }
 

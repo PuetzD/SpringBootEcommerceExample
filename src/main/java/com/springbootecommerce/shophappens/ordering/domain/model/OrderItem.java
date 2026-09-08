@@ -12,17 +12,6 @@ public record OrderItem(
         String productName,
         Money unitPrice,
         int quantity) {
-    public OrderItem(
-            ProductId productId, String sku, String productName, Money unitPrice, int quantity) {
-        this(
-                new ProductVariantId(productId.value()),
-                productId,
-                sku,
-                productName,
-                unitPrice,
-                quantity);
-    }
-
     public OrderItem {
         Objects.requireNonNull(variantId);
         Objects.requireNonNull(productId);

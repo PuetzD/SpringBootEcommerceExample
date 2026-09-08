@@ -10,9 +10,4 @@ public record PurchasedProduct(
         String sku,
         String name,
         Money unitPrice,
-        int quantity) {
-    public PurchasedProduct(
-            ProductId productId, String sku, String name, Money unitPrice, int quantity) {
-        this(new ProductVariantId(productId.value()), productId, sku, name, unitPrice, quantity);
-    }
-}
+        int quantity) {}

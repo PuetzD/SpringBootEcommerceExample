@@ -49,19 +49,6 @@ class ProductRepositoryAdapter implements ProductRepository {
     }
 
     @Override
-    @Transactional
-    public Optional<Product> findForPurchase(ProductId id) {
-        return springData.findForPurchaseById(id.value()).map(mapper::toDomain);
-    }
-
-    @Override
-    @Transactional
-    public Optional<Product> findForPurchase(ProductVariantId id) {
-        springData.lockVariantForPurchase(id.value());
-        return springData.findForPurchaseByVariantId(id.value()).map(mapper::toDomain);
-    }
-
-    @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public List<Product> findAllForPurchase(List<ProductVariantId> ids) {
         if (ids.isEmpty()) return List.of();

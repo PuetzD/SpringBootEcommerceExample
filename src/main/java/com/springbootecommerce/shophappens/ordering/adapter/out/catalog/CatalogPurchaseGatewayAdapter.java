@@ -36,11 +36,7 @@ public class CatalogPurchaseGatewayAdapter implements CatalogPurchaseGateway {
                 .map(
                         s ->
                                 new PurchasedProduct(
-                                        s.variant() == null
-                                                ? new com.springbootecommerce.shophappens
-                                                        .sharedkernel.identity.ProductVariantId(
-                                                        s.product().value())
-                                                : s.variant(),
+                                        s.variant(),
                                         new com.springbootecommerce.shophappens.sharedkernel
                                                 .identity.ProductId(s.product().value()),
                                         s.sku(),
@@ -60,13 +56,7 @@ public class CatalogPurchaseGatewayAdapter implements CatalogPurchaseGateway {
         Map<Long, Integer> purchasedByProduct =
                 byProduct(
                         purchased.stream()
-                                .map(
-                                        s ->
-                                                Map.entry(
-                                                        s.variant() == null
-                                                                ? s.product().value()
-                                                                : s.variant().value(),
-                                                        s.quantity()))
+                                .map(s -> Map.entry(s.variant().value(), s.quantity()))
                                 .toList());
         if (!requestedByProduct.equals(purchasedByProduct)) {
             throw new IllegalArgumentException("Catalog returned products that were not requested");

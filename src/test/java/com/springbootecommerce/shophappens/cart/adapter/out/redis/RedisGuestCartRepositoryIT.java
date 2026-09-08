@@ -9,7 +9,7 @@ import com.springbootecommerce.shophappens.cart.domain.model.CartOwner;
 import com.springbootecommerce.shophappens.cart.domain.model.GuestCartId;
 import com.springbootecommerce.shophappens.cart.domain.model.Quantity;
 import com.springbootecommerce.shophappens.integration.AbstractIntegrationTest;
-import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +23,7 @@ class RedisGuestCartRepositoryIT extends AbstractIntegrationTest {
     void savesLoadsAndRefreshesThirtyMinuteGuestCart() {
         GuestCartId id = GuestCartId.random();
         Cart cart = Cart.empty(CartId.random(), new CartOwner.Guest(id));
-        cart.changeQuantity(new ProductId(7L), new Quantity(2));
+        cart.changeQuantity(new ProductVariantId(701L), new Quantity(2));
 
         Cart saved = repository.save(cart);
         Cart restored = repository.find(id).orElseThrow();

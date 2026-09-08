@@ -16,7 +16,6 @@ import com.springbootecommerce.shophappens.cart.domain.model.CartOwner;
 import com.springbootecommerce.shophappens.cart.domain.model.GuestCartId;
 import com.springbootecommerce.shophappens.cart.domain.model.Quantity;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
-import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -33,14 +32,6 @@ public class CartService
                 ClearCustomerCartUseCase {
     private final GuestCartRepository guests;
     private final CustomerCartRepository customers;
-
-    public void changeQuantity(GuestCartReference guest, ProductId product, int quantity) {
-        changeQuantity(guest, new ProductVariantId(product.value()), quantity);
-    }
-
-    public void changeQuantity(CustomerId customer, ProductId product, int quantity) {
-        changeQuantity(customer, new ProductVariantId(product.value()), quantity);
-    }
 
     @Override
     public void add(GuestCartReference guest, ProductVariantId variant, int quantity) {

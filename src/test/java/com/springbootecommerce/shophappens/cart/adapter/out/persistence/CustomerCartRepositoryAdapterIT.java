@@ -10,7 +10,7 @@ import com.springbootecommerce.shophappens.cart.domain.model.CartOwner;
 import com.springbootecommerce.shophappens.cart.domain.model.Quantity;
 import com.springbootecommerce.shophappens.integration.AbstractIntegrationTest;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
-import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -20,14 +20,14 @@ class CustomerCartRepositoryAdapterIT extends AbstractIntegrationTest {
     @Test
     void savesOneCartPerCustomerAndRestoresItems() {
         Cart cart = Cart.empty(CartId.random(), new CartOwner.Customer(new CustomerId(42L)));
-        cart.changeQuantity(new ProductId(7L), new Quantity(2));
+        cart.changeQuantity(new ProductVariantId(701L), new Quantity(2));
 
         Cart saved = repository.save(cart);
         Cart restored = repository.find(new CustomerId(42L)).orElseThrow();
 
         assertThat(restored.id()).isEqualTo(saved.id());
         assertThat(restored.items())
-                .containsExactly(new CartItem(new ProductId(7L), new Quantity(2)));
+                .containsExactly(new CartItem(new ProductVariantId(701L), new Quantity(2)));
     }
 
     @Test
@@ -45,7 +45,7 @@ class CustomerCartRepositoryAdapterIT extends AbstractIntegrationTest {
     void clearRemovesTheCustomersCart() {
         CustomerId customer = new CustomerId(77L);
         Cart cart = repository.findOrCreate(customer);
-        cart.changeQuantity(new ProductId(7L), new Quantity(1));
+        cart.changeQuantity(new ProductVariantId(701L), new Quantity(1));
         repository.save(cart);
 
         repository.clear(customer);
@@ -57,17 +57,17 @@ class CustomerCartRepositoryAdapterIT extends AbstractIntegrationTest {
     void saveOverwritesTheCustomersExistingCart() {
         CustomerId customer = new CustomerId(55L);
         Cart cart = repository.findOrCreate(customer);
-        cart.changeQuantity(new ProductId(7L), new Quantity(1));
+        cart.changeQuantity(new ProductVariantId(701L), new Quantity(1));
         repository.save(cart);
 
         Cart updated = repository.findOrCreate(customer);
-        updated.remove(new ProductId(7L));
-        updated.changeQuantity(new ProductId(8L), new Quantity(3));
+        updated.remove(new ProductVariantId(701L));
+        updated.changeQuantity(new ProductVariantId(801L), new Quantity(3));
         repository.save(updated);
 
         Cart restored = repository.find(customer).orElseThrow();
         assertThat(restored.id()).isEqualTo(cart.id());
         assertThat(restored.items())
-                .containsExactly(new CartItem(new ProductId(8L), new Quantity(3)));
+                .containsExactly(new CartItem(new ProductVariantId(801L), new Quantity(3)));
     }
 }

@@ -19,7 +19,7 @@ import com.springbootecommerce.shophappens.customer.application.port.in.Customer
 import com.springbootecommerce.shophappens.integration.AbstractIntegrationTest;
 import com.springbootecommerce.shophappens.security.service.CartMergingAuthenticationSuccessHandler;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
-import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,7 +37,7 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 @Import(GuestCartMergeRecoveryIT.GuestCartStoreConfiguration.class)
 class GuestCartMergeRecoveryIT extends AbstractIntegrationTest {
     private static final CustomerReference CUSTOMER = new CustomerReference(9_000_001L);
-    private static final ProductId PRODUCT = new ProductId(9_000_001L);
+    private static final ProductVariantId VARIANT = new ProductVariantId(9_000_001L);
 
     @Autowired MergeGuestCartUseCase mergeGuestCart;
     @Autowired CustomerCartQuery customerCarts;
@@ -68,7 +68,7 @@ class GuestCartMergeRecoveryIT extends AbstractIntegrationTest {
                 .singleElement()
                 .satisfies(
                         item -> {
-                            assertThat(item.product()).isEqualTo(new ProductId(PRODUCT.value()));
+                            assertThat(item.variant()).isEqualTo(VARIANT);
                             assertThat(item.quantity()).isEqualTo(3);
                         });
 
@@ -97,7 +97,7 @@ class GuestCartMergeRecoveryIT extends AbstractIntegrationTest {
 
     private static Cart guestCart(GuestCartId guestId, int quantity) {
         Cart cart = Cart.empty(CartId.random(), new CartOwner.Guest(guestId));
-        cart.changeQuantity(PRODUCT, new Quantity(quantity));
+        cart.changeQuantity(VARIANT, new Quantity(quantity));
         return cart;
     }
 

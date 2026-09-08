@@ -8,6 +8,7 @@ import com.springbootecommerce.shophappens.catalog.domain.model.Product;
 import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
 import com.springbootecommerce.shophappens.integration.AbstractIntegrationTest;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
 import java.util.Comparator;
@@ -16,6 +17,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
 class ProductRepositoryAdapterIT extends AbstractIntegrationTest {
     @Autowired ProductRepository products;
@@ -71,11 +73,13 @@ class ProductRepositoryAdapterIT extends AbstractIntegrationTest {
     }
 
     @Test
-    void findForPurchaseLocksAndRestoresDetailedAggregateWithinAdapterTransaction() {
+    @Transactional
+    void findAllForPurchaseLocksAndRestoresDetailedAggregate() {
         Product seeded =
                 seedProduct("FIX-LOCK", "Concurrency Staff", new Money(new BigDecimal("79.99")), 1);
+        ProductVariantId variant = seeded.defaultVariant().id().orElseThrow();
 
-        Product product = products.findForPurchase(seeded.id().orElseThrow()).orElseThrow();
+        Product product = products.findAllForPurchase(List.of(variant)).getFirst();
 
         assertThat(product.id()).contains(new ProductId(seeded.id().orElseThrow().value()));
         assertThat(product.categoryIds()).containsExactlyElementsOf(seeded.categoryIds());

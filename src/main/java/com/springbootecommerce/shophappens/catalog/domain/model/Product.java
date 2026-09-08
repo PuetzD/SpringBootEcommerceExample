@@ -60,25 +60,6 @@ public final class Product {
 
     public static Product restore(
             ProductId id,
-            Sku sku,
-            String name,
-            String description,
-            Money price,
-            int stockQuantity,
-            String imageUrl,
-            boolean active,
-            Set<CategoryId> categoryIds) {
-        return new Product(
-                Objects.requireNonNull(id),
-                name,
-                description,
-                active,
-                categoryIds,
-                List.of(ProductVariant.create(sku, price, stockQuantity, imageUrl, active, true)));
-    }
-
-    public static Product restore(
-            ProductId id,
             String name,
             String description,
             boolean active,
@@ -211,24 +192,14 @@ public final class Product {
     }
 
     public PurchasedFacts purchase(int quantity) {
-        if (quantity < 1) throw new IllegalArgumentException("Quantity must be positive");
         ProductVariant variant = defaultVariant();
-        if (variant.id().isPresent()) {
-            return purchase(variant.id().orElseThrow(), quantity);
-        }
-        if (!active || !variant.active()) throw new ProductUnavailableException(id, variant.sku());
-        if (variant.stockQuantity() < quantity) {
-            throw new InsufficientStockException(
-                    id, variant.sku(), quantity, variant.stockQuantity());
-        }
-        variant.setStockQuantity(variant.stockQuantity() - quantity);
-        return new PurchasedFacts(
-                id == null ? null : new ProductVariantId(id.value()),
-                id,
-                variant.sku(),
-                name,
-                variant.price(),
-                quantity);
+        ProductVariantId variantId =
+                variant.id()
+                        .orElseThrow(
+                                () ->
+                                        new IllegalStateException(
+                                                "Product must be persisted before purchase"));
+        return purchase(variantId, quantity);
     }
 
     public PurchasedFacts purchase(ProductVariantId variantId, int quantity) {

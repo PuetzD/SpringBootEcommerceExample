@@ -60,6 +60,8 @@ class CatalogPurchaseGatewayAdapterTest {
     void mapsSuccessfulSnapshotWithoutChangingPurchaseFacts() {
         var snapshot =
                 new PurchasedProductSnapshot(
+                        new com.springbootecommerce.shophappens.sharedkernel.identity
+                                .ProductVariantId(701L),
                         new ProductReference(7L),
                         "WEAP-002",
                         "Rubber Duck of Debugging",
@@ -70,6 +72,8 @@ class CatalogPurchaseGatewayAdapterTest {
         assertThat(adapter.purchase(List.of(requested(7L, 2))))
                 .containsExactly(
                         new PurchasedProduct(
+                                new com.springbootecommerce.shophappens.sharedkernel.identity
+                                        .ProductVariantId(701L),
                                 new ProductId(7L),
                                 "WEAP-002",
                                 "Rubber Duck of Debugging",
@@ -78,10 +82,16 @@ class CatalogPurchaseGatewayAdapterTest {
     }
 
     private static RequestedProduct requested(long productId, int quantity) {
-        return new RequestedProduct(new ProductId(productId), quantity);
+        return new RequestedProduct(
+                new com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId(
+                        productId * 100 + 1),
+                quantity);
     }
 
     private static PurchaseLine line(long productId, int quantity) {
-        return new PurchaseLine(new ProductReference(productId), quantity);
+        return new PurchaseLine(
+                new com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId(
+                        productId * 100 + 1),
+                quantity);
     }
 }

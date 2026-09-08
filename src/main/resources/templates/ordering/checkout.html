@@ -16,7 +16,7 @@
         <h2 class="text-lg font-semibold mb-3">Items</h2>
         <ul class="list bg-base-100 rounded-box shadow-sm">
           <li th:each="item : ${checkout.items()}" class="list-row">
-            <span>Product <span th:text="${item.product().value()}">1</span></span>
+            <span>Variant <span th:text="${item.variant().value()}">1</span></span>
             <span>Quantity <span th:text="${item.quantity()}">1</span></span>
           </li>
         </ul>

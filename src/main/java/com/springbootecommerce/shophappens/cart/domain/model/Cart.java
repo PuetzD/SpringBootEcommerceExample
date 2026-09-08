@@ -1,7 +1,6 @@
 package com.springbootecommerce.shophappens.cart.domain.model;
 
 import com.springbootecommerce.shophappens.cart.domain.exception.CartItemNotFoundException;
-import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import java.util.List;
 import java.util.TreeMap;
@@ -53,18 +52,10 @@ public final class Cart {
         items.put(variantId.value(), new CartItem(variantId, result));
     }
 
-    public void changeQuantity(ProductId productId, Quantity quantity) {
-        changeQuantity(new ProductVariantId(productId.value()), quantity);
-    }
-
     public void remove(ProductVariantId variantId) {
         if (items.remove(variantId.value()) == null) {
             throw new CartItemNotFoundException(variantId);
         }
-    }
-
-    public void remove(ProductId productId) {
-        remove(new ProductVariantId(productId.value()));
     }
 
     public void clear() {
