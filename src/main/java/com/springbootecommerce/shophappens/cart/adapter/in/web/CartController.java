@@ -5,7 +5,6 @@ import com.springbootecommerce.shophappens.cart.application.port.in.CustomerCart
 import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartSnapshot;
 import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartUseCase;
 import com.springbootecommerce.shophappens.catalog.application.port.in.BrowseCatalogUseCase;
-import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductSummary;
 import com.springbootecommerce.shophappens.customer.application.port.in.CurrentCustomerIdentity;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
@@ -56,14 +55,18 @@ public class CartController {
                 items.stream()
                         .map(
                                 item ->
-                                        catalog.findActiveByVariantId(item.variant())
-                                                .map(p -> new CartLine(item, p)))
-                        .flatMap(Optional::stream)
+                                        new CartLine(
+                                                item,
+                                                catalog.findActiveByVariantId(item.variant())
+                                                        .orElse(null)))
                         .toList();
 
         addSeo(model);
         model.addAttribute("lines", lines);
-        model.addAttribute("cartEmpty", lines.isEmpty());
+        model.addAttribute("cartEmpty", items.isEmpty());
+        model.addAttribute(
+                "checkoutAllowed",
+                !items.isEmpty() && lines.stream().allMatch(CartLine::available));
         model.addAttribute("customer", customer.orElse(null));
         return "cart/detail";
     }
@@ -71,10 +74,33 @@ public class CartController {
     @PostMapping("/items")
     public String addItem(
             HttpSession session,
-            @RequestParam("product") long productId,
+            @RequestParam("variant") long variantId,
             @RequestParam("quantity") String rawQuantity) {
         int quantity = parseQuantity(rawQuantity);
-        ProductVariantId variant = resolveDefaultVariant(productId);
+        ProductVariantId variant = requireVariantId(variantId);
+        if (catalog.findActiveByVariantId(variant).isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        Optional<CustomerReference> customer = currentCustomer.current();
+        try {
+            if (customer.isPresent()) {
+                customerCart.add(new CustomerId(customer.get().value()), variant, quantity);
+            } else {
+                guestCart.add(guestSessions.getOrCreate(session), variant, quantity);
+            }
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+        }
+        return "redirect:/cart";
+    }
+
+    @PostMapping("/items/{variantId}/quantity")
+    public String changeQuantity(
+            HttpSession session,
+            @PathVariable long variantId,
+            @RequestParam("quantity") String rawQuantity) {
+        ProductVariantId variant = requireVariantId(variantId);
+        int quantity = parseQuantity(rawQuantity);
         Optional<CustomerReference> customer = currentCustomer.current();
         if (customer.isPresent()) {
             customerCart.changeQuantity(new CustomerId(customer.get().value()), variant, quantity);
@@ -84,9 +110,9 @@ public class CartController {
         return "redirect:/cart";
     }
 
-    @PostMapping("/items/{productId}/remove")
-    public String remove(HttpSession session, @PathVariable long productId) {
-        ProductVariantId variant = resolveDefaultVariant(productId);
+    @PostMapping("/items/{variantId}/remove")
+    public String remove(HttpSession session, @PathVariable long variantId) {
+        ProductVariantId variant = requireVariantId(variantId);
         Optional<CustomerReference> customer = currentCustomer.current();
         if (customer.isPresent()) {
             customerCart.remove(new CustomerId(customer.get().value()), variant);
@@ -96,11 +122,12 @@ public class CartController {
         return "redirect:/cart";
     }
 
-    private ProductVariantId resolveDefaultVariant(long productId) {
-        return catalog.findActiveById(new ProductReference(productId))
-                .map(ProductSummary::variant)
-                .filter(java.util.Objects::nonNull)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    private static ProductVariantId requireVariantId(long value) {
+        if (value < 1) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Variant ID must be positive");
+        }
+        return new ProductVariantId(value);
     }
 
     private static int parseQuantity(String rawQuantity) {
@@ -129,5 +156,9 @@ public class CartController {
         model.addAttribute("canonicalUrl", canonicalUrlFactory.forPath(seo.canonicalPath()));
     }
 
-    public record CartLine(CartItemSnapshot item, ProductSummary product) {}
+    public record CartLine(CartItemSnapshot item, ProductSummary product) {
+        public boolean available() {
+            return product != null;
+        }
+    }
 }

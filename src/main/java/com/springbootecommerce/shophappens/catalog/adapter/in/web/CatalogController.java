@@ -11,6 +11,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
 @Controller
@@ -34,15 +35,32 @@ public class CatalogController {
     }
 
     @GetMapping("/products/{sku}")
-    public String detail(@PathVariable String sku, Model model) {
-        var product =
+    public String detail(
+            @PathVariable String sku, @RequestParam(required = false) Long variant, Model model) {
+        var family =
                 catalog.findActiveBySku(sku)
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        var variants = catalog.findActiveVariants(family.product());
+        var product =
+                variant == null
+                        ? variants.stream()
+                                .filter(candidate -> candidate.variant().equals(family.variant()))
+                                .findFirst()
+                                .or(() -> variants.stream().findFirst())
+                                .orElse(family)
+                        : variants.stream()
+                                .filter(candidate -> candidate.variant().value() == variant)
+                                .findFirst()
+                                .orElseThrow(
+                                        () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         var path = "/catalog/products/" + sku;
         var seo = new SeoMetadata(product.name(), product.description(), path, "index,follow");
         model.addAttribute("seo", seo);
         model.addAttribute("canonicalUrl", canonicalUrlFactory.forPath(seo.canonicalPath()));
         model.addAttribute("product", product);
+        model.addAttribute("variants", variants);
+        model.addAttribute("variantAvailable", variants.contains(product));
+        model.addAttribute("navigationSku", sku);
         return "catalog/detail";
     }
 

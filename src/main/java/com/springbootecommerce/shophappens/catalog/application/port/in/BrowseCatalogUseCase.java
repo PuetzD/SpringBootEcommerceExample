@@ -13,5 +13,7 @@ public interface BrowseCatalogUseCase {
 
     Optional<ProductSummary> findActiveByVariantId(ProductVariantId variant);
 
+    List<ProductSummary> findActiveVariants(ProductReference product);
+
     Optional<ProductSummary> findActiveBySku(String sku);
 }

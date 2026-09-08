@@ -4,6 +4,8 @@ import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 
 public interface CustomerCartUseCase {
+    void add(CustomerId customer, ProductVariantId variant, int quantity);
+
     void changeQuantity(CustomerId customer, ProductVariantId variant, int quantity);
 
     void remove(CustomerId customer, ProductVariantId variant);

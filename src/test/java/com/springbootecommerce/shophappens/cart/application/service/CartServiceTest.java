@@ -1,7 +1,9 @@
 package com.springbootecommerce.shophappens.cart.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -17,6 +19,7 @@ import com.springbootecommerce.shophappens.cart.domain.model.GuestCartId;
 import com.springbootecommerce.shophappens.cart.domain.model.Quantity;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,6 +42,59 @@ class CartServiceTest {
         service.changeQuantity(new GuestCartReference(guestId.value()), new ProductId(7L), 2);
 
         verify(guests).save(cart);
+    }
+
+    @Test
+    void guestAddIncrementsWhileChangeQuantityReplaces() {
+        GuestCartId guestId = GuestCartId.random();
+        var variant = new ProductVariantId(202);
+        Cart cart = cartWith(guestId, 5);
+        cart.changeQuantity(variant, new Quantity(5));
+        when(guests.find(guestId)).thenReturn(Optional.of(cart));
+        var reference = new GuestCartReference(guestId.value());
+
+        service.add(reference, variant, 1);
+
+        assertThat(cart.items())
+                .singleElement()
+                .satisfies(item -> assertThat(item.quantity().value()).isEqualTo(6));
+        service.changeQuantity(reference, variant, 1);
+        assertThat(cart.items())
+                .singleElement()
+                .satisfies(item -> assertThat(item.quantity().value()).isEqualTo(1));
+    }
+
+    @Test
+    void customerAddIncrementsExistingVariant() {
+        CustomerId customerId = new CustomerId(42L);
+        var variant = new ProductVariantId(202);
+        Cart cart = Cart.empty(CartId.random(), new CartOwner.Customer(customerId));
+        cart.changeQuantity(variant, new Quantity(2));
+        when(customers.findOrCreate(customerId)).thenReturn(cart);
+
+        service.add(customerId, variant, 3);
+
+        assertThat(cart.items())
+                .singleElement()
+                .satisfies(item -> assertThat(item.quantity().value()).isEqualTo(5));
+        verify(customers).save(cart);
+    }
+
+    @Test
+    void guestAddOverflowLeavesCartUnchangedAndDoesNotSave() {
+        GuestCartId guestId = GuestCartId.random();
+        var variant = new ProductVariantId(202);
+        Cart cart = cartWith(guestId, 5);
+        cart.changeQuantity(variant, new Quantity(999));
+        when(guests.find(guestId)).thenReturn(Optional.of(cart));
+
+        assertThatThrownBy(() -> service.add(new GuestCartReference(guestId.value()), variant, 1))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        assertThat(cart.items())
+                .singleElement()
+                .satisfies(item -> assertThat(item.quantity().value()).isEqualTo(999));
+        verify(guests, never()).save(cart);
     }
 
     @Test

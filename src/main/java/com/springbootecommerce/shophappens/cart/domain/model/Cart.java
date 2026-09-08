@@ -47,6 +47,12 @@ public final class Cart {
         items.put(variantId.value(), new CartItem(variantId, quantity));
     }
 
+    public void add(ProductVariantId variantId, Quantity added) {
+        CartItem current = items.get(variantId.value());
+        Quantity result = current == null ? added : current.quantity().add(added);
+        items.put(variantId.value(), new CartItem(variantId, result));
+    }
+
     public void changeQuantity(ProductId productId, Quantity quantity) {
         changeQuantity(new ProductVariantId(productId.value()), quantity);
     }

@@ -43,6 +43,24 @@ public class CartService
     }
 
     @Override
+    public void add(GuestCartReference guest, ProductVariantId variant, int quantity) {
+        GuestCartId guestId = new GuestCartId(guest.value());
+        Cart cart =
+                guests.find(guestId)
+                        .orElseGet(() -> Cart.empty(CartId.random(), new CartOwner.Guest(guestId)));
+        cart.add(variant, new Quantity(quantity));
+        guests.save(cart);
+    }
+
+    @Override
+    @Transactional
+    public void add(CustomerId customer, ProductVariantId variant, int quantity) {
+        Cart cart = customers.findOrCreate(customer);
+        cart.add(variant, new Quantity(quantity));
+        customers.save(cart);
+    }
+
+    @Override
     public void changeQuantity(GuestCartReference guest, ProductVariantId variant, int quantity) {
         GuestCartId guestId = new GuestCartId(guest.value());
         Cart cart =

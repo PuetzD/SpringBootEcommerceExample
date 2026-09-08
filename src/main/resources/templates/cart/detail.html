@@ -21,25 +21,30 @@
           <div class="card-body">
             <div class="flex justify-between items-start gap-4">
               <div>
-                <p class="font-semibold" th:text="${line.product().name()}">Product</p>
-                <p class="text-base-content/70" th:text="${#numbers.formatDecimal(line.product().price().amount(), 1, 2) + ' EUR'}">0.00 EUR</p>
+                <th:block th:if="${line.available()}">
+                  <p class="font-semibold" th:text="${line.product().name()}">Product</p>
+                  <p class="font-mono text-sm text-base-content/60" th:text="${line.product().sku()}">SKU</p>
+                  <p class="text-base-content/70" th:text="${#numbers.formatDecimal(line.product().price().amount(), 1, 2) + ' EUR'}">0.00 EUR</p>
+                </th:block>
+                <p th:unless="${line.available()}" class="font-semibold text-warning">This item is no longer available</p>
                 <p class="text-base-content/60">Quantity: <span th:text="${line.item().quantity()}">1</span></p>
               </div>
-              <form th:action="@{/cart/items/{id}/remove(id=${line.product().product().value()})}" method="post" class="flex items-start">
+              <form th:action="@{/cart/items/{id}/remove(id=${line.item().variant().value()})}" method="post" class="flex items-start">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                 <button type="submit" class="btn btn-sm btn-error btn-outline">Remove</button>
               </form>
             </div>
             <form
-                th:action="@{/cart/items}"
+                th:if="${line.available()}"
+                th:action="@{/cart/items/{id}/quantity(id=${line.item().variant().value()})}"
                 method="post"
                 class="mt-4 flex items-end gap-2">
               <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-              <input type="hidden" name="product" th:value="${line.product().product().value()}">
-              <label class="form-control">
+              <label class="form-control" th:for="${'quantity-' + line.item().variant().value()}">
                 <span class="label-text text-sm">Quantity</span>
                 <input
                     type="number"
+                    th:id="${'quantity-' + line.item().variant().value()}"
                     name="quantity"
                     min="1"
                     max="999"
@@ -57,7 +62,11 @@
         Your cart is empty.
       </p>
 
-        <p class="mt-8" th:if="${!cartEmpty and customer != null}">
+      <div th:if="${!cartEmpty and !checkoutAllowed}" role="alert" class="alert alert-warning mt-6">
+        Remove unavailable items before checkout.
+      </div>
+
+        <p class="mt-8" th:if="${checkoutAllowed and customer != null}">
           <a th:href="@{/checkout}" class="btn btn-primary">Checkout</a>
         </p>
     </div>

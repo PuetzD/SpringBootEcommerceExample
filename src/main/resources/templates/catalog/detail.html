@@ -28,13 +28,38 @@
       <div class="card-body">
         <div class="flex items-start justify-between gap-4">
           <h1 class="card-title text-3xl" th:text="${product.name()}">Product</h1>
-          <span class="badge badge-success badge-soft" th:if="${product.inStock()}">In stock</span>
-          <span class="badge badge-warning badge-soft" th:unless="${product.inStock()}">Out of stock</span>
+          <span class="badge badge-success badge-soft" th:if="${variantAvailable && product.inStock()}">In stock</span>
+          <span class="badge badge-warning badge-soft" th:if="${variantAvailable && !product.inStock()}">Out of stock</span>
         </div>
         <p class="text-base-content/70" th:text="${product.description()}">Description</p>
+        <p class="text-sm text-base-content/70">
+          SKU: <span class="font-mono" th:text="${product.sku()}">SKU</span>
+        </p>
         <p class="text-2xl font-semibold" th:text="${#numbers.formatDecimal(product.price().amount(), 1, 2) + ' EUR'}">0.00 EUR</p>
-        <form th:action="@{/cart/items}" method="post" class="mt-4 flex items-end gap-2">
-          <input type="hidden" name="product" th:value="${product.product().value()}">
+        <form
+            th:if="${!variants.isEmpty()}"
+            th:action="@{/catalog/products/{sku}(sku=${navigationSku})}"
+            method="get"
+            class="mt-4 flex flex-wrap items-end gap-2">
+          <label class="form-control" for="variant-selector">
+            <span class="label-text text-sm">Variant</span>
+            <select id="variant-selector" name="variant" class="select select-bordered select-sm">
+              <option
+                  th:each="variant : ${variants}"
+                  th:value="${variant.variant().value()}"
+                  th:selected="${variant.variant().equals(product.variant())}"
+                  th:text="${variant.sku() + ' — ' + #numbers.formatDecimal(variant.price().amount(), 1, 2) + ' EUR'}">
+                Variant
+              </option>
+            </select>
+          </label>
+          <button type="submit" class="btn btn-secondary btn-sm">Show variant</button>
+        </form>
+        <div th:unless="${variantAvailable}" role="alert" class="alert alert-warning mt-4">
+          This product currently has no available variants.
+        </div>
+        <form th:if="${variantAvailable}" th:action="@{/cart/items}" method="post" class="mt-4 flex items-end gap-2">
+          <input type="hidden" name="variant" th:value="${product.variant().value()}">
           <label class="form-control">
             <span class="label-text text-sm">Quantity</span>
             <input
