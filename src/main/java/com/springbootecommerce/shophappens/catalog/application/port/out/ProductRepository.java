@@ -19,6 +19,8 @@ public interface ProductRepository {
 
     Optional<Product> findForPurchase(ProductVariantId id);
 
+    List<Product> findAllForPurchase(List<ProductVariantId> ids);
+
     Optional<Product> findActiveById(ProductId id);
 
     Optional<Product> findActiveByVariantId(ProductVariantId id);
@@ -36,6 +38,8 @@ public interface ProductRepository {
     ProductAdminPage searchForAdministration(ProductAdminSearch search);
 
     Optional<VersionedProduct> findForAdministration(ProductId id);
+
+    Optional<VersionedProduct> findForAdministrationUpdate(ProductId id);
 
     Optional<ProductAdminView> findAdminViewById(ProductId id);
 

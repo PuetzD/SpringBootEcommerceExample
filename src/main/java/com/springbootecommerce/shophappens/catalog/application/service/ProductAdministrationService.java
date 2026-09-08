@@ -57,7 +57,7 @@ public class ProductAdministrationService implements ProductAdministrationUseCas
             ProductRevision expectedRevision,
             UpdateProductCommand command) {
         VersionedProduct loaded =
-                products.findForAdministration(new ProductId(reference.value()))
+                products.findForAdministrationUpdate(new ProductId(reference.value()))
                         .orElseThrow(() -> new ProductNotFoundException(reference));
         Product product = loaded.product();
         product.reviseDetails(
@@ -73,7 +73,7 @@ public class ProductAdministrationService implements ProductAdministrationUseCas
     @Transactional
     public void deactivateProduct(ProductReference reference, ProductRevision expectedRevision) {
         VersionedProduct loaded =
-                products.findForAdministration(new ProductId(reference.value()))
+                products.findForAdministrationUpdate(new ProductId(reference.value()))
                         .orElseThrow(() -> new ProductNotFoundException(reference));
         loaded.product().deactivate();
         products.updateForAdministration(loaded.product(), expectedRevision);
@@ -95,7 +95,7 @@ public class ProductAdministrationService implements ProductAdministrationUseCas
             ProductReference reference,
             ProductRevision expectedRevision,
             CreateProductVariantCommand command) {
-        VersionedProduct loaded = load(reference);
+        VersionedProduct loaded = loadForUpdate(reference);
         Product product = loaded.product();
         requireRevision(reference, expectedRevision, loaded.revision());
         product.addVariant(
@@ -118,7 +118,7 @@ public class ProductAdministrationService implements ProductAdministrationUseCas
             ProductVariantId variantId,
             ProductRevision expectedRevision,
             UpdateProductVariantCommand command) {
-        VersionedProduct loaded = load(reference);
+        VersionedProduct loaded = loadForUpdate(reference);
         requireRevision(reference, expectedRevision, loaded.revision());
         Product product = loaded.product();
         product.reviseVariant(
@@ -138,7 +138,7 @@ public class ProductAdministrationService implements ProductAdministrationUseCas
             ProductReference reference,
             ProductVariantId variantId,
             ProductRevision expectedRevision) {
-        VersionedProduct loaded = load(reference);
+        VersionedProduct loaded = loadForUpdate(reference);
         requireRevision(reference, expectedRevision, loaded.revision());
         Product product = loaded.product();
         product.removeVariant(product.variant(variantId));
@@ -147,6 +147,11 @@ public class ProductAdministrationService implements ProductAdministrationUseCas
 
     private VersionedProduct load(ProductReference reference) {
         return products.findForAdministration(new ProductId(reference.value()))
+                .orElseThrow(() -> new ProductNotFoundException(reference));
+    }
+
+    private VersionedProduct loadForUpdate(ProductReference reference) {
+        return products.findForAdministrationUpdate(new ProductId(reference.value()))
                 .orElseThrow(() -> new ProductNotFoundException(reference));
     }
 

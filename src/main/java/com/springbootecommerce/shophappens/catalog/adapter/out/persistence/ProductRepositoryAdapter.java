@@ -10,6 +10,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.ProductCa
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductNotFoundException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductRevision;
+import com.springbootecommerce.shophappens.catalog.application.port.in.PublishedProductUnavailableException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.StaleProductRevisionException;
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductPage;
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductRepository;
@@ -31,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
@@ -57,6 +59,32 @@ class ProductRepositoryAdapter implements ProductRepository {
     public Optional<Product> findForPurchase(ProductVariantId id) {
         springData.lockVariantForPurchase(id.value());
         return springData.findForPurchaseByVariantId(id.value()).map(mapper::toDomain);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public List<Product> findAllForPurchase(List<ProductVariantId> ids) {
+        if (ids.isEmpty()) return List.of();
+        List<Long> owners =
+                springData.findOwnerIds(ids.stream().map(ProductVariantId::value).toList()).stream()
+                        .sorted()
+                        .toList();
+        owners.forEach(springData::lockFamily);
+        List<Product> families =
+                owners.stream()
+                        .map(springData::findDetailedById)
+                        .flatMap(Optional::stream)
+                        .map(mapper::toDomain)
+                        .toList();
+        Set<ProductVariantId> found =
+                families.stream()
+                        .flatMap(product -> product.variants().stream())
+                        .map(variant -> variant.id().orElseThrow())
+                        .collect(Collectors.toSet());
+        if (!found.containsAll(ids)) {
+            throw new PublishedProductUnavailableException(null, null);
+        }
+        return families;
     }
 
     @Override
@@ -184,6 +212,15 @@ class ProductRepositoryAdapter implements ProductRepository {
     @Override
     @Transactional(readOnly = true)
     public Optional<VersionedProduct> findForAdministration(ProductId id) {
+        return springData
+                .findDetailedById(id.value())
+                .map(entity -> new VersionedProduct(mapper.toDomain(entity), entity.getVersion()));
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Optional<VersionedProduct> findForAdministrationUpdate(ProductId id) {
+        if (springData.lockFamily(id.value()).isEmpty()) return Optional.empty();
         return springData
                 .findDetailedById(id.value())
                 .map(entity -> new VersionedProduct(mapper.toDomain(entity), entity.getVersion()));

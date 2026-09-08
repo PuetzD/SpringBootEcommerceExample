@@ -28,6 +28,14 @@ interface SpringDataProductRepository extends JpaRepository<ProductJpaEntity, Lo
             nativeQuery = true)
     Optional<Long> lockVariantForPurchase(@Param("variantId") Long variantId);
 
+    @Query(
+            value = "select distinct product_id from product_variant where id in :ids",
+            nativeQuery = true)
+    List<Long> findOwnerIds(@Param("ids") List<Long> ids);
+
+    @Query(value = "select id from product where id = :id for update", nativeQuery = true)
+    Optional<Long> lockFamily(@Param("id") long id);
+
     @EntityGraph(attributePaths = {"categories", "variants"})
     Optional<ProductJpaEntity> findByIdAndActiveTrue(Long id);
 

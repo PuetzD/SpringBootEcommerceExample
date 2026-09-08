@@ -10,9 +10,13 @@ import com.springbootecommerce.shophappens.catalog.application.port.out.ProductR
 import com.springbootecommerce.shophappens.catalog.domain.exception.ProductUnavailableException;
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
 import com.springbootecommerce.shophappens.catalog.domain.model.PurchasedFacts;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,52 +37,41 @@ public class CatalogPurchaseService implements PurchaseProductsUseCase {
                         .toList();
         rejectDuplicates(sorted);
 
-        return sorted.stream()
-                .map(
-                        line -> {
-                            Product product =
-                                    productRepository
-                                            .findForPurchase(line.variant())
-                                            .or(
-                                                    () ->
-                                                            productRepository.findForPurchase(
-                                                                    new com.springbootecommerce
-                                                                            .shophappens
-                                                                            .sharedkernel.identity
-                                                                            .ProductId(
-                                                                            line.variant()
-                                                                                    .value())))
-                                            .orElseThrow(
-                                                    () ->
-                                                            new PublishedProductUnavailableException(
-                                                                    null, null));
-                            try {
-                                PurchasedFacts facts =
-                                        product.defaultVariant().id().isPresent()
-                                                ? product.purchase(line.variant(), line.quantity())
-                                                : product.purchase(line.quantity());
-                                productRepository.save(product);
-                                return toSnapshot(facts);
-                            } catch (ProductUnavailableException exception) {
-                                throw new PublishedProductUnavailableException(
-                                        new ProductReference(exception.getProductId().value()),
-                                        exception.getSku() == null
-                                                ? null
-                                                : exception.getSku().value());
-                            } catch (
-                                    com.springbootecommerce.shophappens.catalog.domain.exception
-                                                    .InsufficientStockException
-                                            exception) {
-                                throw new PublishedInsufficientStockException(
-                                        new ProductReference(exception.getProductId().value()),
-                                        exception.getSku() == null
-                                                ? null
-                                                : exception.getSku().value(),
-                                        exception.getRequestedQuantity(),
-                                        exception.getAvailableQuantity());
-                            }
-                        })
-                .toList();
+        List<Product> families =
+                productRepository.findAllForPurchase(
+                        sorted.stream().map(PurchaseLine::variant).toList());
+        Map<ProductVariantId, Product> owners = new HashMap<>();
+        families.forEach(
+                product ->
+                        product.variants()
+                                .forEach(
+                                        variant ->
+                                                owners.put(variant.id().orElseThrow(), product)));
+        List<PurchasedProductSnapshot> result = new ArrayList<>();
+        try {
+            for (PurchaseLine line : sorted) {
+                Product owner = owners.get(line.variant());
+                if (owner == null) {
+                    throw new PublishedProductUnavailableException(null, null);
+                }
+                result.add(toSnapshot(owner.purchase(line.variant(), line.quantity())));
+            }
+        } catch (ProductUnavailableException exception) {
+            throw new PublishedProductUnavailableException(
+                    new ProductReference(exception.getProductId().value()),
+                    exception.getSku() == null ? null : exception.getSku().value());
+        } catch (
+                com.springbootecommerce.shophappens.catalog.domain.exception
+                                .InsufficientStockException
+                        exception) {
+            throw new PublishedInsufficientStockException(
+                    new ProductReference(exception.getProductId().value()),
+                    exception.getSku() == null ? null : exception.getSku().value(),
+                    exception.getRequestedQuantity(),
+                    exception.getAvailableQuantity());
+        }
+        families.forEach(productRepository::save);
+        return List.copyOf(result);
     }
 
     private void rejectDuplicates(List<PurchaseLine> lines) {
