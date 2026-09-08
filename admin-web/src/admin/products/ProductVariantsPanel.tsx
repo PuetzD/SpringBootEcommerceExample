@@ -1,8 +1,9 @@
-import {useCreate, useDelete, useGetList, useNotify, useRecordContext, useRefresh, useUpdate} from 'react-admin'
+import {HttpError, useCreate, useDelete, useGetList, useNotify, useRecordContext, useRefresh, useUpdate} from 'react-admin'
 import {type FormEvent, useState} from 'react'
 import type {Product, ProductVariant} from '../../api/types'
 
 type VariantForm = Pick<ProductVariant, 'sku' | 'price' | 'stockQuantity' | 'imageUrl' | 'active'>
+type ProductVariantMutationRecord = ProductVariant & {revision?: number}
 
 const blankVariant: VariantForm = {
   sku: '',
@@ -64,34 +65,70 @@ export function ProductVariantsPanel() {
   )
 }
 
-function VariantRow({variant}: {variant: ProductVariant}) {
+export function VariantRow({variant}: {variant: ProductVariant}) {
   const notify = useNotify()
   const refresh = useRefresh()
-  const [update, {isPending: updating}] = useUpdate()
+  const [update, {isPending: updating}] = useUpdate<ProductVariantMutationRecord>()
   const [remove, {isPending: removing}] = useDelete()
-  const [form, setForm] = useState<VariantForm>(variant)
+  const [draft, setDraft] = useState<ProductVariant | null>(null)
+  const [failure, setFailure] = useState<string | null>(null)
+  const form = draft ?? variant
+  const changed = draft !== null && draft.productRevision !== variant.productRevision
+  const busy = updating || removing
 
   function save() {
+    if (busy || changed || failure !== null) return
     update(
       'productVariants',
-      {id: variant.id, data: {...form, productId: variant.productId, revision: variant.productRevision}, previousData: variant},
-      {onSuccess: () => { notify('Variant updated', {type: 'success'}); refresh() }, onError: () => notify('Unable to update variant', {type: 'error'})},
+      {id: variant.id, data: {...form, revision: form.productRevision}, previousData: form},
+      {
+        mutationMode: 'pessimistic',
+        onSuccess: () => {
+          setDraft(null)
+          setFailure(null)
+          notify('Variant updated', {type: 'success'})
+          refresh()
+        },
+        onError: (error) => {
+          if (error instanceof HttpError && error.status === 409) {
+            setFailure('Product changed. Your draft is preserved; reload before retrying.')
+            refresh()
+            return
+          }
+          notify('Unable to update variant', {type: 'error'})
+        },
+      },
     )
   }
 
   function removeVariant() {
+    if (busy || draft !== null) return
     remove(
       'productVariants',
       {id: variant.id, previousData: variant},
-      {onSuccess: () => { notify('Variant removed', {type: 'success'}); refresh() }, onError: () => notify('Unable to remove variant', {type: 'error'})},
+      {
+        mutationMode: 'pessimistic',
+        onSuccess: () => {
+          notify('Variant removed', {type: 'success'})
+          refresh()
+        },
+        onError: () => notify('Unable to remove variant', {type: 'error'}),
+      },
     )
   }
 
   return <tr>
-    <td><input className="input input-sm input-bordered" value={form.sku} onChange={(event) => setForm({...form, sku: event.target.value})} aria-label={`SKU for ${variant.sku}`} /></td>
-    <td><input className="input input-sm input-bordered w-28" type="number" min="0.01" step="0.01" value={form.price} onChange={(event) => setForm({...form, price: Number(event.target.value)})} aria-label={`Price for ${variant.sku}`} /></td>
-    <td><input className="input input-sm input-bordered w-24" type="number" min="0" value={form.stockQuantity} onChange={(event) => setForm({...form, stockQuantity: Number(event.target.value)})} aria-label={`Stock for ${variant.sku}`} /></td>
-    <td><label className="label cursor-pointer gap-2"><span>{variant.active ? 'Active' : 'Inactive'}</span><input className="toggle toggle-primary" type="checkbox" checked={form.active} onChange={(event) => setForm({...form, active: event.target.checked})} aria-label={`Active for ${variant.sku}`} /></label></td>
-    <td className="flex gap-2"><button className="btn btn-sm btn-primary" type="button" disabled={updating} onClick={save}>Save</button><button className="btn btn-sm btn-error" type="button" disabled={variant.defaultVariant || removing} onClick={removeVariant}>{variant.defaultVariant ? 'Default' : 'Remove'}</button></td>
+    <td><input className="input input-sm input-bordered" disabled={busy} value={form.sku} onChange={(event) => setDraft({...form, sku: event.target.value})} aria-label={`SKU for ${variant.sku}`} /></td>
+    <td><input className="input input-sm input-bordered w-28" disabled={busy} type="number" min="0.01" step="0.01" value={form.price} onChange={(event) => setDraft({...form, price: Number(event.target.value)})} aria-label={`Price for ${variant.sku}`} /></td>
+    <td><input className="input input-sm input-bordered w-24" disabled={busy} type="number" min="0" value={form.stockQuantity} onChange={(event) => setDraft({...form, stockQuantity: Number(event.target.value)})} aria-label={`Stock for ${variant.sku}`} /></td>
+    <td><label className="label cursor-pointer gap-2"><span>{form.active ? 'Active' : 'Inactive'}</span><input className="toggle toggle-primary" disabled={busy} type="checkbox" checked={form.active} onChange={(event) => setDraft({...form, active: event.target.checked})} aria-label={`Active for ${variant.sku}`} /></label></td>
+    <td>
+      <div className="flex flex-wrap gap-2">
+        <button className="btn btn-sm btn-primary" type="button" disabled={busy || changed || failure !== null} onClick={save}>Save</button>
+        <button className="btn btn-sm btn-error" type="button" disabled={variant.defaultVariant || busy || draft !== null} onClick={removeVariant}>{variant.defaultVariant ? 'Default' : 'Remove'}</button>
+        {draft !== null || failure !== null ? <button className="btn btn-sm" type="button" disabled={busy} onClick={() => { setDraft(null); setFailure(null); refresh() }}>Discard draft and reload</button> : null}
+      </div>
+      {changed || failure !== null ? <p className="alert alert-warning mt-2 py-2 text-sm" role="alert">{failure ?? 'Product changed on the server. Discard this draft before editing again.'}</p> : null}
+    </td>
   </tr>
 }
