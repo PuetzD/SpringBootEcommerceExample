@@ -3,6 +3,10 @@ package com.springbootecommerce.shophappens.customer.application.port.in;
 public interface ManageCustomerAddressesUseCase {
     AddressReference save(CustomerReference customer, SaveAddressCommand command);
 
+    void makeDefaultShipping(CustomerReference customer, AddressReference address);
+
+    void makeDefaultBilling(CustomerReference customer, AddressReference address);
+
     void remove(CustomerReference customer, AddressReference address);
 
     record SaveAddressCommand(

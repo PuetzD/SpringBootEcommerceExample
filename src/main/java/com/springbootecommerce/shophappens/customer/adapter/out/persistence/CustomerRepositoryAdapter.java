@@ -7,14 +7,18 @@ import com.springbootecommerce.shophappens.customer.application.port.in.Customer
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerAdminSearch;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerAdminSummary;
 import com.springbootecommerce.shophappens.customer.application.port.out.CustomerRepository;
+import com.springbootecommerce.shophappens.customer.domain.model.Address;
 import com.springbootecommerce.shophappens.customer.domain.model.Customer;
 import com.springbootecommerce.shophappens.sharedkernel.identity.AccountId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 @RequiredArgsConstructor
@@ -25,6 +29,12 @@ class CustomerRepositoryAdapter implements CustomerRepository {
     @Override
     public Optional<Customer> findById(CustomerId id) {
         return springData.findDetailedById(id.value()).map(mapper::toDomain);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Optional<Customer> findForUpdate(CustomerId id) {
+        return springData.findRootForUpdate(id.value()).map(mapper::toDomain);
     }
 
     @Override
@@ -62,8 +72,49 @@ class CustomerRepositoryAdapter implements CustomerRepository {
     }
 
     @Override
+    @Transactional
     public Customer save(Customer customer) {
-        return mapper.toDomain(springData.saveAndFlush(mapper.toJpa(customer)));
+        if (customer.id().isEmpty()) {
+            return mapper.toDomain(springData.saveAndFlush(mapper.toJpa(customer)));
+        }
+
+        var managed =
+                springData.findDetailedById(customer.id().orElseThrow().value()).orElseThrow();
+        boolean shippingOwnerChanged =
+                !Objects.equals(defaultAddressId(managed, true), defaultAddressId(customer, true));
+        boolean billingOwnerChanged =
+                !Objects.equals(
+                        defaultAddressId(managed, false), defaultAddressId(customer, false));
+        if (shippingOwnerChanged || billingOwnerChanged) {
+            managed.getAddresses()
+                    .forEach(
+                            address -> {
+                                if (shippingOwnerChanged) address.setDefaultShipping(false);
+                                if (billingOwnerChanged) address.setDefaultBilling(false);
+                            });
+            springData.flush();
+        }
+        mapper.applyToJpa(managed, customer);
+        springData.flush();
+        return mapper.toDomain(managed);
+    }
+
+    private Long defaultAddressId(CustomerJpaEntity customer, boolean shipping) {
+        for (AddressJpaEntity address : customer.getAddresses()) {
+            if (shipping ? address.isDefaultShipping() : address.isDefaultBilling()) {
+                return address.getId();
+            }
+        }
+        return null;
+    }
+
+    private Long defaultAddressId(Customer customer, boolean shipping) {
+        for (Address address : customer.addresses()) {
+            if (shipping ? address.defaultShipping() : address.defaultBilling()) {
+                return address.id().map(id -> id.value()).orElse(null);
+            }
+        }
+        return null;
     }
 
     private CustomerAdminDetail toAdminDetail(CustomerJpaEntity customer) {

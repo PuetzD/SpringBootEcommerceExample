@@ -11,6 +11,12 @@ import java.util.Optional;
 public interface CustomerRepository {
     Optional<Customer> findById(CustomerId id);
 
+    /**
+     * Loads and locks the customer root for an aggregate mutation. Callers must invoke this inside
+     * the transaction and before reading mutable aggregate state.
+     */
+    Optional<Customer> findForUpdate(CustomerId id);
+
     Optional<Customer> findByAccountId(AccountId accountId);
 
     CustomerAdminPage searchForAdministration(CustomerAdminSearch search);

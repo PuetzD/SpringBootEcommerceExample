@@ -1,6 +1,8 @@
 package com.springbootecommerce.shophappens.customer.adapter.in.web;
 
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -16,6 +18,7 @@ import com.springbootecommerce.shophappens.customer.application.port.in.CurrentC
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.ManageCustomerAddressesUseCase;
 import com.springbootecommerce.shophappens.customer.application.port.in.OwnedAddressQuery;
+import com.springbootecommerce.shophappens.customer.application.port.in.OwnedAddressUnavailableException;
 import com.springbootecommerce.shophappens.customer.domain.exception.AddressNotOwnedException;
 import com.springbootecommerce.shophappens.security.SecurityConfiguration;
 import com.springbootecommerce.shophappens.security.service.CartMergingAuthenticationSuccessHandler;
@@ -94,7 +97,6 @@ class AddressControllerTest {
     @Test
     void setsDefaultShippingAndRedirects() throws Exception {
         when(currentCustomer.current()).thenReturn(Optional.of(CUSTOMER));
-        when(addresses.getOwned(CUSTOMER, new AddressReference(11L))).thenReturn(snapshot(11L));
 
         mvc.perform(
                         post("/account/addresses/11/default-shipping")
@@ -102,12 +104,14 @@ class AddressControllerTest {
                                 .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/account/addresses"));
+
+        verifyNoInteractions(addresses);
+        verify(manager).makeDefaultShipping(CUSTOMER, new AddressReference(11L));
     }
 
     @Test
     void setsDefaultBillingAndRedirects() throws Exception {
         when(currentCustomer.current()).thenReturn(Optional.of(CUSTOMER));
-        when(addresses.getOwned(CUSTOMER, new AddressReference(11L))).thenReturn(snapshot(11L));
 
         mvc.perform(
                         post("/account/addresses/11/default-billing")
@@ -115,6 +119,9 @@ class AddressControllerTest {
                                 .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/account/addresses"));
+
+        verifyNoInteractions(addresses);
+        verify(manager).makeDefaultBilling(CUSTOMER, new AddressReference(11L));
     }
 
     @Test
@@ -154,10 +161,52 @@ class AddressControllerTest {
     void returnsNotFoundForForeignAddressLikeMissingAddress() throws Exception {
         when(currentCustomer.current()).thenReturn(Optional.of(CUSTOMER));
         when(addresses.getOwned(CUSTOMER, new AddressReference(999L)))
-                .thenThrow(new AddressNotOwnedException("Address 999 is not owned"));
+                .thenThrow(new OwnedAddressUnavailableException("Address unavailable"));
 
         mvc.perform(get("/account/addresses/999/edit").with(user("alex").roles("CUSTOMER")))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void defaultShippingReturnsNotFoundForUnavailableAddress() throws Exception {
+        when(currentCustomer.current()).thenReturn(Optional.of(CUSTOMER));
+        doThrow(new AddressNotOwnedException("Address unavailable"))
+                .when(manager)
+                .makeDefaultShipping(CUSTOMER, new AddressReference(999L));
+
+        mvc.perform(
+                        post("/account/addresses/999/default-shipping")
+                                .with(user("alex").roles("CUSTOMER"))
+                                .with(csrf()))
+                .andExpect(status().isNotFound());
+
+        verifyNoInteractions(addresses);
+    }
+
+    @Test
+    void defaultBillingReturnsNotFoundForUnavailableAddress() throws Exception {
+        when(currentCustomer.current()).thenReturn(Optional.of(CUSTOMER));
+        doThrow(new AddressNotOwnedException("Address unavailable"))
+                .when(manager)
+                .makeDefaultBilling(CUSTOMER, new AddressReference(999L));
+
+        mvc.perform(
+                        post("/account/addresses/999/default-billing")
+                                .with(user("alex").roles("CUSTOMER"))
+                                .with(csrf()))
+                .andExpect(status().isNotFound());
+
+        verifyNoInteractions(addresses);
+    }
+
+    @Test
+    void rejectsDefaultMutationWithoutCsrfBeforeOwnershipLookup() throws Exception {
+        mvc.perform(
+                        post("/account/addresses/11/default-shipping")
+                                .with(user("alex").roles("CUSTOMER")))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(currentCustomer, addresses, manager);
     }
 
     private static AddressSnapshot snapshot() {
