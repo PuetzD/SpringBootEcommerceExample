@@ -415,11 +415,11 @@ export const dataProvider = {
     }
     const path = resourcePath(resource)
     const previousData = params.previousData as ProductMutationData | CategoryMutationData | undefined
-    const revision = resolveRevision(previousData ?? {})
 
     if (resource === 'productVariants') {
       const variant = previousData as ProductVariantMutationData | undefined
       if (variant?.productId === undefined) throw new Error('productId is required')
+      const revision = resolveRevision({revision: variant.productRevision})
       await runWithReactAdminError(() =>
         ApiClient.delete(
           path + '/' + variant.productId + '/variants/' + params.id,
@@ -429,6 +429,7 @@ export const dataProvider = {
       return {data: normalizeRecord((previousData ?? {id: params.id}) as {id: number})}
     }
 
+    const revision = resolveRevision(previousData ?? {})
     await runWithReactAdminError(() =>
       ApiClient.delete(`${path}/${params.id}`, {revision}),
     )

@@ -1,6 +1,6 @@
 import {HttpError} from 'react-admin'
 import {ApiError} from '../../api/client'
-import type {Category, Customer, Order, PageResponse, Product} from '../../api/types'
+import type {Category, Customer, Order, PageResponse, Product, ProductVariant} from '../../api/types'
 
 const {get, post, put, patch, remove} = vi.hoisted(() => ({
   get: vi.fn(),
@@ -342,6 +342,48 @@ describe('dataProvider', () => {
     ).resolves.toEqual({data: category})
 
     expect(remove).toHaveBeenCalledWith('/api/admin/categories/7', {revision: 2})
+  })
+
+  it('deletes a variant using its response productRevision', async () => {
+    const variant: ProductVariant = {
+      id: 12,
+      productId: 9,
+      sku: 'BLUE',
+      price: 20,
+      stockQuantity: 4,
+      imageUrl: null,
+      active: true,
+      defaultVariant: false,
+      productRevision: 4,
+    }
+    remove.mockResolvedValue(undefined)
+
+    await expect(
+      dataProvider.delete('productVariants', {id: 12, previousData: variant}),
+    ).resolves.toEqual({data: variant})
+
+    expect(remove).toHaveBeenCalledWith('/api/admin/products/9/variants/12', {revision: 4})
+  })
+
+  it('rejects a missing variant revision before HTTP', async () => {
+    const variant: ProductVariant = {
+      id: 12,
+      productId: 9,
+      sku: 'BLUE',
+      price: 20,
+      stockQuantity: 4,
+      imageUrl: null,
+      active: true,
+      defaultVariant: false,
+      productRevision: 4,
+    }
+    const {productRevision, ...missingRevision} = variant
+    expect(productRevision).toBe(4)
+
+    await expect(
+      dataProvider.delete('productVariants', {id: 12, previousData: missingRevision}),
+    ).rejects.toThrow('revision is required')
+    expect(remove).not.toHaveBeenCalled()
   })
 
   it.each([
