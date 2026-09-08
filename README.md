@@ -69,6 +69,8 @@ on the host, start those services first with Docker Compose:
 
 ```bash
 docker compose up -d postgres redis
+npm ci
+npm run build:frontend
 ./mvnw spring-boot:run
 ```
 
@@ -89,13 +91,17 @@ SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
 ```
 
 The `dev` profile runs schema migrations only. Demo data is deliberately not a
-Flyway migration because it truncates application tables. To import it locally,
-start the application once so Flyway creates the schema, stop it, and run these
-Docker Compose commands from the repository root:
+Flyway migration because it truncates application tables. To import it, use only
+a disposable local Compose database. Start the application once so Flyway creates
+the schema, stop it with Ctrl+C, import with error-on-first-failure enabled, and
+then restart the application:
 
-```text
-docker compose up -d postgres
+```bash
+docker compose up -d postgres redis
+./mvnw spring-boot:run
+# After migrations finish, stop the application with Ctrl+C.
 docker compose exec -T postgres psql -U demo -d demo -v ON_ERROR_STOP=1 -f /seed/demo-data.sql
+./mvnw spring-boot:run
 ```
 
 The import command is the same on Windows, WSL, macOS, and Linux. It fails if
@@ -128,10 +134,11 @@ The database schema is managed by Flyway migrations in `db/migration` and
 checked against the JPA entities at startup via `ddl-auto: validate`:
 
 - `V1__create_account_schema.sql` — accounts
-- `V2__create_catalog_schema.sql` — categories and products
+- `V2__create_catalog_schema.sql` — categories, product families, and sellable variants
 - `V3__create_cart_schema.sql` — customer carts
 - `V4__create_ordering_schema.sql` — orders, checkout idempotency, and order query indexes
 - `V5__create_integration_outbox.sql` — transactional integration events
+- `V8__create_catalog_attribute_schema.sql` — attribute definitions, values, and assignments
 
 The optional seed is maintained in `scripts/demo-data.sql`, outside Flyway's
 migration locations. Use the Compose import command above instead of copying it
