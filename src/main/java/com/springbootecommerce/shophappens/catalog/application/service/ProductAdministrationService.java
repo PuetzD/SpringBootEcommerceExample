@@ -1,5 +1,6 @@
 package com.springbootecommerce.shophappens.catalog.application.service;
 
+import com.springbootecommerce.shophappens.catalog.application.port.in.AmbiguousProductUpdateException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CreateProductCommand;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CreateProductVariantCommand;
@@ -11,6 +12,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.ProductRe
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductRevision;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductVariantAdminView;
 import com.springbootecommerce.shophappens.catalog.application.port.in.UpdateProductCommand;
+import com.springbootecommerce.shophappens.catalog.application.port.in.UpdateProductFamilyCommand;
 import com.springbootecommerce.shophappens.catalog.application.port.in.UpdateProductVariantCommand;
 import com.springbootecommerce.shophappens.catalog.application.port.out.CategoryRepository;
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductRepository;
@@ -56,13 +58,31 @@ public class ProductAdministrationService implements ProductAdministrationUseCas
             ProductReference reference,
             ProductRevision expectedRevision,
             UpdateProductCommand command) {
-        VersionedProduct loaded =
-                products.findForAdministrationUpdate(new ProductId(reference.value()))
-                        .orElseThrow(() -> new ProductNotFoundException(reference));
+        VersionedProduct loaded = loadForUpdate(reference);
+        requireRevision(reference, expectedRevision, loaded.revision());
+        if (loaded.product().variants().size() > 1) {
+            throw new AmbiguousProductUpdateException();
+        }
         Product product = loaded.product();
         product.reviseDetails(
                 command.name(), command.description(), command.price(), command.imageUrl());
         product.setStockQuantity(command.stockQuantity());
+        product.replaceCategories(toCategoryIds(command.categories()));
+        if (command.active()) product.activate();
+        else product.deactivate();
+        return toAdminView(products.updateForAdministration(product, expectedRevision));
+    }
+
+    @Override
+    @Transactional
+    public ProductAdminView updateProductFamily(
+            ProductReference reference,
+            ProductRevision expectedRevision,
+            UpdateProductFamilyCommand command) {
+        VersionedProduct loaded = loadForUpdate(reference);
+        requireRevision(reference, expectedRevision, loaded.revision());
+        Product product = loaded.product();
+        product.reviseFamilyDetails(command.name(), command.description());
         product.replaceCategories(toCategoryIds(command.categories()));
         if (command.active()) product.activate();
         else product.deactivate();

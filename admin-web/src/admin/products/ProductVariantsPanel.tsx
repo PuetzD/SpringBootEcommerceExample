@@ -50,7 +50,7 @@ export function ProductVariantsPanel() {
       {isPending ? <p>Loading variants…</p> : <div className="overflow-x-auto">
         <table className="table table-zebra">
           <caption className="sr-only">Product variants</caption>
-          <thead><tr><th>SKU</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th></tr></thead>
+          <thead><tr><th>SKU</th><th>Price</th><th>Stock</th><th>Image URL</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody>{data.map((variant) => <VariantRow key={variant.id} variant={variant} />)}</tbody>
         </table>
       </div>}
@@ -121,6 +121,7 @@ export function VariantRow({variant}: {variant: ProductVariant}) {
     <td><input className="input input-sm input-bordered" disabled={busy} value={form.sku} onChange={(event) => setDraft({...form, sku: event.target.value})} aria-label={`SKU for ${variant.sku}`} /></td>
     <td><input className="input input-sm input-bordered w-28" disabled={busy} type="number" min="0.01" step="0.01" value={form.price} onChange={(event) => setDraft({...form, price: Number(event.target.value)})} aria-label={`Price for ${variant.sku}`} /></td>
     <td><input className="input input-sm input-bordered w-24" disabled={busy} type="number" min="0" value={form.stockQuantity} onChange={(event) => setDraft({...form, stockQuantity: Number(event.target.value)})} aria-label={`Stock for ${variant.sku}`} /></td>
+    <td><input className="input input-sm input-bordered" disabled={busy} value={form.imageUrl ?? ''} onChange={(event) => setDraft({...form, imageUrl: event.target.value || null})} aria-label={`Image URL for ${variant.sku}`} /></td>
     <td><label className="label cursor-pointer gap-2"><span>{form.active ? 'Active' : 'Inactive'}</span><input className="toggle toggle-primary" disabled={busy} type="checkbox" checked={form.active} onChange={(event) => setDraft({...form, active: event.target.checked})} aria-label={`Active for ${variant.sku}`} /></label></td>
     <td>
       <div className="flex flex-wrap gap-2">

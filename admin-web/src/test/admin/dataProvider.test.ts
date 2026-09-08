@@ -2,10 +2,11 @@ import {HttpError} from 'react-admin'
 import {ApiError} from '../../api/client'
 import type {Category, Customer, Order, PageResponse, Product} from '../../api/types'
 
-const {get, post, put, remove} = vi.hoisted(() => ({
+const {get, post, put, patch, remove} = vi.hoisted(() => ({
   get: vi.fn(),
   post: vi.fn(),
   put: vi.fn(),
+  patch: vi.fn(),
   remove: vi.fn(),
 }))
 
@@ -18,6 +19,7 @@ vi.mock('../../api/client', async () => {
       get,
       post,
       put,
+      patch,
       delete: remove,
     },
   }
@@ -281,35 +283,34 @@ describe('dataProvider', () => {
     )
   })
 
-  it('updates products with body revision and the shared If-Match transport option', async () => {
-    put.mockResolvedValue(product)
+  it('updates family fields without sending default commercial values', async () => {
+    patch.mockResolvedValue(product)
 
     await expect(
       dataProvider.update('products', {
         id: product.id,
         data: {
           ...product,
-          name: 'Router Pro',
+          name: 'Family',
+          price: 999,
           categoryIds: [3],
         },
         previousData: product,
       }),
     ).resolves.toEqual({data: normalizedProduct})
 
-    expect(put).toHaveBeenCalledWith(
-      '/api/admin/products/9',
+    expect(patch).toHaveBeenCalledWith(
+      '/api/admin/products/9/family',
       {
         revision: 4,
-        name: 'Router Pro',
+        name: 'Family',
         description: 'Mesh router',
-        price: 199.99,
-        stockQuantity: 8,
-        imageUrl: null,
         active: true,
         categoryIds: [3],
       },
       {revision: 4},
     )
+    expect(put).not.toHaveBeenCalled()
   })
 
   it('updates categories with the shared If-Match transport option and a rename body', async () => {

@@ -2,6 +2,7 @@ package com.springbootecommerce.shophappens.administration.web;
 
 import com.springbootecommerce.shophappens.administration.web.api.ApiErrorResponse;
 import com.springbootecommerce.shophappens.administration.web.api.CustomerAdminApiController;
+import com.springbootecommerce.shophappens.catalog.application.port.in.AmbiguousProductUpdateException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryInUseException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryNotFoundException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.DuplicateCategoryException;
@@ -123,6 +124,12 @@ public class AdminApiExceptionHandler {
     @ExceptionHandler(DuplicateCategoryException.class)
     public ResponseEntity<ApiErrorResponse> handleDuplicateCategory(DuplicateCategoryException ex) {
         return response(ex.getMessage(), HttpStatus.CONFLICT, "catalog.category.conflict");
+    }
+
+    @ExceptionHandler(AmbiguousProductUpdateException.class)
+    public ResponseEntity<ApiErrorResponse> handleAmbiguousProductUpdate(
+            AmbiguousProductUpdateException ex) {
+        return response(ex.getMessage(), HttpStatus.CONFLICT, "catalog.variant.required");
     }
 
     @ExceptionHandler(StaleProductRevisionException.class)

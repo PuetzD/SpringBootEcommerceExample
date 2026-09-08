@@ -189,6 +189,43 @@ class ProductTest {
                 .isInstanceOf(ProductUnavailableException.class);
     }
 
+    @Test
+    void defaultAliasIgnoresCollectionOrderAndTracksRename() {
+        var regular =
+                ProductVariant.restore(
+                        new ProductVariantId(101),
+                        new Sku("TEE-A"),
+                        new Money(new BigDecimal("10.00")),
+                        5,
+                        null,
+                        true,
+                        true);
+        var sibling =
+                ProductVariant.restore(
+                        new ProductVariantId(202),
+                        new Sku("TEE-B"),
+                        new Money(new BigDecimal("20.00")),
+                        8,
+                        null,
+                        true,
+                        false);
+        var family =
+                Product.restore(
+                        new ProductId(11),
+                        "Tee",
+                        "Cotton",
+                        true,
+                        Set.of(),
+                        List.of(sibling, regular));
+
+        assertThat(family.sku()).isEqualTo(new Sku("TEE-A"));
+
+        family.reviseVariant(
+                new ProductVariantId(101), new Sku("TEE-NEW"), regular.price(), 5, null, true);
+
+        assertThat(family.sku()).isEqualTo(new Sku("TEE-NEW"));
+    }
+
     private Product productWithStock(int stock) {
         return Product.create(
                 new Sku("ELEC-001"),

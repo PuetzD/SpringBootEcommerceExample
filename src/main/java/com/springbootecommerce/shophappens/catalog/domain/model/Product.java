@@ -14,7 +14,6 @@ import java.util.Set;
 
 public final class Product {
     private final ProductId id;
-    private final Sku sku;
     private String name;
     private String description;
     private boolean active;
@@ -23,14 +22,12 @@ public final class Product {
 
     private Product(
             ProductId id,
-            Sku sku,
             String name,
             String description,
             boolean active,
             Set<CategoryId> categoryIds,
             List<ProductVariant> variants) {
         this.id = id;
-        this.sku = Objects.requireNonNull(sku);
         this.name = Objects.requireNonNull(name).strip();
         this.description = description;
         this.active = active;
@@ -54,7 +51,6 @@ public final class Product {
         }
         return new Product(
                 null,
-                sku,
                 normalizedName,
                 description,
                 true,
@@ -74,7 +70,6 @@ public final class Product {
             Set<CategoryId> categoryIds) {
         return new Product(
                 Objects.requireNonNull(id),
-                sku,
                 name,
                 description,
                 active,
@@ -90,13 +85,7 @@ public final class Product {
             Set<CategoryId> categoryIds,
             List<ProductVariant> variants) {
         return new Product(
-                Objects.requireNonNull(id),
-                variants.getFirst().sku(),
-                name,
-                description,
-                active,
-                categoryIds,
-                variants);
+                Objects.requireNonNull(id), name, description, active, categoryIds, variants);
     }
 
     public Optional<ProductId> id() {
@@ -104,7 +93,7 @@ public final class Product {
     }
 
     public Sku sku() {
-        return sku;
+        return defaultVariant().sku();
     }
 
     public String name() {
@@ -202,6 +191,11 @@ public final class Product {
         this.name = normalizeName(name);
         this.description = description;
         defaultVariant().reviseCommercialDetails(Objects.requireNonNull(price, "price"), imageUrl);
+    }
+
+    public void reviseFamilyDetails(String name, String description) {
+        this.name = normalizeName(name);
+        this.description = description;
     }
 
     public void replaceCategories(Set<CategoryId> categoryIds) {

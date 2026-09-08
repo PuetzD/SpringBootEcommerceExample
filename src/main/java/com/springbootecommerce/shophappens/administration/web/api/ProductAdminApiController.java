@@ -13,6 +13,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.ProductRe
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductRevision;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductVariantAdminView;
 import com.springbootecommerce.shophappens.catalog.application.port.in.UpdateProductCommand;
+import com.springbootecommerce.shophappens.catalog.application.port.in.UpdateProductFamilyCommand;
 import com.springbootecommerce.shophappens.catalog.application.port.in.UpdateProductVariantCommand;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
@@ -27,6 +28,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -110,6 +112,21 @@ public class ProductAdminApiController {
                                 request.active(),
                                 references(request.categoryIds())));
         return toResponse(updated);
+    }
+
+    @PatchMapping("/products/{id}/family")
+    public ProductResponse updateFamily(
+            @PathVariable @Positive long id,
+            @Valid @RequestBody UpdateProductFamilyRequest request) {
+        return toResponse(
+                productAdministrationUseCase.updateProductFamily(
+                        new ProductReference(id),
+                        new ProductRevision(request.revision()),
+                        new UpdateProductFamilyCommand(
+                                request.name(),
+                                request.description(),
+                                request.active(),
+                                references(request.categoryIds()))));
     }
 
     @DeleteMapping("/products/{id}")

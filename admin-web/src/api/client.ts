@@ -119,6 +119,22 @@ export const ApiClient = {
         return handleResponse<T>(response)
     },
 
+    async patch<T>(path: string, body: unknown, revisionOrOptions?: number | ApiRequestOptions): Promise<T> {
+        const {revision} = normalizeMutationOptions(revisionOrOptions)
+        const response = await fetch(path, {
+            method: 'PATCH',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                ...csrfHeaders(),
+                ...revisionHeaders(revision),
+            },
+            body: JSON.stringify(body),
+        })
+        return handleResponse<T>(response)
+    },
+
     async delete(path: string, revisionOrOptions?: number | ApiRequestOptions): Promise<void> {
         const {revision} = normalizeMutationOptions(revisionOrOptions)
         const response = await fetch(path, {

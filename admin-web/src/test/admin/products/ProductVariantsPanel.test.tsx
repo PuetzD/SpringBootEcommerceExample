@@ -128,6 +128,24 @@ it('submits the original revision and preserves input on a 409', async () => {
   expect(stock().value).toBe('8')
 })
 
+it('edits images through the variant mutation', async () => {
+  const {update} = setup()
+
+  fireEvent.change(screen.getByRole('textbox', {name: 'Image URL for BLUE'}), {
+    target: {value: '/images/blue.png'},
+  })
+  fireEvent.click(screen.getByRole('button', {name: 'Save'}))
+
+  await waitFor(() =>
+    expect(update).toHaveBeenCalledWith(
+      'productVariants',
+      expect.objectContaining({
+        data: expect.objectContaining({imageUrl: '/images/blue.png', revision: 4}),
+      }),
+    ),
+  )
+})
+
 it('blocks typing and removal while save is pending', async () => {
   const {update} = setup()
   let finish!: (value: {data: ProductVariant}) => void

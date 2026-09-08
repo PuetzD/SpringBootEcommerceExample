@@ -8,7 +8,6 @@ import type {
   CreateProductInput,
   PageResponse,
   Product,
-  UpdateProductInput,
   Order,
   ProductVariant,
 } from '../api/types'
@@ -181,22 +180,6 @@ function toCreateProductInput(data: ProductMutationData): CreateProductInput {
   }
 }
 
-function toUpdateProductInput(
-  data: ProductMutationData,
-  revision: number,
-): UpdateProductInput {
-  return {
-    revision,
-    name: requireString(data.name, 'name'),
-    description: data.description ?? null,
-    price: requireNumber(data.price, 'price'),
-    stockQuantity: requireNumber(data.stockQuantity, 'stockQuantity'),
-    imageUrl: data.imageUrl ?? null,
-    active: requireBoolean(data.active, 'active'),
-    categoryIds: categoryIds(data),
-  }
-}
-
 function toReactAdminError(error: unknown) {
   if (!(error instanceof ApiError)) {
     return error
@@ -355,9 +338,15 @@ export const dataProvider = {
       const previousData = params.previousData as ProductMutationData
       const revision = resolveRevision(data, previousData)
       const response = await runWithReactAdminError(() =>
-        ApiClient.put<Product>(
-          `${path}/${params.id}`,
-          toUpdateProductInput(data, revision),
+        ApiClient.patch<Product>(
+          `${path}/${params.id}/family`,
+          {
+            revision,
+            name: requireString(data.name, 'name'),
+            description: data.description ?? null,
+            active: requireBoolean(data.active, 'active'),
+            categoryIds: categoryIds(data),
+          },
           {revision},
         ),
       )

@@ -11,6 +11,11 @@ public interface ProductAdministrationUseCase {
             ProductRevision expectedRevision,
             UpdateProductCommand command);
 
+    ProductAdminView updateProductFamily(
+            ProductReference product,
+            ProductRevision expectedRevision,
+            UpdateProductFamilyCommand command);
+
     void deactivateProduct(ProductReference product, ProductRevision expectedRevision);
 
     List<ProductVariantAdminView> listVariants(ProductReference product);

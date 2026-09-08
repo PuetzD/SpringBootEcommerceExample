@@ -89,6 +89,35 @@ describe('ApiClient', () => {
             expect((global.fetch as any).mock.calls[0][1].headers['If-Match']).toBe('"4"')
         })
 
+    it('patches with credentials, CSRF and expected revision', async () => {
+            ; (global.fetch as any).mockResolvedValueOnce({
+                ok: true,
+                status: 200,
+                headers: new Headers({ 'content-type': 'application/json' }),
+                json: async () => ({ id: 9 }),
+            })
+
+            const { ApiClient } = await import('../../api/client')
+            const csrf = await import('../../auth/CsrfProvider')
+            csrf.setToken('csrf-family')
+            try {
+                await ApiClient.patch('/api/admin/products/9/family', { name: 'Family' }, { revision: 4 })
+                expect(global.fetch).toHaveBeenCalledWith('/api/admin/products/9/family', {
+                    method: 'PATCH',
+                    credentials: 'same-origin',
+                    body: '{"name":"Family"}',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Accept: 'application/json',
+                        'X-CSRF-TOKEN': 'csrf-family',
+                        'If-Match': '"4"',
+                    },
+                })
+            } finally {
+                csrf.clearToken()
+            }
+        })
+
     it('non-2xx responses throw typed ApiErrorResponse', async () => {
             const errorBody = { message: 'Not found', status: 404 }
             ; (global.fetch as any).mockResolvedValueOnce({

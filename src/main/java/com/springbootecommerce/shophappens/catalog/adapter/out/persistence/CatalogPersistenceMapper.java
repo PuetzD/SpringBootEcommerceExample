@@ -35,12 +35,8 @@ public class CatalogPersistenceMapper {
     }
 
     void applyToJpa(ProductJpaEntity jpa, Product product, Set<CategoryJpaEntity> categories) {
-        jpa.setSku(product.sku().value());
         jpa.setName(product.name());
         jpa.setDescription(product.description());
-        jpa.setPrice(product.price().amount());
-        jpa.setStockQuantity(product.stockQuantity());
-        jpa.setImageUrl(product.imageUrl());
         jpa.setActive(product.active());
         jpa.setCategories(new LinkedHashSet<>(categories));
         applyVariantsToJpa(jpa, product);

@@ -40,10 +40,16 @@ interface SpringDataProductRepository extends JpaRepository<ProductJpaEntity, Lo
     Optional<ProductJpaEntity> findByIdAndActiveTrue(Long id);
 
     @EntityGraph(attributePaths = {"categories", "variants"})
-    Optional<ProductJpaEntity> findByVariantsIdAndActiveTrue(Long variantId);
+    @Query(
+            "select p from ProductJpaEntity p join p.variants v "
+                    + "where p.active = true and v.active = true and v.id = :variantId")
+    Optional<ProductJpaEntity> findByVariantsIdAndActiveTrue(@Param("variantId") Long variantId);
 
     @EntityGraph(attributePaths = {"categories", "variants"})
-    Optional<ProductJpaEntity> findBySkuAndActiveTrue(String sku);
+    @Query(
+            "select p from ProductJpaEntity p join p.variants v "
+                    + "where p.active = true and v.defaultVariant = true and v.sku = :sku")
+    Optional<ProductJpaEntity> findBySkuAndActiveTrue(@Param("sku") String sku);
 
     @EntityGraph(attributePaths = {"categories", "variants"})
     List<ProductJpaEntity> findByActiveTrueOrderByNameAscIdAsc();
@@ -63,7 +69,9 @@ interface SpringDataProductRepository extends JpaRepository<ProductJpaEntity, Lo
             """
                     select p from ProductJpaEntity p
                     where (:active is null or p.active = :active)
-                      and (:query = '' or lower(p.sku) like lower(concat('%', :query, '%'))
+                      and (:query = '' or exists (select v.id from ProductVariantJpaEntity v
+                                                  where v.product = p
+                                                    and lower(v.sku) like lower(concat('%', :query, '%')))
                            or lower(p.name) like lower(concat('%', :query, '%')))
                     """)
     org.springframework.data.domain.Page<ProductJpaEntity> searchForAdministration(
