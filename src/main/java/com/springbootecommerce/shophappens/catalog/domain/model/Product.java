@@ -192,12 +192,10 @@ public final class Product {
 
     public void deactivate() {
         this.active = false;
-        variants.forEach(ProductVariant::deactivate);
     }
 
     public void activate() {
         this.active = true;
-        variants.forEach(ProductVariant::activate);
     }
 
     public void reviseDetails(String name, String description, Money price, String imageUrl) {

@@ -5,9 +5,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.springbootecommerce.shophappens.catalog.domain.exception.InsufficientStockException;
 import com.springbootecommerce.shophappens.catalog.domain.exception.ProductUnavailableException;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -137,6 +140,53 @@ class ProductTest {
         assertThat(product.variants())
                 .extracting(ProductVariant::sku)
                 .containsExactlyInAnyOrder(new Sku("ELEC-001"), new Sku("ELEC-002"));
+    }
+
+    @Test
+    void familyEditsPreserveWithdrawnVariant() {
+        var regular =
+                ProductVariant.restore(
+                        new ProductVariantId(101),
+                        new Sku("TEE-A"),
+                        new Money(new BigDecimal("10.00")),
+                        5,
+                        null,
+                        true,
+                        true);
+        var withdrawn =
+                ProductVariant.restore(
+                        new ProductVariantId(202),
+                        new Sku("TEE-B"),
+                        new Money(new BigDecimal("20.00")),
+                        8,
+                        null,
+                        false,
+                        false);
+        var family =
+                Product.restore(
+                        new ProductId(11),
+                        "Tee",
+                        "Cotton",
+                        true,
+                        Set.of(),
+                        List.of(regular, withdrawn));
+
+        family.reviseDetails("Renamed tee", "Cotton", family.price(), null);
+        family.activate();
+
+        assertThat(withdrawn.active()).isFalse();
+
+        family.deactivate();
+
+        assertThat(regular.active()).isTrue();
+        assertThatThrownBy(() -> family.purchase(new ProductVariantId(101), 1))
+                .isInstanceOf(ProductUnavailableException.class);
+
+        family.activate();
+
+        assertThat(withdrawn.active()).isFalse();
+        assertThatThrownBy(() -> family.purchase(new ProductVariantId(202), 1))
+                .isInstanceOf(ProductUnavailableException.class);
     }
 
     private Product productWithStock(int stock) {
