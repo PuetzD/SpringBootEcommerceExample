@@ -26,7 +26,7 @@ public class CatalogAttributeDefinitionAdministrationService
     @Transactional
     public CatalogAttributeDefinitionView create(CreateCatalogAttributeDefinitionCommand command) {
         return view(
-                definitions.save(
+                definitions.insert(
                         CatalogAttributeDefinition.create(
                                 command.code(),
                                 command.label(),
@@ -40,7 +40,7 @@ public class CatalogAttributeDefinitionAdministrationService
             String code, String valueCode, String label) {
         CatalogAttributeDefinition definition =
                 definitions
-                        .findByCode(code)
+                        .findForUpdateByCode(code)
                         .orElseThrow(
                                 () -> new IllegalArgumentException("Unknown attribute definition"));
         definition.addAllowedValue(valueCode, label);
