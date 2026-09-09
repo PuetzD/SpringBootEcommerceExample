@@ -1,6 +1,10 @@
 package com.springbootecommerce.shophappens.ordering.adapter.out.persistence;
 
+import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutReview;
+import com.springbootecommerce.shophappens.ordering.application.port.in.PrepareCheckoutUseCase;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -126,5 +130,11 @@ class CheckoutSeeds {
                         productId),
                 quantity);
         return new CustomerCartSeed(customerId, shippingAddressId, billingAddressId, cartId);
+    }
+
+    static CheckoutReview review(PrepareCheckoutUseCase preparation, Clock clock, long customerId) {
+        CustomerId customer = new CustomerId(customerId);
+        return new CheckoutReview(
+                customer, preparation.prepare(customer).items(), clock.instant().plusSeconds(900));
     }
 }

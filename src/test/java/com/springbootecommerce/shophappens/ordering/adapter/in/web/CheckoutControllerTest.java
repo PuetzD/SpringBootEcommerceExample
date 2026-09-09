@@ -174,12 +174,23 @@ class CheckoutControllerTest {
     @Test
     void unavailableVariantDisablesPlacementAndLinksBackToCart() throws Exception {
         when(preparation.prepare(new CustomerId(CUSTOMER.value())))
-                .thenReturn(prepared(List.of(new ProductVariantId(203))));
+                .thenReturn(
+                        new CheckoutPreparation(
+                                new CustomerId(CUSTOMER.value()),
+                                List.of(),
+                                List.of(),
+                                List.of(new ProductVariantId(203))));
 
         mvc.perform(get("/checkout").with(user("customer").roles("CUSTOMER")))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("disabled")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("/cart")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("/cart")))
+                .andExpect(
+                        content()
+                                .string(
+                                        org.hamcrest.Matchers.not(
+                                                org.hamcrest.Matchers.containsString(
+                                                        "Your cart is empty."))));
         verify(reviews, never()).put(any(), any(), any());
     }
 

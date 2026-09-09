@@ -2,6 +2,7 @@ package com.springbootecommerce.shophappens.ordering.adapter.out.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doAnswer;
 
@@ -11,12 +12,17 @@ import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
 import com.springbootecommerce.shophappens.integration.AbstractIntegrationTest;
 import com.springbootecommerce.shophappens.ordering.application.exception.CheckoutItemUnavailableException;
 import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutReference;
+import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutReviewChangedException;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderCommand;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderUseCase;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlacedOrder;
+import com.springbootecommerce.shophappens.ordering.application.port.in.PrepareCheckoutUseCase;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
+import com.springbootecommerce.shophappens.sharedkernel.money.Money;
+import java.math.BigDecimal;
+import java.time.Clock;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -39,6 +45,8 @@ class CheckoutVariantConcurrencyIT extends AbstractIntegrationTest {
     @Autowired PlaceOrderUseCase checkout;
     @Autowired JdbcTemplate jdbc;
     @Autowired PlatformTransactionManager transactions;
+    @Autowired PrepareCheckoutUseCase preparation;
+    @Autowired Clock clock;
     @MockitoSpyBean ProductRepository products;
 
     @BeforeEach
@@ -195,6 +203,136 @@ class CheckoutVariantConcurrencyIT extends AbstractIntegrationTest {
                 .isOne();
     }
 
+    @Test
+    void administrationPriceChangeWinsBeforePurchaseLockAndRequiresFreshReview() throws Exception {
+        long product = CheckoutSeeds.seedProduct(jdbc, 10);
+        long variant = defaultVariant(product);
+        var customer = CheckoutSeeds.seedCustomerCart(jdbc, product, 1);
+        var command = command(customer);
+        var adminLocked = new CountDownLatch(1);
+        var releaseAdmin = new CountDownLatch(1);
+        var purchaseStarted = new CountDownLatch(1);
+        ProductRepository target = AopTestUtils.getUltimateTargetObject(products);
+        doAnswer(
+                        call -> {
+                            purchaseStarted.countDown();
+                            return call.callRealMethod();
+                        })
+                .when(target)
+                .findAllForPurchase(anyList());
+
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        try {
+            Future<?> writer =
+                    pool.submit(
+                            () ->
+                                    revisePriceWhileHoldingLock(
+                                            product,
+                                            variant,
+                                            new Money(new BigDecimal("20.99")),
+                                            adminLocked,
+                                            releaseAdmin));
+            assertThat(adminLocked.await(10, TimeUnit.SECONDS)).isTrue();
+            Future<PlacedOrder> placement = pool.submit(() -> checkout.place(command));
+            assertThat(purchaseStarted.await(10, TimeUnit.SECONDS)).isTrue();
+            assertThat(placement.isDone()).isFalse();
+
+            releaseAdmin.countDown();
+            writer.get(20, TimeUnit.SECONDS);
+            assertThatThrownBy(() -> placement.get(20, TimeUnit.SECONDS))
+                    .isInstanceOf(ExecutionException.class)
+                    .hasCauseInstanceOf(CheckoutReviewChangedException.class);
+        } finally {
+            releaseAdmin.countDown();
+            pool.shutdownNow();
+        }
+
+        assertThat(stock(variant)).isEqualTo(10);
+        assertThat(
+                        jdbc.queryForObject(
+                                "select price from product_variant where id=?",
+                                BigDecimal.class,
+                                variant))
+                .isEqualByComparingTo("20.99");
+        assertThat(jdbc.queryForObject("select count(*) from customer_order", Long.class)).isZero();
+        assertThat(jdbc.queryForObject("select count(*) from integration_outbox", Long.class))
+                .isZero();
+        assertThat(
+                        jdbc.queryForObject(
+                                "select count(*) from customer_cart_item where cart_id=?",
+                                Long.class,
+                                customer.cartId()))
+                .isOne();
+    }
+
+    @Test
+    void checkoutHoldingPurchaseLockPlacesReviewedFactsBeforeLaterPriceChange() throws Exception {
+        long product = CheckoutSeeds.seedProduct(jdbc, 10);
+        long variant = defaultVariant(product);
+        var customer = CheckoutSeeds.seedCustomerCart(jdbc, product, 1);
+        var command = command(customer);
+        var purchaseLocked = new CountDownLatch(1);
+        var releaseCheckout = new CountDownLatch(1);
+        var administrationAttempted = new CountDownLatch(1);
+        var administrationAcquired = new CountDownLatch(1);
+        ProductRepository target = AopTestUtils.getUltimateTargetObject(products);
+        doAnswer(
+                        call -> {
+                            Object locked = call.callRealMethod();
+                            purchaseLocked.countDown();
+                            if (!releaseCheckout.await(10, TimeUnit.SECONDS)) {
+                                throw new IllegalStateException(
+                                        "Timed out waiting to release checkout");
+                            }
+                            return locked;
+                        })
+                .when(target)
+                .findAllForPurchase(anyList());
+        doAnswer(
+                        call -> {
+                            administrationAttempted.countDown();
+                            Object loaded = call.callRealMethod();
+                            administrationAcquired.countDown();
+                            return loaded;
+                        })
+                .when(target)
+                .findForAdministrationUpdate(any(ProductId.class));
+
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        try {
+            Future<PlacedOrder> placement = pool.submit(() -> checkout.place(command));
+            assertThat(purchaseLocked.await(10, TimeUnit.SECONDS)).isTrue();
+            Future<?> writer =
+                    pool.submit(
+                            () ->
+                                    revisePrice(
+                                            product, variant, new Money(new BigDecimal("20.99"))));
+            assertThat(administrationAttempted.await(10, TimeUnit.SECONDS)).isTrue();
+            assertThat(administrationAcquired.getCount()).isOne();
+            assertThat(writer.isDone()).isFalse();
+
+            releaseCheckout.countDown();
+            PlacedOrder placed = placement.get(20, TimeUnit.SECONDS);
+            writer.get(20, TimeUnit.SECONDS);
+            assertThat(administrationAcquired.getCount()).isZero();
+            assertThat(placed.total()).isEqualTo(new Money(CheckoutSeeds.PRODUCT_PRICE));
+        } finally {
+            releaseCheckout.countDown();
+            pool.shutdownNow();
+        }
+
+        assertThat(stock(variant)).isEqualTo(9);
+        assertThat(
+                        jdbc.queryForObject(
+                                "select price from product_variant where id=?",
+                                BigDecimal.class,
+                                variant))
+                .isEqualByComparingTo("20.99");
+        assertThat(jdbc.queryForObject("select count(*) from customer_order", Long.class)).isOne();
+        assertThat(jdbc.queryForObject("select count(*) from integration_outbox", Long.class))
+                .isOne();
+    }
+
     private List<PlaceOrderCommand> interleavedCarts() {
         long p1 = CheckoutSeeds.seedProduct(jdbc, 10);
         long p2 = CheckoutSeeds.seedProduct(jdbc, 10);
@@ -236,6 +374,61 @@ class CheckoutVariantConcurrencyIT extends AbstractIntegrationTest {
                 "select stock_quantity from product_variant where id = ?", Integer.class, variant);
     }
 
+    private void revisePriceWhileHoldingLock(
+            long product,
+            long variant,
+            Money price,
+            CountDownLatch locked,
+            CountDownLatch release) {
+        new TransactionTemplate(transactions)
+                .executeWithoutResult(
+                        status -> {
+                            var loaded =
+                                    products.findForAdministrationUpdate(new ProductId(product))
+                                            .orElseThrow();
+                            locked.countDown();
+                            try {
+                                if (!release.await(10, TimeUnit.SECONDS)) {
+                                    throw new IllegalStateException(
+                                            "Timed out waiting to release administration");
+                                }
+                            } catch (InterruptedException exception) {
+                                Thread.currentThread().interrupt();
+                                throw new IllegalStateException(exception);
+                            }
+                            revisePrice(loaded, variant, price);
+                        });
+    }
+
+    private void revisePrice(long product, long variant, Money price) {
+        new TransactionTemplate(transactions)
+                .executeWithoutResult(
+                        status ->
+                                revisePrice(
+                                        products.findForAdministrationUpdate(new ProductId(product))
+                                                .orElseThrow(),
+                                        variant,
+                                        price));
+    }
+
+    private void revisePrice(
+            com.springbootecommerce.shophappens.catalog.application.port.out.VersionedProduct
+                    loaded,
+            long variant,
+            Money price) {
+        ProductVariantId variantId = new ProductVariantId(variant);
+        var current = loaded.product().variant(variantId);
+        loaded.product()
+                .reviseVariant(
+                        variantId,
+                        current.sku(),
+                        price,
+                        current.stockQuantity(),
+                        current.imageUrl(),
+                        current.active());
+        products.updateForAdministration(loaded.product(), new ProductRevision(loaded.revision()));
+    }
+
     private List<PlacedOrder> placeTogether(PlaceOrderCommand first, PlaceOrderCommand second)
             throws Exception {
         var start = new CyclicBarrier(2);
@@ -265,6 +458,6 @@ class CheckoutVariantConcurrencyIT extends AbstractIntegrationTest {
                 new CheckoutReference(UUID.randomUUID()),
                 customer.shippingAddressId(),
                 customer.billingAddressId(),
-                null);
+                CheckoutSeeds.review(preparation, clock, customer.customerId()));
     }
 }

@@ -9,7 +9,9 @@ import com.springbootecommerce.shophappens.ordering.application.port.in.Checkout
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderCommand;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderUseCase;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlacedOrder;
+import com.springbootecommerce.shophappens.ordering.application.port.in.PrepareCheckoutUseCase;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
+import java.time.Clock;
 import java.util.UUID;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
@@ -21,6 +23,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 class CheckoutIdempotencyIT extends AbstractIntegrationTest {
     @Autowired PlaceOrderUseCase checkout;
+    @Autowired PrepareCheckoutUseCase preparation;
+    @Autowired Clock clock;
     @Autowired JdbcTemplate jdbc;
 
     @Test
@@ -34,7 +38,7 @@ class CheckoutIdempotencyIT extends AbstractIntegrationTest {
                         checkoutId,
                         seed.shippingAddressId(),
                         seed.billingAddressId(),
-                        null);
+                        CheckoutSeeds.review(preparation, clock, seed.customerId()));
 
         CyclicBarrier barrier = new CyclicBarrier(2);
         ExecutorService pool = Executors.newFixedThreadPool(2);
