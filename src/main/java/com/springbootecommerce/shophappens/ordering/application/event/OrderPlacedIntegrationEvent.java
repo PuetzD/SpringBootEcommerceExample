@@ -15,10 +15,11 @@ public record OrderPlacedIntegrationEvent(
         long customerId,
         Instant occurredAt,
         BigDecimal total,
+        String currency,
         List<Item> items,
         Address shippingAddress,
         Address billingAddress) {
-    public static final String EVENT_TYPE = "ordering.order-placed.v1";
+    public static final String EVENT_TYPE = "ordering.order-placed.v2";
 
     public OrderPlacedIntegrationEvent {
         items = List.copyOf(items);
@@ -32,19 +33,28 @@ public record OrderPlacedIntegrationEvent(
                 order.customerId().value(),
                 order.placedAt(),
                 order.total().amount(),
+                order.total().currency().name(),
                 order.items().stream().map(Item::from).toList(),
                 Address.from(order.shippingAddress()),
                 Address.from(order.billingAddress()));
     }
 
     public record Item(
-            long productId, String sku, String productName, BigDecimal unitPrice, int quantity) {
-        private static Item from(OrderItem item) {
+            long variantId,
+            long productId,
+            String sku,
+            String productName,
+            BigDecimal unitPrice,
+            String currency,
+            int quantity) {
+        static Item from(OrderItem item) {
             return new Item(
+                    item.variantId().value(),
                     item.productId().value(),
                     item.sku(),
                     item.productName(),
                     item.unitPrice().amount(),
+                    item.unitPrice().currency().name(),
                     item.quantity());
         }
     }

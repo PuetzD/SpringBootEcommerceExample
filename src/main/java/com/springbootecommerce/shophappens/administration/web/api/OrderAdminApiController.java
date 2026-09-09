@@ -68,10 +68,12 @@ public class OrderAdminApiController {
 
     private OrderItemResponse toResponse(OrderItemView item) {
         return new OrderItemResponse(
+                item.variantId(),
                 item.productId(),
                 item.sku(),
                 item.productName(),
                 item.unitPrice().amount(),
+                item.unitPrice().currency().name(),
                 item.quantity(),
                 item.lineTotal().amount());
     }

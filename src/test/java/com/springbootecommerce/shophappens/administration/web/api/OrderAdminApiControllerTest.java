@@ -11,6 +11,7 @@ import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdm
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminSearch;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminSummary;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdministrationQuery;
+import com.springbootecommerce.shophappens.ordering.application.port.in.OrderItemView;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderReference;
 import com.springbootecommerce.shophappens.security.SecurityConfiguration;
 import com.springbootecommerce.shophappens.security.service.CartMergingAuthenticationSuccessHandler;
@@ -67,7 +68,11 @@ class OrderAdminApiControllerTest {
                 .andExpect(jsonPath("$.id").value(orderNumber))
                 .andExpect(jsonPath("$.orderId").isNotEmpty())
                 .andExpect(jsonPath("$.orderNumber").value(orderNumber))
-                .andExpect(jsonPath("$.customerId").value(7));
+                .andExpect(jsonPath("$.customerId").value(7))
+                .andExpect(jsonPath("$.items[0].variantId").value(202))
+                .andExpect(jsonPath("$.items[0].productId").value(7))
+                .andExpect(jsonPath("$.items[0].unitPrice").value(19.99))
+                .andExpect(jsonPath("$.items[0].currency").value("EUR"));
     }
 
     @Test
@@ -113,7 +118,15 @@ class OrderAdminApiControllerTest {
                 new CustomerId(7),
                 new Money(new BigDecimal("19.99")),
                 Instant.parse("2026-09-05T09:00:00Z"),
-                List.of(),
+                List.of(
+                        new OrderItemView(
+                                202L,
+                                7L,
+                                "SHIRT-L",
+                                "T-Shirt",
+                                new Money(new BigDecimal("19.99")),
+                                1,
+                                new Money(new BigDecimal("19.99")))),
                 List.of());
     }
 }

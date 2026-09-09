@@ -3,6 +3,7 @@ package com.springbootecommerce.shophappens.ordering.application.port.in;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 
 public record OrderItemView(
+        long variantId,
         long productId,
         String sku,
         String productName,

@@ -76,6 +76,7 @@ public class OrderQueryService implements PrepareCheckoutUseCase, OrderQuery {
                                                 .map(
                                                         i ->
                                                                 new OrderItemView(
+                                                                        i.variantId().value(),
                                                                         i.productId().value(),
                                                                         i.sku(),
                                                                         i.productName(),

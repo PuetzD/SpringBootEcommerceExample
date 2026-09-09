@@ -128,8 +128,14 @@ class OrderRepositoryAdapterIT extends AbstractIntegrationTest {
         assertThat(detail.total()).isEqualTo(original.total());
         assertThat(detail.placedAt()).isEqualTo(original.placedAt());
         assertThat(detail.items())
-                .extracting(item -> item.sku())
-                .containsExactly("ELEC-001", "TOY-003");
+                .extracting(
+                        item -> item.variantId(),
+                        item -> item.productId(),
+                        item -> item.sku(),
+                        item -> item.unitPrice().currency().name())
+                .containsExactly(
+                        org.assertj.core.groups.Tuple.tuple(202L, 7L, "ELEC-001", "EUR"),
+                        org.assertj.core.groups.Tuple.tuple(901L, 9L, "TOY-003", "EUR"));
         assertThat(detail.addresses())
                 .extracting(address -> address.role())
                 .containsExactlyInAnyOrder("SHIPPING", "BILLING");
@@ -230,7 +236,7 @@ class OrderRepositoryAdapterIT extends AbstractIntegrationTest {
                 customer,
                 List.of(
                         new OrderItem(
-                                new ProductVariantId(701L),
+                                new ProductVariantId(202L),
                                 new ProductId(7L),
                                 "ELEC-001",
                                 "Headphones",

@@ -17,8 +17,6 @@ import org.springframework.stereotype.Component;
 @ConditionalOnProperty(name = "ordering.events.kafka.enabled", havingValue = "true")
 public class OutboxKafkaPublisher {
     private static final int BATCH_SIZE = 100;
-    private static final String TOPIC = "ordering.order-placed.v1";
-    private static final String EVENT_VERSION = "1";
 
     private final IntegrationEventOutbox outbox;
     private final UpdateOutboxStatusUseCase statuses;
@@ -41,12 +39,20 @@ public class OutboxKafkaPublisher {
     public void publishPending() {
         for (PendingIntegrationEvent event : outbox.pending(BATCH_SIZE)) {
             try {
+                String version =
+                        switch (event.eventType()) {
+                            case "ordering.order-placed.v1" -> "1";
+                            case "ordering.order-placed.v2" -> "2";
+                            default ->
+                                    throw new IllegalArgumentException(
+                                            "Unsupported outbox event type");
+                        };
                 ProducerRecord<String, String> record =
-                        new ProducerRecord<>(TOPIC, event.aggregateKey(), event.payload());
+                        new ProducerRecord<>(
+                                event.eventType(), event.aggregateKey(), event.payload());
                 record.headers()
                         .add("event-type", event.eventType().getBytes(StandardCharsets.UTF_8));
-                record.headers()
-                        .add("event-version", EVENT_VERSION.getBytes(StandardCharsets.UTF_8));
+                record.headers().add("event-version", version.getBytes(StandardCharsets.UTF_8));
                 record.headers()
                         .add(
                                 "event-id",

@@ -73,10 +73,12 @@ export interface Category {
 }
 
 export interface OrderItem {
+    variantId: number
     productId: number
     sku: string
     productName: string
     unitPrice: number
+    currency: string
     quantity: number
     lineTotal: number
 }
