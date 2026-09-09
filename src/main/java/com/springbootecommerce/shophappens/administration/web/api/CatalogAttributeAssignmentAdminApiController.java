@@ -2,6 +2,7 @@ package com.springbootecommerce.shophappens.administration.web.api;
 
 import com.springbootecommerce.shophappens.catalog.application.port.in.AssignCatalogAttributeCommand;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CatalogAttributeAssignmentUseCase;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
@@ -30,9 +31,11 @@ public class CatalogAttributeAssignmentAdminApiController {
 
     @PostMapping("/products/{productId}/variants/{variantId}/attributes")
     public ResponseEntity<Void> assignToVariant(
+            @PathVariable @Positive long productId,
             @PathVariable @Positive long variantId,
             @Valid @RequestBody AssignCatalogAttributeRequest request) {
         service.assignToVariant(
+                new ProductReference(productId),
                 variantId,
                 new AssignCatalogAttributeCommand(request.definitionCode(), request.value()));
         return ResponseEntity.noContent().build();

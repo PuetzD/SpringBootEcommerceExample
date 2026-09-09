@@ -2,12 +2,16 @@ package com.springbootecommerce.shophappens.catalog.application.service;
 
 import com.springbootecommerce.shophappens.catalog.application.port.in.AssignCatalogAttributeCommand;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CatalogAttributeAssignmentUseCase;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductNotFoundException;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.catalog.application.port.out.CatalogAttributeAssignmentRepository;
 import com.springbootecommerce.shophappens.catalog.application.port.out.CatalogAttributeDefinitionRepository;
+import com.springbootecommerce.shophappens.catalog.application.port.out.ProductRepository;
 import com.springbootecommerce.shophappens.catalog.domain.model.CatalogAttributeAssignment;
 import com.springbootecommerce.shophappens.catalog.domain.model.CatalogAttributeDefinition;
 import com.springbootecommerce.shophappens.catalog.domain.model.CatalogAttributeScope;
 import com.springbootecommerce.shophappens.catalog.domain.model.CatalogAttributeType;
+import com.springbootecommerce.shophappens.catalog.domain.model.Product;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import java.math.BigDecimal;
@@ -20,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CatalogAttributeAssignmentService implements CatalogAttributeAssignmentUseCase {
     private final CatalogAttributeDefinitionRepository definitions;
     private final CatalogAttributeAssignmentRepository assignments;
+    private final ProductRepository products;
 
     @Transactional
     public void assignToProduct(long productId, AssignCatalogAttributeCommand command) {
@@ -31,8 +36,16 @@ public class CatalogAttributeAssignmentService implements CatalogAttributeAssign
     }
 
     @Transactional
-    public void assignToVariant(long variantId, AssignCatalogAttributeCommand command) {
+    public void assignToVariant(
+            ProductReference reference, long variantId, AssignCatalogAttributeCommand command) {
+        Product product =
+                products.findById(new ProductId(reference.value()))
+                        .orElseThrow(() -> new ProductNotFoundException(reference));
         ProductVariantId variant = new ProductVariantId(variantId);
+        if (product.variants().stream()
+                .noneMatch(candidate -> candidate.id().filter(variant::equals).isPresent())) {
+            throw new ProductNotFoundException(reference);
+        }
         CatalogAttributeDefinition definition = definition(command);
         if (definition.type() != CatalogAttributeType.SELECT) {
             throw new IllegalArgumentException(
