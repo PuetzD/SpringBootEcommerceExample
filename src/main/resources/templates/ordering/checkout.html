@@ -6,20 +6,52 @@
 <main class="flex-grow py-12">
   <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
     <h1 class="text-2xl font-bold mb-8">Checkout</h1>
-    <div class="alert alert-error mb-6" th:if="${checkoutError}" th:text="${checkoutError}">Checkout unavailable</div>
+    <div role="alert" class="alert alert-error mb-6" th:if="${checkoutError}" th:text="${checkoutError}">Checkout unavailable</div>
     <div th:if="${#lists.isEmpty(checkout.items())}" class="alert alert-info mb-6">Your cart is empty.</div>
+    <div role="alert" th:if="${!#lists.isEmpty(checkout.unavailableVariants())}" class="alert alert-warning mb-6">
+      <div>
+        <p>Some selected items are no longer available. Return to your cart before placing the order.</p>
+        <ul class="list-disc ms-5 mt-2">
+          <li th:each="variant : ${checkout.unavailableVariants()}">Variant <span th:text="${variant.value()}">203</span></li>
+        </ul>
+        <a th:href="@{/cart}" class="link link-primary mt-3 inline-block">Review cart</a>
+      </div>
+    </div>
     <form th:action="@{/checkout}" th:object="${checkoutForm}" method="post" class="flex flex-col gap-6">
       <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
       <input type="hidden" th:field="*{checkoutId}">
       <div th:if="${#fields.hasErrors('checkoutId')}" class="text-error" th:errors="*{checkoutId}"></div>
       <section>
         <h2 class="text-lg font-semibold mb-3">Items</h2>
-        <ul class="list bg-base-100 rounded-box shadow-sm">
-          <li th:each="item : ${checkout.items()}" class="list-row">
-            <span>Variant <span th:text="${item.variant().value()}">1</span></span>
-            <span>Quantity <span th:text="${item.quantity()}">1</span></span>
-          </li>
-        </ul>
+        <div class="overflow-x-auto bg-base-100 rounded-box shadow-sm">
+          <table class="table">
+            <caption class="sr-only">Merchandise selected for checkout</caption>
+            <thead>
+            <tr>
+              <th scope="col">Product</th>
+              <th scope="col">SKU</th>
+              <th scope="col">Unit price</th>
+              <th scope="col">Quantity</th>
+              <th scope="col">Line total</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="item : ${checkout.items()}">
+              <th scope="row" th:text="${item.productName()}">Blue shirt</th>
+              <td th:text="${item.sku()}">BLUE</td>
+              <td th:text="${#numbers.formatDecimal(item.unitPrice().amount(), 1, 2) + ' EUR'}">20.00 EUR</td>
+              <td th:text="${item.quantity()}">1</td>
+              <td th:text="${#numbers.formatDecimal(item.lineTotal().amount(), 1, 2) + ' EUR'}">20.00 EUR</td>
+            </tr>
+            </tbody>
+            <tfoot>
+            <tr>
+              <th scope="row" colspan="4">Merchandise total</th>
+              <td th:text="${#numbers.formatDecimal(checkout.merchandiseTotal().amount(), 1, 2) + ' EUR'}">20.00 EUR</td>
+            </tr>
+            </tfoot>
+          </table>
+        </div>
       </section>
       <section>
         <h2 class="text-lg font-semibold mb-3">Delivery addresses</h2>
@@ -36,7 +68,8 @@
         </select>
         <div class="text-error" th:errors="*{billingAddressId}"></div>
       </section>
-      <button type="submit" class="btn btn-primary self-start" th:disabled="${#lists.isEmpty(checkout.items())}">Place order</button>
+      <p id="placement-help" class="text-sm text-base-content/70">Merchandise prices are checked again when you place the order. Shipping, tax, and payment are not included in this demo.</p>
+      <button type="submit" class="btn btn-primary self-start" aria-describedby="placement-help" th:disabled="${#lists.isEmpty(checkout.items()) or !#lists.isEmpty(checkout.unavailableVariants())}">Place order</button>
     </form>
   </div>
 </main>

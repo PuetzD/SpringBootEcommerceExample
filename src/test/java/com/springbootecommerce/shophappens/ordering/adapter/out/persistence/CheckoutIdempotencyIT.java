@@ -33,7 +33,8 @@ class CheckoutIdempotencyIT extends AbstractIntegrationTest {
                         new CustomerId(seed.customerId()),
                         checkoutId,
                         seed.shippingAddressId(),
-                        seed.billingAddressId());
+                        seed.billingAddressId(),
+                        null);
 
         CyclicBarrier barrier = new CyclicBarrier(2);
         ExecutorService pool = Executors.newFixedThreadPool(2);

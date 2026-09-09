@@ -37,7 +37,8 @@ class CheckoutRollbackIT extends AbstractIntegrationTest {
                         new CustomerId(seed.customerId()),
                         checkoutId,
                         seed.shippingAddressId(),
-                        seed.billingAddressId());
+                        seed.billingAddressId(),
+                        null);
 
         List<RequestedProduct> cartItems =
                 jdbc.query(

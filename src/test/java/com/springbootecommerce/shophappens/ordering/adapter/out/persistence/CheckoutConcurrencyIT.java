@@ -87,7 +87,8 @@ class CheckoutConcurrencyIT extends AbstractIntegrationTest {
                 new CustomerId(customer.customerId()),
                 new CheckoutReference(UUID.randomUUID()),
                 customer.shippingAddressId(),
-                customer.billingAddressId());
+                customer.billingAddressId(),
+                null);
     }
 
     private static Attempt placeAfterBarrier(
