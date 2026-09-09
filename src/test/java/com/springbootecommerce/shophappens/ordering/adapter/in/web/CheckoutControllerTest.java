@@ -54,7 +54,7 @@ class CheckoutControllerTest {
         when(preparation.prepare(new CustomerId(CUSTOMER.value())))
                 .thenReturn(
                         new CheckoutPreparation(
-                                new CustomerId(CUSTOMER.value()), List.of(), List.of()));
+                                new CustomerId(CUSTOMER.value()), List.of(), List.of(), List.of()));
     }
 
     @Test
