@@ -6,6 +6,7 @@ import com.springbootecommerce.shophappens.cart.application.port.out.AfterCommit
 import com.springbootecommerce.shophappens.cart.application.port.out.CartMergeLedger;
 import com.springbootecommerce.shophappens.cart.application.port.out.CustomerCartRepository;
 import com.springbootecommerce.shophappens.cart.application.port.out.GuestCartRepository;
+import com.springbootecommerce.shophappens.cart.application.port.out.GuestCartWriteGuard;
 import com.springbootecommerce.shophappens.cart.domain.model.Cart;
 import com.springbootecommerce.shophappens.cart.domain.model.GuestCartId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
@@ -21,12 +22,14 @@ public class CartMergeService implements MergeGuestCartUseCase {
     private final CustomerCartRepository customers;
     private final CartMergeLedger ledger;
     private final AfterCommitExecutor afterCommit;
+    private final GuestCartWriteGuard guestWrites;
 
     @Override
-    @Transactional
+    @Transactional(timeout = 10)
     public void merge(GuestCartReference guest, CustomerId customer) {
         GuestCartId guestId = new GuestCartId(guest.value());
         CustomerId customerId = customer;
+        guestWrites.acquire(guestId);
         if (!ledger.claim(guestId, customerId)) {
             afterCommit.execute(() -> guests.delete(guestId));
             return;

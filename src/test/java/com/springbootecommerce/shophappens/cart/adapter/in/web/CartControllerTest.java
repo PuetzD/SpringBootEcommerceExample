@@ -20,6 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.springbootecommerce.shophappens.cart.application.port.in.CartItemSnapshot;
 import com.springbootecommerce.shophappens.cart.application.port.in.CustomerCartSnapshot;
 import com.springbootecommerce.shophappens.cart.application.port.in.CustomerCartUseCase;
+import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartConsumedException;
 import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartReference;
 import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartSnapshot;
 import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartUseCase;
@@ -43,6 +44,7 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -294,6 +296,45 @@ class CartControllerTest {
         mvc.perform(post("/cart/items/202/quantity").param("quantity", "2"))
                 .andExpect(status().isForbidden());
         mvc.perform(post("/cart/items/202/remove")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void consumedGuestMutationReturnsConflictAndRecoveryLink() throws Exception {
+        when(currentCustomer.current()).thenReturn(Optional.empty());
+        MockHttpSession session = new MockHttpSession();
+        doThrow(new GuestCartConsumedException())
+                .when(guestCart)
+                .remove(any(GuestCartReference.class), eq(VARIANT));
+
+        mvc.perform(post("/cart/items/202/remove").session(session).with(csrf()))
+                .andExpect(status().isConflict())
+                .andExpect(view().name("cart/conflict"))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("/cart")))
+                .andExpect(
+                        content()
+                                .string(
+                                        org.hamcrest.Matchers.containsString(
+                                                "already been merged")));
+        org.assertj.core.api.Assertions.assertThat(
+                        session.getAttribute(GuestCartReference.SESSION_ATTRIBUTE))
+                .isNotNull();
+    }
+
+    @Test
+    void guestStorageFailureReturnsServiceUnavailableWithReloadGuidance() throws Exception {
+        when(currentCustomer.current()).thenReturn(Optional.empty());
+        doThrow(new DataAccessResourceFailureException("Redis unavailable"))
+                .when(guestCart)
+                .remove(any(GuestCartReference.class), eq(VARIANT));
+
+        mvc.perform(post("/cart/items/202/remove").with(csrf()))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(view().name("cart/conflict"))
+                .andExpect(
+                        content()
+                                .string(
+                                        org.hamcrest.Matchers.containsString(
+                                                "Cart could not be saved")));
     }
 
     private static ProductSummary productSummary() {

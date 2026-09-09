@@ -13,6 +13,7 @@ import com.springbootecommerce.shophappens.cart.application.port.out.AfterCommit
 import com.springbootecommerce.shophappens.cart.application.port.out.CartMergeLedger;
 import com.springbootecommerce.shophappens.cart.application.port.out.CustomerCartRepository;
 import com.springbootecommerce.shophappens.cart.application.port.out.GuestCartRepository;
+import com.springbootecommerce.shophappens.cart.application.port.out.GuestCartWriteGuard;
 import com.springbootecommerce.shophappens.cart.domain.model.Cart;
 import com.springbootecommerce.shophappens.cart.domain.model.CartId;
 import com.springbootecommerce.shophappens.cart.domain.model.CartOwner;
@@ -23,6 +24,7 @@ import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantI
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -32,6 +34,7 @@ class CartMergeServiceTest {
     @Mock GuestCartRepository guests;
     @Mock CustomerCartRepository customers;
     @Mock CartMergeLedger ledger;
+    @Mock GuestCartWriteGuard guard;
     @Mock AfterCommitExecutor afterCommit;
     @InjectMocks CartMergeService service;
 
@@ -46,6 +49,10 @@ class CartMergeServiceTest {
 
         service.merge(new GuestCartReference(guestId.value()), new CustomerId(42L));
 
+        InOrder protocol = org.mockito.Mockito.inOrder(guard, ledger, guests, customers);
+        protocol.verify(guard).acquire(guestId);
+        protocol.verify(ledger).claim(guestId, new CustomerId(42L));
+        protocol.verify(guests).find(guestId);
         verify(customers).save(argThat(cart -> cart.items().getFirst().quantity().value() == 5));
         verify(afterCommit).execute(argThat(action -> action != null));
     }

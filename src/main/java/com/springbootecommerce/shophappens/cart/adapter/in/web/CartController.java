@@ -2,6 +2,7 @@ package com.springbootecommerce.shophappens.cart.adapter.in.web;
 
 import com.springbootecommerce.shophappens.cart.application.port.in.CartItemSnapshot;
 import com.springbootecommerce.shophappens.cart.application.port.in.CustomerCartUseCase;
+import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartConsumedException;
 import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartSnapshot;
 import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartUseCase;
 import com.springbootecommerce.shophappens.catalog.application.port.in.BrowseCatalogUseCase;
@@ -16,14 +17,18 @@ import jakarta.servlet.http.HttpSession;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.TransactionException;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 @RequiredArgsConstructor
@@ -122,6 +127,18 @@ public class CartController {
         return "redirect:/cart";
     }
 
+    @ExceptionHandler(GuestCartConsumedException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public String consumedGuestCart(GuestCartConsumedException exception, Model model) {
+        return conflict(exception.getMessage(), model);
+    }
+
+    @ExceptionHandler({DataAccessException.class, TransactionException.class})
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public String cartStorageUnavailable(Model model) {
+        return conflict("Cart could not be saved. Reload your cart to check its contents.", model);
+    }
+
     private static ProductVariantId requireVariantId(long value) {
         if (value < 1) {
             throw new ResponseStatusException(
@@ -154,6 +171,12 @@ public class CartController {
                         "noindex,nofollow");
         model.addAttribute("seo", seo);
         model.addAttribute("canonicalUrl", canonicalUrlFactory.forPath(seo.canonicalPath()));
+    }
+
+    private String conflict(String message, Model model) {
+        addSeo(model);
+        model.addAttribute("message", message);
+        return "cart/conflict";
     }
 
     public record CartLine(CartItemSnapshot item, ProductSummary product) {

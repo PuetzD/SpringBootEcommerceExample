@@ -22,4 +22,13 @@ class PostgresCartMergeLedger implements CartMergeLedger {
                         customerId.value());
         return inserted == 1;
     }
+
+    @Override
+    public boolean isConsumed(GuestCartId guestCartId) {
+        return Boolean.TRUE.equals(
+                jdbc.queryForObject(
+                        "select exists(select 1 from consumed_guest_cart where guest_cart_id=?)",
+                        Boolean.class,
+                        guestCartId.value()));
+    }
 }

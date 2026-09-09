@@ -5,13 +5,17 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.springbootecommerce.shophappens.cart.application.port.in.CustomerCartSnapshot;
+import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartConsumedException;
 import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartReference;
 import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartSnapshot;
+import com.springbootecommerce.shophappens.cart.application.port.out.CartMergeLedger;
 import com.springbootecommerce.shophappens.cart.application.port.out.CustomerCartRepository;
 import com.springbootecommerce.shophappens.cart.application.port.out.GuestCartRepository;
+import com.springbootecommerce.shophappens.cart.application.port.out.GuestCartWriteGuard;
 import com.springbootecommerce.shophappens.cart.domain.model.Cart;
 import com.springbootecommerce.shophappens.cart.domain.model.CartId;
 import com.springbootecommerce.shophappens.cart.domain.model.CartOwner;
@@ -30,6 +34,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class CartServiceTest {
     @Mock GuestCartRepository guests;
     @Mock CustomerCartRepository customers;
+    @Mock GuestCartWriteGuard guard;
+    @Mock CartMergeLedger ledger;
     @InjectMocks CartService service;
 
     @Test
@@ -115,6 +121,38 @@ class CartServiceTest {
                                                                 item.variantId().value() == 701L
                                                                         && item.quantity().value()
                                                                                 == 2)));
+    }
+
+    @Test
+    void guestRemoveAcquiresGuardBeforeLoadingAndSaves() {
+        GuestCartId guestId = GuestCartId.random();
+        var variant = new ProductVariantId(202);
+        Cart cart = cartWith(guestId, 5);
+        cart.changeQuantity(variant, new Quantity(1));
+        when(guests.find(guestId)).thenReturn(Optional.of(cart));
+
+        service.remove(new GuestCartReference(guestId.value()), variant);
+
+        var protocol = org.mockito.Mockito.inOrder(guard, ledger, guests);
+        protocol.verify(guard).acquire(guestId);
+        protocol.verify(ledger).isConsumed(guestId);
+        protocol.verify(guests).find(guestId);
+        verify(guests).save(cart);
+        assertThat(cart.items()).isEmpty();
+    }
+
+    @Test
+    void consumedGuestRejectsMutationBeforeReadingOrWritingRedis() {
+        GuestCartId guestId = GuestCartId.random();
+        var reference = new GuestCartReference(guestId.value());
+        when(ledger.isConsumed(guestId)).thenReturn(true);
+
+        assertThatThrownBy(() -> service.add(reference, new ProductVariantId(202), 1))
+                .isInstanceOf(GuestCartConsumedException.class);
+
+        verify(guard).acquire(guestId);
+        verify(ledger).isConsumed(guestId);
+        verifyNoInteractions(guests);
     }
 
     @Test
