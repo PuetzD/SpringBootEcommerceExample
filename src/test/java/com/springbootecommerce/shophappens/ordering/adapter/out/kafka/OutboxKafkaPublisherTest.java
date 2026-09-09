@@ -2,7 +2,9 @@ package com.springbootecommerce.shophappens.ordering.adapter.out.kafka;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -17,6 +19,8 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,6 +30,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
 
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings("unchecked")
@@ -95,7 +100,61 @@ class OutboxKafkaPublisherTest {
         publisher.publishPending();
 
         verifyNoInteractions(kafka);
-        verify(statuses).markFailed(eventId, "Unsupported outbox event type");
+        verify(statuses).markFailed(eventId, "IllegalArgumentException");
         verify(statuses, never()).markPublished(any(), any());
+    }
+
+    @Test
+    void timeoutMarksFailureAndContinuesWithTheNextEvent() throws Exception {
+        UUID timedOutId = UUID.fromString("55555555-5555-5555-5555-555555555555");
+        UUID healthyId = UUID.fromString("66666666-6666-6666-6666-666666666666");
+        when(outbox.pending(100))
+                .thenReturn(
+                        List.of(pending(timedOutId, "timed-out"), pending(healthyId, "healthy")));
+        CompletableFuture<SendResult<String, String>> timedOut = mock(CompletableFuture.class);
+        when(timedOut.get(10, TimeUnit.SECONDS)).thenThrow(new TimeoutException());
+        when(kafka.send(any(ProducerRecord.class)))
+                .thenReturn(timedOut, CompletableFuture.completedFuture(null));
+        OutboxKafkaPublisher publisher =
+                new OutboxKafkaPublisher(
+                        outbox, statuses, kafka, Clock.fixed(PUBLISHED_AT, ZoneOffset.UTC));
+
+        publisher.publishPending();
+
+        verify(statuses).markFailed(timedOutId, "TimeoutException");
+        verify(statuses, never()).markPublished(timedOutId, PUBLISHED_AT);
+        verify(statuses).markPublished(healthyId, PUBLISHED_AT);
+        verify(kafka, times(2)).send(any(ProducerRecord.class));
+    }
+
+    @Test
+    void interruptionStopsTheBatchAndRestoresTheThreadFlag() throws Exception {
+        UUID interruptedId = UUID.fromString("77777777-7777-7777-7777-777777777777");
+        UUID untouchedId = UUID.fromString("88888888-8888-8888-8888-888888888888");
+        when(outbox.pending(100))
+                .thenReturn(
+                        List.of(
+                                pending(interruptedId, "interrupted"),
+                                pending(untouchedId, "untouched")));
+        CompletableFuture<SendResult<String, String>> interrupted = mock(CompletableFuture.class);
+        when(interrupted.get(10, TimeUnit.SECONDS)).thenThrow(new InterruptedException());
+        when(kafka.send(any(ProducerRecord.class))).thenReturn(interrupted);
+        OutboxKafkaPublisher publisher =
+                new OutboxKafkaPublisher(
+                        outbox, statuses, kafka, Clock.fixed(PUBLISHED_AT, ZoneOffset.UTC));
+
+        try {
+            publisher.publishPending();
+
+            assertThat(Thread.currentThread().isInterrupted()).isTrue();
+            verify(kafka).send(any(ProducerRecord.class));
+            verifyNoInteractions(statuses);
+        } finally {
+            Thread.interrupted();
+        }
+    }
+
+    private static PendingIntegrationEvent pending(UUID eventId, String aggregateKey) {
+        return new PendingIntegrationEvent(eventId, "ordering.order-placed.v2", aggregateKey, "{}");
     }
 }

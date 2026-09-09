@@ -6,6 +6,7 @@ import com.springbootecommerce.shophappens.ordering.application.port.out.Integra
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -57,9 +58,12 @@ public class OutboxKafkaPublisher {
                         .add(
                                 "event-id",
                                 event.eventId().toString().getBytes(StandardCharsets.UTF_8));
-                kafka.send(record).get();
+                kafka.send(record).get(10, TimeUnit.SECONDS);
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+                return;
             } catch (Exception exception) {
-                statuses.markFailed(event.eventId(), exception.getMessage());
+                statuses.markFailed(event.eventId(), exception.getClass().getSimpleName());
                 continue;
             }
             statuses.markPublished(event.eventId(), Instant.now(clock));

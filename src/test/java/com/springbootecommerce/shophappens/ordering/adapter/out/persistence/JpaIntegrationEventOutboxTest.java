@@ -42,6 +42,8 @@ class JpaIntegrationEventOutboxTest {
         assertThat(entity.getEventType()).isEqualTo("ordering.order-placed.v2");
         assertThat(entity.getAggregateKey()).isEqualTo("22222222-2222-2222-2222-222222222222");
         assertThat(entity.getCreatedAt()).isEqualTo(CREATED_AT);
+        assertThat(entity.getNextAttemptAt()).isEqualTo(CREATED_AT);
+        assertThat(entity.getQuarantinedAt()).isNull();
 
         JsonNode payload = objectMapper.readTree(entity.getPayload());
         assertThat(payload.propertyNames())

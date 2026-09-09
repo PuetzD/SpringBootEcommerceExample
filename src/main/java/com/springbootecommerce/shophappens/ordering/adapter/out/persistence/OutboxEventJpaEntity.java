@@ -45,6 +45,12 @@ class OutboxEventJpaEntity {
     @Column(name = "last_error", columnDefinition = "text")
     private String lastError;
 
+    @Column(name = "next_attempt_at", nullable = false)
+    private Instant nextAttemptAt;
+
+    @Column(name = "quarantined_at")
+    private Instant quarantinedAt;
+
     static OutboxEventJpaEntity create(
             UUID eventId,
             String eventType,
@@ -58,6 +64,7 @@ class OutboxEventJpaEntity {
         entity.aggregateKey = aggregateKey;
         entity.payload = payload;
         entity.createdAt = createdAt;
+        entity.nextAttemptAt = createdAt;
         return entity;
     }
 }
