@@ -1,4 +1,4 @@
-import {render, screen} from '@testing-library/react'
+import {render, screen, within} from '@testing-library/react'
 import {AdminContext, ResourceContextProvider} from 'react-admin'
 import {CustomerList} from '../../../admin/customers/CustomerList'
 import {CustomerShow} from '../../../admin/customers/CustomerShow'
@@ -52,6 +52,7 @@ describe('Customer resource', () => {
     expect(await screen.findByText('Alice')).toBeTruthy()
     expect(screen.getByText('Example')).toBeTruthy()
     expect(screen.getByText('alice@example.com')).toBeTruthy()
+    expect(within(screen.getByRole('table')).queryByRole('button', {name: 'ra.sort.sort_by'})).toBeNull()
     expect(screen.queryByRole('button', {name: /create|edit|delete/i})).toBeNull()
   })
 

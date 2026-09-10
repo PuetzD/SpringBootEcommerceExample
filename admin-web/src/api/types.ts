@@ -12,7 +12,7 @@ export interface FieldErrorResponse {
 
 export type ApiQueryValue = string | number | boolean
 
-export type ApiQueryParams = Record<string, ApiQueryValue | undefined>
+export type ApiQueryParams = Record<string, ApiQueryValue | null | undefined>
 
 export interface ApiRequestOptions {
     params?: ApiQueryParams

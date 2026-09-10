@@ -1,5 +1,5 @@
 import type {ApiErrorResponse, ApiQueryParams, ApiRequestOptions, FieldErrorResponse} from './types'
-import {clearToken, getToken, refreshToken} from '../auth/CsrfProvider'
+import {clearToken, getCsrf, refreshToken} from '../auth/CsrfProvider'
 
 export class ApiError extends Error {
     status: number
@@ -17,8 +17,8 @@ export class ApiError extends Error {
 }
 
 function csrfHeaders(): Record<string, string> {
-    const token = getToken()
-    return token ? {'X-CSRF-TOKEN': token} : {}
+    const csrf = getCsrf()
+    return csrf ? {[csrf.headerName]: csrf.token} : {}
 }
 
 function revisionHeaders(revision?: number): Record<string, string> {
@@ -76,7 +76,7 @@ export const ApiClient = {
         const url = new URL(path, window.location.origin)
         if (params) {
             Object.entries(params).forEach(([key, value]) => {
-                if (value !== undefined) url.searchParams.append(key, String(value))
+                if (value !== undefined && value !== null) url.searchParams.append(key, String(value))
             })
         }
         const response = await fetch(url.toString(), {

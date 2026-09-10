@@ -12,9 +12,9 @@ export function CategoryList() {
       pagination={<Pagination rowsPerPageOptions={[5, 10, 20, 25, 50]} />}
     >
       <Datagrid rowClick="edit" bulkActionButtons={false}>
-        <TextField source="name" />
-        <TextField source="slug" />
-        <NumberField source="productCount" label="Products" />
+        <TextField source="name" sortable={false} />
+        <TextField source="slug" sortable={false} />
+        <NumberField source="productCount" label="Products" sortable={false} />
         <EditButton label="Rename" />
         <DeleteButton
           mutationMode="pessimistic"

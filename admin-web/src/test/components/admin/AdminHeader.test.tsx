@@ -22,4 +22,22 @@ describe('AdminHeader logout', () => {
     expect(fetch).toHaveBeenCalledWith('/api/admin/csrf', expect.anything())
     setToken(null)
   })
+
+  it('submits logout with the CSRF header name supplied by the server', async () => {
+    setToken('logout-token', 'X-XSRF-TOKEN')
+    vi.mocked(fetch).mockRejectedValueOnce(new Error('stop after request capture'))
+
+    await expect(logout()).rejects.toThrow('stop after request capture')
+
+    expect(fetch).toHaveBeenCalledWith('/admin/logout', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        'X-XSRF-TOKEN': 'logout-token',
+      },
+      body: undefined,
+    })
+  })
 })

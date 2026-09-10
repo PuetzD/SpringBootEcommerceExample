@@ -1,4 +1,4 @@
-import {render, screen} from '@testing-library/react'
+import {render, screen, within} from '@testing-library/react'
 import {AdminContext, ResourceContextProvider} from 'react-admin'
 import {CategoryList} from '../../../admin/categories/CategoryList'
 
@@ -24,6 +24,7 @@ describe('Category resource', () => {
 
     expect(await screen.findByText('Networking')).toBeTruthy()
     expect(screen.getByText('4')).toBeTruthy()
+    expect(within(screen.getByRole('table')).queryByRole('button', {name: 'ra.sort.sort_by'})).toBeNull()
     expect(consoleError).not.toHaveBeenCalled()
     expect(consoleWarn).not.toHaveBeenCalled()
 

@@ -8,10 +8,10 @@ export function OrderList() {
   return (
     <List filters={filters} perPage={20} pagination={<Pagination rowsPerPageOptions={[5, 10, 20, 25, 50]} />}>
       <Datagrid rowClick="show" bulkActionButtons={false}>
-        <TextField source="orderNumber" label="Order number" />
-        <NumberField source="customerId" label="Customer" />
-        <NumberField source="total" options={{style: 'currency', currency: 'EUR'}} />
-        <DateField source="placedAt" showTime />
+        <TextField source="orderNumber" label="Order number" sortable={false} />
+        <NumberField source="customerId" label="Customer" sortable={false} />
+        <NumberField source="total" sortable={false} options={{style: 'currency', currency: 'EUR'}} />
+        <DateField source="placedAt" showTime sortable={false} />
       </Datagrid>
     </List>
   )
