@@ -67,8 +67,8 @@ public class CategoryAdminApiController {
     }
 
     @GetMapping("/categories/options")
-    public List<CategoryOption> listCategoryOptions() {
-        return categoryAdminQuery.listCategoryOptions();
+    public List<CategoryOptionResponse> listCategoryOptions() {
+        return categoryAdminQuery.listCategoryOptions().stream().map(this::toResponse).toList();
     }
 
     @PostMapping("/categories")
@@ -113,5 +113,10 @@ public class CategoryAdminApiController {
                 "/api/admin/categories/" + category.category().value(),
                 "/api/admin/categories/" + category.category().value(),
                 "/api/admin/categories/" + category.category().value());
+    }
+
+    private CategoryOptionResponse toResponse(CategoryOption category) {
+        return new CategoryOptionResponse(
+                category.category().value(), category.name(), category.slug());
     }
 }
