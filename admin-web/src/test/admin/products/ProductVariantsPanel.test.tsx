@@ -1,7 +1,7 @@
 import {fireEvent, render, screen, waitFor} from '@testing-library/react'
-import {AdminContext, HttpError} from 'react-admin'
-import type {ProductVariant} from '../../../api/types'
-import {VariantRow} from '../../../admin/products/ProductVariantsPanel'
+import {AdminContext, HttpError, RecordContextProvider} from 'react-admin'
+import type {Product, ProductVariant} from '../../../api/types'
+import {ProductVariantsPanel, VariantRow} from '../../../admin/products/ProductVariantsPanel'
 
 const initial: ProductVariant = {
   id: 12,
@@ -13,6 +13,19 @@ const initial: ProductVariant = {
   active: true,
   defaultVariant: false,
   productRevision: 4,
+}
+
+const family: Product = {
+  id: 9,
+  sku: 'BASE',
+  name: 'Router',
+  description: null,
+  price: 20,
+  stockQuantity: 10,
+  imageUrl: null,
+  active: true,
+  revision: 4,
+  categories: [],
 }
 
 function setup() {
@@ -34,6 +47,43 @@ function setup() {
 
 const stock = () =>
   screen.getByRole('spinbutton', {name: 'Stock for BLUE'}) as HTMLInputElement
+
+it('locks variant creation until a pending request settles', async () => {
+  let settle!: (value: {data: ProductVariant}) => void
+  const create = vi.fn().mockReturnValue(
+    new Promise<{data: ProductVariant}>((resolve) => {
+      settle = resolve
+    }),
+  )
+
+  render(
+    <AdminContext dataProvider={{create, getList: vi.fn().mockResolvedValue({data: [], total: 0})}}>
+      <RecordContextProvider value={family}>
+        <ProductVariantsPanel />
+      </RecordContextProvider>
+    </AdminContext>,
+  )
+
+  fireEvent.change(screen.getByRole('textbox', {name: 'SKU'}), {target: {value: 'PURPLE'}})
+  fireEvent.change(screen.getByRole('spinbutton', {name: 'Price'}), {target: {value: '19.99'}})
+  fireEvent.change(screen.getByRole('spinbutton', {name: 'Stock'}), {target: {value: '2'}})
+  fireEvent.click(screen.getByRole('button', {name: 'Add variant'}))
+
+  await waitFor(() => expect(create).toHaveBeenCalledTimes(1))
+  expect(screen.getByRole('group', {name: 'Add a variant'}).getAttribute('aria-busy')).toBe('true')
+  expect((screen.getByRole('textbox', {name: 'SKU'}) as HTMLInputElement).disabled).toBe(true)
+  expect((screen.getByRole('spinbutton', {name: 'Price'}) as HTMLInputElement).disabled).toBe(true)
+  expect((screen.getByRole('spinbutton', {name: 'Stock'}) as HTMLInputElement).disabled).toBe(true)
+  expect((screen.getByRole('button', {name: 'Add variant'}) as HTMLButtonElement).disabled).toBe(true)
+
+  fireEvent.click(screen.getByRole('button', {name: 'Add variant'}))
+  expect(create).toHaveBeenCalledTimes(1)
+
+  settle({data: {...initial, sku: 'PURPLE'}})
+  await waitFor(() =>
+    expect((screen.getByRole('button', {name: 'Add variant'}) as HTMLButtonElement).disabled).toBe(false),
+  )
+})
 
 it('refreshes pristine stock from server props', () => {
   const {refetch} = setup()

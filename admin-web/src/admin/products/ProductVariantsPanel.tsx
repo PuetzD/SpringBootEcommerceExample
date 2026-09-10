@@ -22,14 +22,14 @@ export function ProductVariantsPanel() {
     filter: {productId: product?.id},
     pagination: {page: 1, perPage: 100},
   })
-  const [create] = useCreate()
+  const [create, {isPending: creating}] = useCreate()
   const [form, setForm] = useState<VariantForm>(blankVariant)
 
   if (!product) return null
 
   function submit(event: FormEvent) {
     event.preventDefault()
-    if (productId === undefined) return
+    if (creating || productId === undefined) return
     create(
       'productVariants',
       {data: {...form, productId, revision: product?.revision}},
@@ -54,12 +54,15 @@ export function ProductVariantsPanel() {
           <tbody>{data.map((variant) => <VariantRow key={variant.id} variant={variant} />)}</tbody>
         </table>
       </div>}
-      <form className="mt-4 grid gap-3 md:grid-cols-5" onSubmit={submit}>
-        <label className="form-control"><span className="label-text">SKU</span><input className="input input-bordered" value={form.sku} onChange={(event) => setForm({...form, sku: event.target.value})} required /></label>
-        <label className="form-control"><span className="label-text">Price</span><input className="input input-bordered" type="number" min="0.01" step="0.01" value={form.price} onChange={(event) => setForm({...form, price: Number(event.target.value)})} required /></label>
-        <label className="form-control"><span className="label-text">Stock</span><input className="input input-bordered" type="number" min="0" value={form.stockQuantity} onChange={(event) => setForm({...form, stockQuantity: Number(event.target.value)})} required /></label>
-        <label className="form-control"><span className="label-text">Image URL</span><input className="input input-bordered" value={form.imageUrl ?? ''} onChange={(event) => setForm({...form, imageUrl: event.target.value || null})} /></label>
-        <button className="btn btn-primary self-end" type="submit">Add variant</button>
+      <form className="mt-4" onSubmit={submit}>
+        <fieldset className="grid gap-3 md:grid-cols-5" disabled={creating} aria-busy={creating}>
+          <legend className="sr-only">Add a variant</legend>
+          <label className="form-control"><span className="label-text">SKU</span><input className="input input-bordered" disabled={creating} value={form.sku} onChange={(event) => setForm({...form, sku: event.target.value})} required /></label>
+          <label className="form-control"><span className="label-text">Price</span><input className="input input-bordered" disabled={creating} type="number" min="0.01" step="0.01" value={form.price} onChange={(event) => setForm({...form, price: Number(event.target.value)})} required /></label>
+          <label className="form-control"><span className="label-text">Stock</span><input className="input input-bordered" disabled={creating} type="number" min="0" value={form.stockQuantity} onChange={(event) => setForm({...form, stockQuantity: Number(event.target.value)})} required /></label>
+          <label className="form-control"><span className="label-text">Image URL</span><input className="input input-bordered" disabled={creating} value={form.imageUrl ?? ''} onChange={(event) => setForm({...form, imageUrl: event.target.value || null})} /></label>
+          <button className="btn btn-primary self-end" disabled={creating} type="submit">Add variant</button>
+        </fieldset>
       </form>
     </section>
   )
