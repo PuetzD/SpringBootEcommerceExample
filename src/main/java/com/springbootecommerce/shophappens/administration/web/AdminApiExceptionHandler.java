@@ -70,6 +70,17 @@ public class AdminApiExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleResponseStatus(
             ResponseStatusException ex, HttpServletRequest request) {
         int status = ex.getStatusCode() != null ? ex.getStatusCode().value() : 500;
+        if (status >= HttpStatus.INTERNAL_SERVER_ERROR.value()) {
+            LOGGER.error(
+                    "Unexpected admin API failure for {} {}",
+                    request.getMethod(),
+                    request.getRequestURI(),
+                    ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(
+                            new ApiErrorResponse(
+                                    "An unexpected error occurred", 500, "internal.error"));
+        }
         String message =
                 ex.getReason() != null && !ex.getReason().isBlank()
                         ? ex.getReason()

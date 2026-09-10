@@ -131,7 +131,8 @@ public class ProductAdminApiController {
 
     @DeleteMapping("/products/{id}")
     public ResponseEntity<Void> deleteProduct(
-            @PathVariable @Positive long id, @RequestHeader("If-Match") String ifMatch) {
+            @PathVariable @Positive long id,
+            @RequestHeader(value = "If-Match", required = false) String ifMatch) {
         productAdministrationUseCase.deactivateProduct(
                 new ProductReference(id),
                 new ProductRevision(ExpectedRevisionParser.parse(ifMatch)));
@@ -149,7 +150,7 @@ public class ProductAdminApiController {
     public ProductVariantResponse createVariant(
             @PathVariable @Positive long id,
             @Valid @RequestBody CreateProductVariantRequest request,
-            @RequestHeader("If-Match") String ifMatch) {
+            @RequestHeader(value = "If-Match", required = false) String ifMatch) {
         ProductVariantAdminView created =
                 productAdministrationUseCase.createVariant(
                         new ProductReference(id),
@@ -186,7 +187,7 @@ public class ProductAdminApiController {
     public ResponseEntity<Void> deleteVariant(
             @PathVariable @Positive long productId,
             @PathVariable @Positive long variantId,
-            @RequestHeader("If-Match") String ifMatch) {
+            @RequestHeader(value = "If-Match", required = false) String ifMatch) {
         productAdministrationUseCase.deleteVariant(
                 new ProductReference(productId),
                 new ProductVariantId(variantId),

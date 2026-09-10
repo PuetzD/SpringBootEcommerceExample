@@ -19,6 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.springbootecommerce.shophappens.catalog.application.port.in.AmbiguousProductUpdateException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CreateProductCommand;
+import com.springbootecommerce.shophappens.catalog.application.port.in.DuplicateSkuException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminPage;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminSearch;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminView;
@@ -27,6 +28,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAd
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductCategorySummary;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductRevision;
+import com.springbootecommerce.shophappens.catalog.application.port.in.StaleProductRevisionException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.UpdateProductCommand;
 import com.springbootecommerce.shophappens.catalog.application.port.in.UpdateProductFamilyCommand;
 import com.springbootecommerce.shophappens.security.SecurityConfiguration;
@@ -89,6 +91,25 @@ class ProductAdminApiControllerTest {
     }
 
     @Test
+    void forwardsDatabaseBoundedProductSearchParameters() throws Exception {
+        when(productAdminQuery.searchProducts(new ProductAdminSearch(2, 25, "widget", true)))
+                .thenReturn(new ProductAdminPage(List.of(), 2, 25, 0, 0));
+
+        mockMvc.perform(
+                        get("/api/admin/products")
+                                .param("page", "2")
+                                .param("size", "25")
+                                .param("q", "widget")
+                                .param("active", "true")
+                                .with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page").value(2))
+                .andExpect(jsonPath("$.size").value(25));
+
+        verify(productAdminQuery).searchProducts(new ProductAdminSearch(2, 25, "widget", true));
+    }
+
+    @Test
     void adminCanGetProductDetail() throws Exception {
         when(productAdminQuery.findProduct(new ProductReference(1L)))
                 .thenReturn(
@@ -117,18 +138,36 @@ class ProductAdminApiControllerTest {
     }
 
     @Test
-    void rejectsOversizedProductPages() throws Exception {
+    void rejectsProductPagesOutsideDatabaseBounds() throws Exception {
+        mockMvc.perform(
+                        get("/api/admin/products")
+                                .param("page", "-1")
+                                .with(user("admin").roles("ADMIN")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("catalog.invalid"));
+        mockMvc.perform(
+                        get("/api/admin/products")
+                                .param("size", "0")
+                                .with(user("admin").roles("ADMIN")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("catalog.invalid"));
         mockMvc.perform(
                         get("/api/admin/products")
                                 .param("size", "101")
                                 .with(user("admin").roles("ADMIN")))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("catalog.invalid"));
     }
 
     @Test
     void customerReceivesForbiddenForProducts() throws Exception {
         mockMvc.perform(get("/api/admin/products").with(user("customer").roles("CUSTOMER")))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void anonymousUserReceivesUnauthorizedForProducts() throws Exception {
+        mockMvc.perform(get("/api/admin/products")).andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -148,7 +187,9 @@ class ProductAdminApiControllerTest {
                                 .with(csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"sku\":\"\",\"name\":\"\",\"price\":-1}"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("request.validation"))
+                .andExpect(jsonPath("$.fieldErrors.sku").value("SKU is required"));
     }
 
     @Test
@@ -311,5 +352,64 @@ class ProductAdminApiControllerTest {
                 .andExpect(status().isNoContent());
         verify(productAdministrationUseCase)
                 .deactivateProduct(new ProductReference(1L), new ProductRevision(4L));
+    }
+
+    @Test
+    void productDeletionRequiresQuotedRevisionAndCsrf() throws Exception {
+        mockMvc.perform(
+                        delete("/api/admin/products/1")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("catalog.invalid"));
+        mockMvc.perform(
+                        delete("/api/admin/products/1")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf())
+                                .header("If-Match", "4"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("catalog.invalid"));
+        mockMvc.perform(
+                        delete("/api/admin/products/1")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf())
+                                .header("If-Match", "\"4\"", "\"5\""))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("catalog.invalid"));
+        mockMvc.perform(
+                        delete("/api/admin/products/1")
+                                .with(user("admin").roles("ADMIN"))
+                                .header("If-Match", "\"4\""))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(productAdministrationUseCase);
+    }
+
+    @Test
+    void duplicateSkuAndStaleRevisionUseStableConflictCodes() throws Exception {
+        when(productAdministrationUseCase.createProduct(any(CreateProductCommand.class)))
+                .thenThrow(new DuplicateSkuException("SKU-1"));
+        mockMvc.perform(
+                        post("/api/admin/products")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"sku\":\"SKU-1\",\"name\":\"Widget\",\"price\":19.99,\"stockQuantity\":7}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("catalog.product.sku-conflict"));
+
+        when(productAdministrationUseCase.updateProduct(any(), any(), any()))
+                .thenThrow(
+                        new StaleProductRevisionException(
+                                new ProductReference(1), new ProductRevision(0)));
+        mockMvc.perform(
+                        put("/api/admin/products/1")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"revision\":0,\"name\":\"Widget\",\"price\":19.99,\"stockQuantity\":7,\"active\":true}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("catalog.product.stale"));
     }
 }
