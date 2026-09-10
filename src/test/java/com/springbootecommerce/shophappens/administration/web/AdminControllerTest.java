@@ -10,6 +10,8 @@ import com.springbootecommerce.shophappens.security.service.CartMergingAuthentic
 import com.springbootecommerce.shophappens.security.web.AdminLoginController;
 import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -23,16 +25,25 @@ class AdminControllerTest {
 
     @MockitoBean CartMergingAuthenticationSuccessHandler successHandler;
 
-    @Test
-    void adminReceivesSpaForRoot() throws Exception {
-        mockMvc.perform(get("/admin").with(user("admin").roles("ADMIN")))
-                .andExpect(status().isOk())
-                .andExpect(forwardedUrl("/admin/index.html"));
-    }
-
-    @Test
-    void adminReceivesSpaForProducts() throws Exception {
-        mockMvc.perform(get("/admin/products").with(user("admin").roles("ADMIN")))
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "/admin",
+                "/admin/",
+                "/admin/products",
+                "/admin/products/create",
+                "/admin/products/7",
+                "/admin/categories",
+                "/admin/categories/create",
+                "/admin/categories/7",
+                "/admin/orders",
+                "/admin/orders/ORD-20260905-ORDERADMIN1/show",
+                "/admin/customers",
+                "/admin/customers/12/show",
+                "/admin/storefront"
+            })
+    void adminReceivesSpaForEveryMountedRoute(String route) throws Exception {
+        mockMvc.perform(get(route).with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(forwardedUrl("/admin/index.html"));
     }
@@ -59,9 +70,18 @@ class AdminControllerTest {
                 .andExpect(status().isForbidden());
     }
 
-    @Test
-    void fallbackRejectsPathsWithFileExtension() throws Exception {
-        mockMvc.perform(get("/admin/missing-font.woff").with(user("admin").roles("ADMIN")))
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "/admin/dashboard",
+                "/admin/unknown",
+                "/admin/missing-font.woff",
+                "/admin/products/7/show",
+                "/admin/orders/create",
+                "/admin/orders/invoice.pdf/show"
+            })
+    void rejectsUnknownOrExtensionLikePaths(String route) throws Exception {
+        mockMvc.perform(get(route).with(user("admin").roles("ADMIN")))
                 .andExpect(status().isNotFound());
     }
 }

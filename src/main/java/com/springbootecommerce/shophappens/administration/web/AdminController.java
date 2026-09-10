@@ -7,33 +7,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
-    @GetMapping({"", "/"})
-    public String getBackend() {
-        return "forward:/admin/index.html";
-    }
-
-    @GetMapping("/products")
-    public String getProductsOverview() {
-        return "forward:/admin/index.html";
-    }
-
-    @GetMapping("/categories")
-    public String getCategoriesOverview() {
-        return "forward:/admin/index.html";
-    }
-
-    @GetMapping("/orders")
-    public String getOrdersOverview() {
-        return "forward:/admin/index.html";
-    }
-
-    @GetMapping("/customers")
-    public String getCustomersOverview() {
-        return "forward:/admin/index.html";
-    }
-
-    @GetMapping("/storefront")
-    public String getStorefrontOverview() {
+    @GetMapping({
+        "",
+        "/",
+        "/products",
+        "/products/create",
+        "/products/{id:[1-9][0-9]*}",
+        "/categories",
+        "/categories/create",
+        "/categories/{id:[1-9][0-9]*}",
+        "/orders",
+        "/orders/{orderNumber:[A-Za-z0-9-]+}/show",
+        "/customers",
+        "/customers/{id:[1-9][0-9]*}/show",
+        "/storefront"
+    })
+    public String adminApplication() {
         return "forward:/admin/index.html";
     }
 }
