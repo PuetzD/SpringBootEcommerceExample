@@ -12,10 +12,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.springbootecommerce.shophappens.catalog.application.port.in.AmbiguousProductUpdateException;
+import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CreateProductCommand;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminPage;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminSearch;
@@ -76,7 +78,42 @@ class ProductAdminApiControllerTest {
         mockMvc.perform(get("/api/admin/products").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").value(1))
-                .andExpect(jsonPath("$.content[0].sku").value("SKU-1"));
+                .andExpect(jsonPath("$.content[0].sku").value("SKU-1"))
+                .andExpect(jsonPath("$.content[0].revision").value(0))
+                .andExpect(jsonPath("$.content[0].categories[0].id").value(10))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(20))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1));
+        verify(productAdminQuery).searchProducts(new ProductAdminSearch(0, 20, null, null));
+    }
+
+    @Test
+    void adminCanGetProductDetail() throws Exception {
+        when(productAdminQuery.findProduct(new ProductReference(1L)))
+                .thenReturn(
+                        Optional.of(
+                                new ProductAdminView(
+                                        new ProductReference(1L),
+                                        "SKU-1",
+                                        "Widget",
+                                        "Useful widget",
+                                        new Money(BigDecimal.valueOf(19.99)),
+                                        7,
+                                        null,
+                                        true,
+                                        new ProductRevision(3),
+                                        List.of(
+                                                new ProductCategorySummary(
+                                                        new CategoryReference(10L),
+                                                        "Tools",
+                                                        "tools")))));
+
+        mockMvc.perform(get("/api/admin/products/1").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.revision").value(3))
+                .andExpect(jsonPath("$.categories[0].id").value(10));
     }
 
     @Test
@@ -129,20 +166,6 @@ class ProductAdminApiControllerTest {
                                 true,
                                 new ProductRevision(0),
                                 List.of()));
-        when(productAdminQuery.findProduct(new ProductReference(1L)))
-                .thenReturn(
-                        Optional.of(
-                                new ProductAdminView(
-                                        new ProductReference(1L),
-                                        "SKU-1",
-                                        "Widget",
-                                        "Useful widget",
-                                        new Money(BigDecimal.valueOf(19.99)),
-                                        7,
-                                        "https://example.com/widget.png",
-                                        true,
-                                        new ProductRevision(0),
-                                        List.of())));
 
         mockMvc.perform(
                         post("/api/admin/products")
@@ -150,9 +173,20 @@ class ProductAdminApiControllerTest {
                                 .with(csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(
-                                        "{\"sku\":\"SKU-1\",\"name\":\"Widget\",\"description\":\"Useful widget\",\"price\":19.99,\"stockQuantity\":7,\"imageUrl\":\"https://example.com/widget.png\"}"))
+                                        "{\"sku\":\"SKU-1\",\"name\":\"Widget\",\"description\":\"Useful widget\",\"price\":19.99,\"stockQuantity\":7,\"imageUrl\":\"https://example.com/widget.png\",\"categoryIds\":[10]}"))
                 .andExpect(status().isCreated())
+                .andExpect(header().string("Location", "/api/admin/products/1"))
                 .andExpect(jsonPath("$.sku").value("SKU-1"));
+        verify(productAdministrationUseCase)
+                .createProduct(
+                        new CreateProductCommand(
+                                "SKU-1",
+                                "Widget",
+                                "Useful widget",
+                                new Money(BigDecimal.valueOf(19.99)),
+                                7,
+                                "https://example.com/widget.png",
+                                Set.of(new CategoryReference(10L))));
     }
 
     @Test
@@ -164,7 +198,7 @@ class ProductAdminApiControllerTest {
                 .thenReturn(
                         new ProductAdminView(
                                 new ProductReference(1L),
-                                "SKU-2",
+                                "SKU-1",
                                 "Updated widget",
                                 "Updated description",
                                 new Money(BigDecimal.valueOf(29.99)),
@@ -173,20 +207,6 @@ class ProductAdminApiControllerTest {
                                 true,
                                 new ProductRevision(1),
                                 List.of()));
-        when(productAdminQuery.findProduct(new ProductReference(1L)))
-                .thenReturn(
-                        Optional.of(
-                                new ProductAdminView(
-                                        new ProductReference(1L),
-                                        "SKU-2",
-                                        "Updated widget",
-                                        "Updated description",
-                                        new Money(BigDecimal.valueOf(29.99)),
-                                        10,
-                                        "https://example.com/updated.png",
-                                        true,
-                                        new ProductRevision(0),
-                                        List.of())));
 
         mockMvc.perform(
                         put("/api/admin/products/1")
@@ -196,7 +216,20 @@ class ProductAdminApiControllerTest {
                                 .content(
                                         "{\"revision\":0,\"name\":\"Updated widget\",\"description\":\"Updated description\",\"price\":29.99,\"stockQuantity\":10,\"imageUrl\":\"https://example.com/updated.png\",\"active\":true,\"categoryIds\":[]}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Updated widget"));
+                .andExpect(jsonPath("$.name").value("Updated widget"))
+                .andExpect(jsonPath("$.revision").value(1));
+        verify(productAdministrationUseCase)
+                .updateProduct(
+                        new ProductReference(1L),
+                        new ProductRevision(0),
+                        new UpdateProductCommand(
+                                "Updated widget",
+                                "Updated description",
+                                new Money(BigDecimal.valueOf(29.99)),
+                                10,
+                                "https://example.com/updated.png",
+                                true,
+                                Set.of()));
     }
 
     @Test
@@ -276,5 +309,7 @@ class ProductAdminApiControllerTest {
                                 .with(csrf())
                                 .header("If-Match", "\"4\""))
                 .andExpect(status().isNoContent());
+        verify(productAdministrationUseCase)
+                .deactivateProduct(new ProductReference(1L), new ProductRevision(4L));
     }
 }

@@ -3,6 +3,8 @@ package com.springbootecommerce.shophappens.catalog.application.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminPage;
+import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminSearch;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminView;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductRepository;
@@ -11,6 +13,19 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class ProductAdministrationQueryServiceTest {
+
+    @Test
+    void delegatesTheExactAdministrationSearch() {
+        ProductRepository products = mock(ProductRepository.class);
+        ProductAdminSearch search = new ProductAdminSearch(2, 25, "widget", false);
+        ProductAdminPage expected = new ProductAdminPage(java.util.List.of(), 2, 25, 0, 0);
+        when(products.searchForAdministration(search)).thenReturn(expected);
+
+        ProductAdministrationQueryService service = new ProductAdministrationQueryService(products);
+
+        assertThat(service.searchProducts(search)).isSameAs(expected);
+        verify(products).searchForAdministration(search);
+    }
 
     @Test
     void findsAProductDirectlyByIdRegardlessOfItsSearchPage() {

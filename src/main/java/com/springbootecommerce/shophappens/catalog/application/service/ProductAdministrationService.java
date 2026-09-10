@@ -4,6 +4,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.Ambiguous
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CreateProductCommand;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CreateProductVariantCommand;
+import com.springbootecommerce.shophappens.catalog.application.port.in.InvalidCatalogOperationException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminView;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdministrationUseCase;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductCategorySummary;
@@ -40,15 +41,20 @@ public class ProductAdministrationService implements ProductAdministrationUseCas
     @Override
     @Transactional
     public ProductAdminView createProduct(CreateProductCommand command) {
-        Product product =
-                Product.create(
-                        new Sku(command.sku()),
-                        command.name(),
-                        command.description(),
-                        command.price(),
-                        command.stockQuantity(),
-                        command.imageUrl(),
-                        toCategoryIds(command.categories()));
+        Product product;
+        try {
+            product =
+                    Product.create(
+                            new Sku(command.sku()),
+                            command.name(),
+                            command.description(),
+                            command.price(),
+                            command.stockQuantity(),
+                            command.imageUrl(),
+                            toCategoryIds(command.categories()));
+        } catch (IllegalArgumentException exception) {
+            throw new InvalidCatalogOperationException(exception.getMessage());
+        }
         return toAdminView(products.insertForAdministration(product));
     }
 
@@ -64,12 +70,16 @@ public class ProductAdministrationService implements ProductAdministrationUseCas
             throw new AmbiguousProductUpdateException();
         }
         Product product = loaded.product();
-        product.reviseDetails(
-                command.name(), command.description(), command.price(), command.imageUrl());
-        product.setStockQuantity(command.stockQuantity());
-        product.replaceCategories(toCategoryIds(command.categories()));
-        if (command.active()) product.activate();
-        else product.deactivate();
+        try {
+            product.reviseDetails(
+                    command.name(), command.description(), command.price(), command.imageUrl());
+            product.setStockQuantity(command.stockQuantity());
+            product.replaceCategories(toCategoryIds(command.categories()));
+            if (command.active()) product.activate();
+            else product.deactivate();
+        } catch (IllegalArgumentException exception) {
+            throw new InvalidCatalogOperationException(exception.getMessage());
+        }
         return toAdminView(products.updateForAdministration(product, expectedRevision));
     }
 
