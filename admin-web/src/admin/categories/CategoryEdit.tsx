@@ -15,6 +15,20 @@ function conflictCode(error: unknown): string | undefined {
   return typeof code === 'string' ? code : undefined
 }
 
+function hasEntries(value: unknown): boolean {
+  if (Array.isArray(value)) return value.length > 0
+  return typeof value === 'object' && value !== null && Object.keys(value).length > 0
+}
+
+function hasFieldErrors(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) return false
+  const {body, fieldErrors: errorFieldErrors} = error as {body?: unknown; fieldErrors?: unknown}
+  if (hasEntries(errorFieldErrors)) return true
+  if (typeof body !== 'object' || body === null) return false
+  const {errors, fieldErrors} = body as {errors?: unknown; fieldErrors?: unknown}
+  return hasEntries(errors) || hasEntries(fieldErrors)
+}
+
 function CategoryEditToolbar() {
   return (
     <Toolbar>
@@ -39,6 +53,8 @@ export function CategoryEdit() {
             refresh()
             return
           }
+
+          if (hasFieldErrors(error)) return
 
           notify('Unable to rename category', {type: 'error'})
         },

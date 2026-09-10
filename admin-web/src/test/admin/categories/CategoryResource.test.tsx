@@ -90,6 +90,7 @@ describe('Category resource', () => {
       expect(await screen.findByText(/remove this category from every product/i)).toBeTruthy()
       expect(screen.getByText('Networking')).toBeTruthy()
       expect(remove).toHaveBeenCalledTimes(1)
+      expect(consoleError).toHaveBeenCalledTimes(1)
       expect(consoleError).toHaveBeenCalledWith(inUseError)
     } finally {
       consoleError.mockRestore()
@@ -125,6 +126,7 @@ describe('Category resource', () => {
 
       expect(await screen.findByText(/choose the action again/i)).toBeTruthy()
       expect(await screen.findByText('Network equipment')).toBeTruthy()
+      expect(consoleError).toHaveBeenCalledTimes(1)
       expect(consoleError).toHaveBeenCalledWith(staleError)
 
       const refreshedRow = screen.getByText('Network equipment').closest('tr')
@@ -179,6 +181,7 @@ describe('Category resource', () => {
       await waitFor(() => expect(getOne).toHaveBeenCalledTimes(2))
       expect(screen.getByRole('textbox', {name: /name/i}).getAttribute('value')).toBe('Network equipment')
       expect(screen.getByRole('textbox', {name: /revision/i}).getAttribute('value')).toBe('3')
+      expect(consoleError).toHaveBeenCalledTimes(1)
       expect(consoleError).toHaveBeenCalledWith(staleError)
 
       fireEvent.change(screen.getByRole('textbox', {name: /name/i}), {target: {value: 'Managed network equipment'}})
@@ -193,6 +196,45 @@ describe('Category resource', () => {
           previousData: expect.objectContaining({revision: 3}),
         }),
       )
+    } finally {
+      consoleError.mockRestore()
+    }
+  })
+
+  it('keeps a rejected rename draft and exposes its field error without a generic notification', async () => {
+    const validationError = new HttpError('Invalid category name', 422, {
+      errors: {name: 'A category with this name already exists'},
+      fieldErrors: [{field: 'name', message: 'A category with this name already exists'}],
+    })
+    const originalCategory = {id: 7, name: 'Networking', slug: 'networking', revision: 2, productCount: 4}
+    const update = vi.fn().mockRejectedValue(validationError)
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    try {
+      render(
+        <MemoryRouter initialEntries={['/categories/7']}>
+          <AdminContext dataProvider={{getOne: vi.fn().mockResolvedValue({data: originalCategory}), update}}>
+            <ResourceContextProvider value="categories">
+              <Routes>
+                <Route path="/categories/:id" element={<CategoryEdit />} />
+              </Routes>
+            </ResourceContextProvider>
+            <Notification />
+          </AdminContext>
+        </MemoryRouter>,
+      )
+
+      const name = await screen.findByRole('textbox', {name: /name/i})
+      fireEvent.change(name, {target: {value: 'Duplicate networking'}})
+      fireEvent.submit(name.closest('form')!)
+
+      const fieldError = await screen.findByText('A category with this name already exists')
+      await waitFor(() => expect(update).toHaveBeenCalledTimes(1))
+      expect(name.getAttribute('value')).toBe('Duplicate networking')
+      expect(name.getAttribute('aria-describedby')).toBe(fieldError.getAttribute('id'))
+      expect(screen.queryByText('Unable to rename category')).toBeNull()
+      expect(consoleError).toHaveBeenCalledTimes(1)
+      expect(consoleError).toHaveBeenCalledWith(validationError)
     } finally {
       consoleError.mockRestore()
     }
