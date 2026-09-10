@@ -8,6 +8,13 @@ Model Administration as a protected inbound delivery channel, not a bounded cont
 
 Accepted
 
+## Amendment history
+
+- **2026-08-31**: the original decision covered Catalog-owned Product and Category administration.
+- **2026-09-11**: read-only Customer and Order administration was added through Customer Profile and
+  Ordering contracts. This extends the delivery surface without changing Administration into a
+  bounded context or transferring business ownership.
+
 ## Context
 
 The administration surface delivers Product and Category management plus read-only Customer and

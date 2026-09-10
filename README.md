@@ -35,6 +35,7 @@ Shipping and tax calculation and payment processing are not implemented.
 sequenceDiagram
     actor Customer
     participant Web as Ordering web adapter
+    participant Session as Server-side session
     participant Ordering
     participant Cart
     participant Profile as Customer Profile
@@ -43,8 +44,10 @@ sequenceDiagram
     participant Publisher as Optional outbox publisher
     participant Kafka
 
-    Customer->>Web: place checkout ID, address references, reviewed merchandise
-    Web->>Ordering: place order
+    Customer->>Web: submit checkout ID and address references
+    Web->>Session: load CheckoutReview by checkout ID
+    Session-->>Web: return server-held reviewed merchandise
+    Web->>Ordering: place order with identifiers and CheckoutReview
     Ordering->>DB: lock checkout ID and check prior outcome
     Ordering->>Cart: load Customer Cart
     Ordering->>Profile: resolve owned address snapshots

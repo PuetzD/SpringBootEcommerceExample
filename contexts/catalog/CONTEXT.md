@@ -5,7 +5,7 @@ Catalog describes the Products the shop may present and sell. For this project i
 ## Language
 
 **Product**:
-A customer-facing product family that groups one or more Product Variants sharing descriptive details and Category membership. A Product is not itself the sellable SKU once variants are introduced.
+A customer-facing product family that groups one or more Product Variants sharing descriptive details and Category membership. The Product is the family identity; its Product Variants are the sellable forms.
 _Avoid_: Item, article, merchandise
 
 **Product Variant**:
@@ -33,7 +33,7 @@ The number of units of a Product Variant currently available to place in Orders 
 _Avoid_: Inventory, warehouse stock
 
 **Active Product**:
-A Product eligible to appear in customer-facing Catalog results and to be purchased. Active does not imply that the Product is currently in stock.
+An active Product is eligible to appear in customer-facing Catalog results. Its active Product Variants may be purchased; Product activity alone does not make a Variant active or in stock.
 _Avoid_: Published Product, available Product
 
 **Inactive Product**:
