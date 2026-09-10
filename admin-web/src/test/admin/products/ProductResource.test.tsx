@@ -1,4 +1,4 @@
-import {render, screen} from '@testing-library/react'
+import {render, screen, within} from '@testing-library/react'
 import {AdminContext, ResourceContextProvider} from 'react-admin'
 import {ProductList} from '../../../admin/products/ProductList'
 
@@ -39,6 +39,10 @@ describe('Product resource', () => {
     expect(await screen.findByText('Router')).toBeTruthy()
     expect(screen.getByText('SKU-9')).toBeTruthy()
     expect(screen.getByRole('button', {name: /activate router/i})).toBeTruthy()
+    for (const label of ['sku', 'name', 'price', 'stockQuantity', 'active', 'categories']) {
+      const header = screen.getByRole('columnheader', {name: new RegExp(label, 'i')})
+      expect(within(header).queryByRole('button')).toBeNull()
+    }
     expect(consoleError).not.toHaveBeenCalled()
     expect(consoleWarn).not.toHaveBeenCalled()
 
