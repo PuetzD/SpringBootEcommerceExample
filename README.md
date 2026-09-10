@@ -1,9 +1,9 @@
 # Spring Boot Ecommerce Example
 
-This is my learning project for building an ecommerce application with Java and
-Spring Boot. It is intentionally developed in small steps to explore practical
-application structure, security, persistence, testing, and server-rendered UI
-development. I'm also learning DDD here.
+This is a senior software engineer's Java learning project: a deliberately bounded ecommerce
+application used to practise Spring Boot, domain modeling, persistence, security, testing, and
+delivery trade-offs. It demonstrates a simulated merchandise purchase workflow, not a
+production-ready retail platform.
 
 ## Technology
 
@@ -18,13 +18,50 @@ development. I'm also learning DDD here.
 
 The application is a modular monolith with separate `account`, `customer`,
 `catalog`, `cart`, and `ordering` bounded contexts. Contexts collaborate through
-application-port contracts rather than importing another context's domain or
-persistence internals.
+provider-owned application-port contracts rather than importing another context's domain or
+persistence internals. Administration, Security, and Storefront are protected inbound delivery
+adapters rather than additional bounded contexts. The complete consumer-to-provider graph is in the
+[context map](CONTEXT_MAP.md) and is enforced against compiled dependencies by
+`ArchitectureRulesTest`.
 
 Checkout is intentionally a synchronous PostgreSQL consistency boundary. Order
 creation, stock deduction, cart clearing, and creation of the corresponding
 integration-outbox row commit or roll back together. Kafka is not required for a
-checkout to succeed.
+checkout to succeed. The checkout review contains current merchandise facts for selected Product
+Variants; the authoritative purchase is compared with that review before the Order is accepted.
+Shipping and tax calculation and payment processing are not implemented.
+
+```mermaid
+sequenceDiagram
+    actor Customer
+    participant Web as Ordering web adapter
+    participant Ordering
+    participant Cart
+    participant Profile as Customer Profile
+    participant Catalog
+    participant DB as PostgreSQL transaction
+    participant Publisher as Optional outbox publisher
+    participant Kafka
+
+    Customer->>Web: place checkout ID, address references, reviewed merchandise
+    Web->>Ordering: place order
+    Ordering->>DB: lock checkout ID and check prior outcome
+    Ordering->>Cart: load Customer Cart
+    Ordering->>Profile: resolve owned address snapshots
+    Ordering->>Catalog: purchase Product Variants using current facts
+    Ordering->>Ordering: compare purchase with unexpired review
+    Ordering->>DB: save Order and outbox v2 row
+    Ordering->>Cart: clear Customer Cart
+    alt every check succeeds
+        DB-->>Ordering: commit stock + Order + outbox + Cart
+        Ordering-->>Web: return one placed Order
+    else review, address, stock, or availability fails
+        DB-->>Ordering: roll back all checkout writes
+        Ordering-->>Web: return checkout failure
+    end
+    Publisher->>DB: poll committed eligible rows
+    Publisher->>Kafka: publish with event ID/type/version headers
+```
 
 Successful checkouts produce the immutable, versioned
 `ordering.order-placed.v2` event. It contains both product-family and sellable
@@ -38,6 +75,24 @@ failed attempts. Delivery is at least once: consumers must use the event ID for
 idempotency. See the [outbox operations runbook](docs/operations/outbox.md) for
 inspection, targeted replay, and the current single-publisher limitation. A
 Kafka consumer and inbox/processed-event store remain future work.
+
+### Architectural decisions
+
+- [ADR-0002](docs/adr/0002-cross-context-contract-ownership.md) keeps contracts with their defining
+  contexts. This rejects shared domain/JPA models; the cost is explicit adapter mapping and contract
+  evolution.
+- [ADR-0004](docs/adr/0004-shared-kernel-identifiers-and-money.md) shares only stable identifiers and
+  money semantics. This rejects both duplicated meanings and a broad common model; the cost is
+  coordinated change when a genuinely shared value evolves.
+- [ADR-0005](docs/adr/0005-administration-as-catalog-delivery-channel.md) treats Administration as a
+  delivery channel. A sixth context and direct database writes were rejected; each resource instead
+  needs an owner-provided contract and an explicit protected route.
+- [ADR-0006](docs/adr/0006-checkout-transaction-boundary.md) keeps checkout atomic in PostgreSQL and
+  Kafka post-commit. A later service split would pay the cost of replacing that local transaction
+  with reservation and process-manager/saga coordination.
+- [ADR-0010](docs/adr/0010-product-variants-and-sellable-identity.md) separates Product-family identity
+  from stable Product Variant identity rather than using mutable SKU as a foreign key. That choice
+  carries compatibility and migration costs.
 
 ## Running Locally
 
@@ -65,6 +120,12 @@ docker compose up --build
 
 Open <http://localhost:8080> after the application starts. Stop the stack with
 `docker compose down`.
+
+Compose mounts PostgreSQL at `/var/lib/postgresql/data` through the named `postgres_data` volume;
+ordinary container recreation therefore retains the local database until that volume is explicitly
+removed. The `prod` profile honors forwarded HTTPS headers and configures the session cookie as
+`Secure`, `HttpOnly`, and `SameSite=Strict`; `ProductionSessionCookieIT` covers login, authenticated
+reuse, and logout expiry for that profile.
 
 The application uses PostgreSQL and Redis. When running the application directly
 on the host, start those services first with Docker Compose:
@@ -123,6 +184,19 @@ PMD, unit tests, architecture tests, and integration tests. The integration
 tests start disposable PostgreSQL and Redis
 containers; Docker must be available for those tests. It also generates the JaCoCo coverage report at
 `target/site/jacoco/index.html`.
+
+The repeatable frontend and backend verification commands are:
+
+```bash
+npm ci
+npm run test:admin
+npm run build:admin
+./mvnw verify
+```
+
+Maven does not build the React administration application. Run the npm build before host packaging,
+or use the Dockerfile, whose frontend stage builds the CSS and React bundle and whose backend stage
+copies those generated assets before packaging the application.
 
 Format Java sources with:
 
@@ -197,15 +271,25 @@ npm run dev:css
 
 ## Administration frontend
 
-The `/admin` application uses React Admin resources for Catalog-owned Products
-and flat Categories. It preserves the existing `/api/admin/products`,
-`/api/admin/categories`, and `/api/admin/categories/options` contracts.
+The protected `/admin` application mounts a Dashboard at its root, Product-family management with
+nested Product Variant creation/edit/delete, flat Category management, read-only Order and Customer
+list/detail resources, and a Storefront route. The backend forwards only these finite SPA shapes:
+
+- `/admin`
+- `/admin/products`, `/admin/products/create`, and `/admin/products/{id}`
+- `/admin/categories`, `/admin/categories/create`, and `/admin/categories/{id}`
+- `/admin/orders` and `/admin/orders/{orderNumber}/show`
+- `/admin/customers` and `/admin/customers/{id}/show`
+- `/admin/storefront`
+
+All four list transports use fixed server ordering and ignore React-admin sort state, so their
+column sorting controls are disabled rather than sorting only the visible page.
 
 The typed Catalog data provider is the sole resource transport adapter. It
 delegates to the shared API client, which owns same-origin credentials and the
-`X-XSRF-TOKEN` CSRF header. Product and Category updates/deletes send the
-current revision through `If-Match`; stale revisions and category-in-use
-conflicts are surfaced without automatic retries.
+server-provided CSRF header name and token. Mutations propagate the current revision in the request
+body or a quoted `If-Match` header according to the endpoint contract; stale revisions and
+category-in-use conflicts are surfaced without automatic retries.
 
 Manage frontend dependencies and the production bundle separately from Maven:
 
@@ -231,6 +315,14 @@ The application serves resources directly from `src/main/resources`, so Java
 does not need to be restarted after frontend changes. Run `npm run dev:css` in
 an additional terminal when changing Tailwind input styles. This watch mode
 reloads rebuilt assets on refresh; Vite's HMR development server is not used.
+
+## Evidence boundary
+
+The September 2026 convergence work recorded focused backend architecture, security, Catalog,
+checkout, concurrency, persistence, and administration gates. Its latest React-admin gate recorded
+13 test files with 67 passing tests and a successful Vite production build. Those focused records do
+not amount to a new clean full-suite, authenticated browser/Lighthouse, or built-container runtime
+proof for this documentation revision, and none is claimed here.
 
 ## AI Skills
 

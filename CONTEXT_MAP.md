@@ -1,45 +1,111 @@
 # Context Map
 
-This modular monolith separates the customer shopping journey into five bounded contexts. Each context owns its language and model. `storefront` and `security` are adapter packages around those contexts rather than domains; the architecture rules still isolate them as protected slices (so no context internal may be reached from them), exactly as the bounded contexts are protected. See `ArchitectureRulesTest`.
-
-Shared presentation support lives in `shared.web` (e.g. `SeoMetadata`, `CanonicalUrlFactory`). It is owned by no context and is consumed by the web adapters of any public page.
+Shop Happens is a modular monolith with five bounded contexts. `Administration`, `Security`, and
+`Storefront` are protected inbound delivery slices, not additional bounded contexts. Contexts and
+delivery adapters collaborate through provider-owned contracts in `application.port.in`; they do
+not import another context's domain, application services, output ports, or persistence model.
 
 ## Contexts
 
-- [Identity and Access](./contexts/account/CONTEXT.md): registers Accounts and establishes who may access the application
+- [Identity and Access](./contexts/account/CONTEXT.md): registers Accounts and establishes who may
+  access the application
 - [Customer Profile](./contexts/customer/CONTEXT.md): represents Customers and their saved Addresses
-- [Catalog](./contexts/catalog/CONTEXT.md): describes Product families and their sellable Product Variants, Categories, prices, and available stock
-- [Cart](./contexts/cart/CONTEXT.md): maintains Product Variant selections for a Customer or anonymous browser session
-- [Ordering](./contexts/ordering/CONTEXT.md): checks out a Cart and records the resulting purchase as an Order
+- [Catalog](./contexts/catalog/CONTEXT.md): describes Product families, sellable Product Variants,
+  Categories, prices, and shop-wide stock
+- [Cart](./contexts/cart/CONTEXT.md): maintains Product Variant selections for a Customer or an
+  anonymous browser session
+- [Ordering](./contexts/ordering/CONTEXT.md): reviews a Cart and records the resulting purchase as an
+  Order
 
-## Relationships
+## Published-contract dependencies
 
-An arrow `A → B` means “A depends on B's published contract.” The graph is
-acyclic; inbound adapters may depend on published input ports, while context
-internals are never shared.
+An arrow `A -> B` (rendered `A → B` in prose) means “consumer A depends on provider B's published
+contract.” The diagram shows
+all direct cross-context and inbound-delivery edges enforced by `ArchitectureRulesTest`; shared
+presentation and shared-kernel edges are described separately below.
 
-- **Identity and Access → Customer Profile**: When a Customer-role Account is registered, Identity and Access creates the corresponding Customer through Customer Profile's published input port (the dependency arrow points this way). Customer Profile stores the Account identifier as its own `AccountId` value object and does not consume the Account aggregate.
-- **Cart → Catalog**: Cart stores Product Variant identifiers and desired quantities. Its delivery adapter asks Catalog for display details; Catalog remains authoritative for family/variant activity, current price, and stock.
-- **Ordering → Customer Profile**: Checkout obtains the Customer-owned shipping and billing Address details through Customer Profile's published contract and stores immutable snapshots.
-- **Ordering → Cart**: Checkout loads the Customer Cart through Cart's published contract and clears it only when the Order is placed successfully.
-- **Ordering → Catalog**: Checkout resolves and purchases each selected Product Variant through Catalog's published contract. Ordering stores the returned product-family and variant identities, SKU, name, price, and quantity as purchase facts.
-- **Ordering → Integration platform**: Ordering records versioned immutable integration events in its transactional outbox. Kafka publication is asynchronous and post-commit; events expose identifiers and snapshots, never aggregates or persistence entities.
+```mermaid
+flowchart LR
+    Security[Security adapter]
+    Administration[Administration adapter]
+    Storefront[Storefront adapter]
+    Account[Identity and Access]
+    Customer[Customer Profile]
+    Catalog[Catalog]
+    Cart[Cart]
+    Ordering[Ordering]
 
-Customer identifiers in Cart and Ordering and shared `Money` semantics are shared-kernel use, not
-consumer/provider relationships. Security and Administration compose published ports as inbound
-adapters, so they are not additional bounded contexts or arrows in this graph.
+    Security --> Account
+    Security --> Customer
+    Security --> Cart
+    Administration --> Catalog
+    Administration --> Customer
+    Administration --> Ordering
+    Storefront --> Catalog
+    Account --> Customer
+    Cart --> Customer
+    Cart --> Catalog
+    Ordering --> Customer
+    Ordering --> Cart
+    Ordering --> Catalog
+```
 
-No context shares a persistence entity with another context. Cross-context collaboration uses identifiers, immutable contracts, and application operations.
+- **Identity and Access → Customer Profile**: customer Account registration creates the
+  corresponding Customer through Customer Profile's published input contract. Identity and Access
+  retains no Customer aggregate or profile persistence type.
+- **Cart → Customer Profile**: Cart's web adapter resolves an authenticated Customer through the
+  published current-customer contract; an anonymous request falls back to a Guest Cart.
+- **Cart → Catalog**: Cart stores Product Variant identifiers and quantities. Its web adapter asks
+  Catalog for current display facts; Cart does not promise price, availability, or stock.
+- **Ordering → Customer Profile**: checkout resolves Customer-owned shipping and billing Addresses
+  and stores immutable Order Address snapshots.
+- **Ordering → Cart**: checkout loads the Customer Cart and clears it only in the successful order
+  transaction.
+- **Ordering → Catalog**: checkout's anti-corruption adapters translate Ordering requests and
+  failures at the boundary while Catalog authoritatively purchases each selected Product Variant.
+- **Security → Identity and Access, Customer Profile, Cart**: Security composes authenticated
+  Account and Customer identity and triggers retry-safe Guest Cart merge through published
+  contracts. It does not own any of those business models.
+- **Administration → Catalog, Customer Profile, Ordering**: the protected administration delivery
+  adapter exposes Catalog mutations and read-only Customer and Order views through the owning
+  contexts' published contracts. See [ADR-0005](./docs/adr/0005-administration-as-catalog-delivery-channel.md).
+- **Storefront → Catalog**: the public delivery adapter obtains Product and Category views through
+  Catalog's browsing contracts.
 
-The portfolio extensibility baseline models German B2C physical-goods commerce in EUR with
-SKU-backed Product Variants and account-required checkout. Payment, tax calculation, shipping-rate
-calculation, reservation, fulfillment, returns/refunds, and privacy automation remain planned
-capabilities rather than current context relationships. The operating assumptions and proposed
-boundaries are recorded in [ADR-0007](./docs/adr/0007-commerce-operating-model-baseline.md) and
-[ADR-0008](./docs/adr/0008-payment-and-reservation-boundaries.md).
+The graph is acyclic. [ADR-0002](./docs/adr/0002-cross-context-contract-ownership.md) records why
+providers own published contracts and consumers translate them instead of sharing domain or
+persistence types.
 
-## Identifier value objects
+## Shared support
 
-Four identifier value objects are shared across contexts via `sharedkernel.identity` (alongside `Money` in `sharedkernel.money`): `AccountId` (`account`, `customer`), `CustomerId` (`customer`, `cart`, `ordering`), `ProductId` (`catalog`, `cart`, `ordering`), and `ProductVariantId` (`catalog`, `cart`, `ordering`). They are record wrappers over a `long` that enforce the same positivity invariant. `Sku` remains a Catalog-local business identifier; other context-local identifiers stay in their owning context: `CategoryId` (catalog), `AddressId` (customer), `CartId`, `GuestCartId`, `CartOwner`, `Quantity` (cart), `OrderId`, `OrderNumber`, `CheckoutId`, `AddressRole` (ordering).
+The deliberately small `sharedkernel` contains stable `AccountId`, `CustomerId`, `ProductId`, and
+`ProductVariantId` meanings plus `Money`/`Currency` semantics. These values express common
+identity and money, not ownership arrows. Aggregates, commands, exceptions, repositories, framework
+types, and context-local identifiers remain outside it. See
+[ADR-0004](./docs/adr/0004-shared-kernel-identifiers-and-money.md) and
+[ADR-0010](./docs/adr/0010-product-variants-and-sellable-identity.md).
 
-The decision to promote the shared identifiers into `sharedkernel` is recorded in [ADR-0004](./docs/adr/0004-shared-kernel-identifiers-and-money.md). Product-family and ProductVariant identity and migration rules are recorded in [ADR-0010](./docs/adr/0010-product-variants-and-sellable-identity.md). Administration's delivery-channel boundary is recorded in [ADR-0005](./docs/adr/0005-administration-as-catalog-delivery-channel.md).
+Shared public-page presentation support lives in `shared.web` and is owned by no bounded context.
+It contains presentation concepts such as canonical URLs and SEO metadata, never business behavior.
+
+## External event delivery
+
+Ordering appends `ordering.order-placed.v2` to its PostgreSQL outbox in the checkout transaction.
+The optional publisher sends committed rows to Kafka later; Kafka is not part of checkout's success
+boundary. Previously stored `ordering.order-placed.v1` rows remain replayable, but new checkouts emit
+only v2. Delivery behavior and operator recovery are documented in the
+[outbox runbook](./docs/operations/outbox.md).
+
+## Current and planned boundaries
+
+The implemented checkout is an account-required, EUR merchandise purchase: it reviews current
+Product Variant facts, records immutable product/variant, price, quantity, and address snapshots,
+and deducts shop-wide stock. It is not a full commercial Quote and does not calculate shipping or
+tax or process payment.
+
+Payments, tax and shipping calculation, reservations, fulfillment, returns/refunds, and asynchronous
+consumers remain planned capabilities. The future operating assumptions and proposed lifecycle
+boundaries are recorded in [ADR-0007](./docs/adr/0007-commerce-operating-model-baseline.md),
+[ADR-0008](./docs/adr/0008-payment-and-reservation-boundaries.md), and
+[ADR-0009](./docs/adr/0009-cross-context-commerce-integrity.md); they do not describe implemented
+workflows.

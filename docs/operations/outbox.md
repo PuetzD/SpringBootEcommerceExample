@@ -4,6 +4,10 @@ The optional Kafka publisher provides at-least-once delivery. A retry keeps the 
 and payload, so consumers must deduplicate by `event-id`. Run only one publisher instance; the
 current query does not lease rows between workers.
 
+New checkouts append `ordering.order-placed.v2`. The publisher also accepts previously stored
+`ordering.order-placed.v1` rows so they can be replayed without rewriting their type, payload, or
+identity; the stored event type is the Kafka topic and the matching version is sent in headers.
+
 ## Inspect delivery state
 
 The non-quarantined count includes both due work and retries scheduled for the future:
@@ -46,6 +50,10 @@ WHERE event_id = :event_id;
 
 Resolve the failure cause first. In a transaction, execute the following statement with a bound UUID
 parameter—not string interpolation:
+
+Restoring broker connectivity only makes non-quarantined due rows eligible. It does not release a
+row quarantined after five failures; an operator must deliberately target that row after checking
+its diagnostic and cause.
 
 ```sql
 UPDATE integration_outbox

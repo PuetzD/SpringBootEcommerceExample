@@ -2,7 +2,10 @@
 
 ## Status
 
-Accepted as an engineering baseline; legal/accounting review remains required for retention and deletion behavior.
+Accepted as a future engineering baseline where it discusses Payment, Reservation, Shipment,
+Return, Refund, or asynchronous consumers; those capabilities are not implemented. The current
+Ordering snapshots and local checkout/outbox transaction already follow the applicable portion.
+Legal/accounting review remains required for retention and deletion behavior.
 
 ## Decision
 

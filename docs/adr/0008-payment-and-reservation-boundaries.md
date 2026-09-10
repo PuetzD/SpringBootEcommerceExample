@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted as an engineering baseline; provider and finance review remains required.
+Accepted as a future engineering baseline; Payment, Quote, and Reservation lifecycles are not
+implemented. Provider and finance review remains required.
 
 ## Decision
 
