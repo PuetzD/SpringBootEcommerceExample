@@ -1,4 +1,4 @@
-import {AutocompleteArrayInput, BooleanInput, Edit, ReferenceArrayInput, SimpleForm, TextInput} from 'react-admin'
+import {AutocompleteArrayInput, BooleanInput, Edit, ReferenceArrayInput, SimpleForm, TextInput, required} from 'react-admin'
 import {ProductVariantsPanel} from './ProductVariantsPanel'
 
 export function ProductEdit() {
@@ -7,7 +7,7 @@ export function ProductEdit() {
       <>
       <SimpleForm>
         <TextInput source="sku" disabled />
-        <TextInput source="name" isRequired />
+        <TextInput source="name" validate={required('Required field')} />
         <TextInput source="description" multiline />
         <BooleanInput source="active" />
         <TextInput source="revision" disabled />
