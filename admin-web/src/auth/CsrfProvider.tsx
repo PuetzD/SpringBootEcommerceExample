@@ -68,7 +68,9 @@ export function CsrfProvider({children}: {children: ReactNode}) {
 
     useEffect(() => {
         _listeners.add(setCsrf)
-        if (!getCsrf()) {
+        const latestCsrf = getCsrf()
+        setCsrf(latestCsrf)
+        if (!latestCsrf) {
             void refreshToken()
         }
         return () => {
