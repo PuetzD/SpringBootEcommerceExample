@@ -1,12 +1,16 @@
 # Ordering
 
-Ordering converts a Customer's Cart into an immutable record of a purchase. It captures the commercial and postal facts that were accepted at checkout.
+Ordering converts a Customer's Cart into an immutable record of a purchase. The current implementation captures reviewed merchandise and postal facts; it does not yet quote shipping or tax or process payment.
 
-## Language
+## Implemented language
 
 **Checkout**:
-The all-or-nothing attempt to place an Order from a Customer's current Cart using selected shipping and billing Addresses and current Catalog facts.
+The all-or-nothing attempt to place an Order from a Customer's reviewed Cart using selected shipping and billing Addresses and current Catalog purchase facts.
 _Avoid_: Payment, Cart submission
+
+**Checkout Review**:
+A short-lived review of currently available Product Variant lines and their current Catalog prices. Checkout rejects a review that has expired or differs from the authoritative facts obtained while purchasing.
+_Avoid_: Quote, reservation, price commitment
 
 **Checkout ID**:
 The stable identifier supplied for one Checkout attempt. Reusing it returns the original outcome instead of placing a duplicate Order.
@@ -21,7 +25,7 @@ The stable, customer-visible business identifier for an Order.
 _Avoid_: Database ID, checkout token
 
 **Order Item**:
-An immutable snapshot of one purchased Product, including its Product identifier, name, SKU, unit Price, Quantity, and line total.
+An immutable snapshot of one purchased Product Variant, including its variant and product-family identifiers, SKU, product name, unit Price, Quantity, and line total.
 _Avoid_: Cart Item, product reference
 
 **Order Address**:
@@ -37,39 +41,11 @@ The Order Address recording where billing correspondence is to be directed.
 _Avoid_: Billing Address, Invoice Address
 
 **Order Total**:
-The immutable payable EUR amount accepted at Checkout. It is the sum of merchandise, discounts, shipping, and tax in the accepted Price Breakdown.
-_Avoid_: Cart total, current catalog total, recomputed historical total
-
-**Price Breakdown**:
-The immutable accepted calculation of merchandise, discounts, shipping, tax basis, tax, and payable total for one Checkout Quote.
-_Avoid_: Cart total, invoice, provider response
-
-**Checkout Quote**:
-A short-lived, versioned offer containing authoritative line snapshots, normalized addresses, selected shipping, tax calculation, and a Price Breakdown. It must be explicitly accepted before an Order is created.
-_Avoid_: Cart, estimate, Order
-
-**Reservation**:
-An expiring commitment of Catalog stock for one Checkout Quote. It is consumed once by a completed Order or released once on failure/expiry.
-_Avoid_: Stock decrement, Order, availability flag
-
-**Payment**:
-The separately tracked provider-backed attempt to authorize and capture the accepted Order Total. Payment state does not replace Order state.
-_Avoid_: Checkout, card data, paid Order
-
-**Shipment**:
-The fulfillment record for sending an Order to its Shipping Order Address, including carrier progress and tracking.
-_Avoid_: Order, shipping charge, delivery promise
-
-**Return**:
-An authorized post-delivery request to send purchased goods back for inspection and disposition.
-_Avoid_: Cancellation, Refund
-
-**Refund**:
-A recorded reversal of all or part of a captured Payment, linked to the applicable Order items and provider result.
-_Avoid_: Return, discount, cancellation
+The immutable merchandise total in EUR accepted at Checkout. It is the sum of the Order Item line totals; the current implementation has no discount, shipping, or tax components.
+_Avoid_: Price Breakdown, current catalog total, recomputed historical total
 
 **Placed Order**:
-An Order accepted after every Product and Address passes Checkout and the purchase is recorded completely.
+An Order accepted after every Product Variant and Address passes Checkout and the purchase is recorded completely.
 _Avoid_: Confirmed Order, paid Order
 
 **Administrative Order View**:
@@ -77,5 +53,23 @@ A read-only view of Orders made available to an authorized administrator for ope
 _Avoid_: Order status, payment state, shipment state
 
 **Money**:
-A non-negative EUR monetary amount with two-decimal precision. Ordering snapshots the currency, tax basis, tax, charges, and payable amount and never recalculates a historical Order.
+A non-negative EUR monetary amount with two-decimal precision. Ordering snapshots merchandise prices and totals and never recalculates a historical Order.
 _Avoid_: Decimal, implicit currency, recomputed total
+
+## Planned language
+
+The following terms describe proposed boundaries, not implemented checkout behavior. See
+[ADR-0007](../../docs/adr/0007-commerce-operating-model-baseline.md) and
+[ADR-0008](../../docs/adr/0008-payment-and-reservation-boundaries.md).
+
+**Checkout Quote / Price Breakdown**:
+A future versioned offer and accepted calculation that may include discounts, shipping, tax basis, tax, and payable total.
+
+**Reservation**:
+A future expiring stock commitment consumed by a completed Order or released on failure or expiry.
+
+**Payment**:
+A future provider-backed authorization/capture lifecycle separate from Order state.
+
+**Shipment / Return / Refund**:
+Future fulfillment and post-purchase lifecycles with their own state, idempotency, and published contracts.

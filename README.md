@@ -27,15 +27,17 @@ integration-outbox row commit or roll back together. Kafka is not required for a
 checkout to succeed.
 
 Successful checkouts produce the immutable, versioned
-`ordering.order-placed.v1` event. The event contains identifiers and snapshots,
-not JPA entities or mutable cart objects. Kafka publication is asynchronous and
-opt-in; the default profile only persists the event in PostgreSQL.
+`ordering.order-placed.v2` event. It contains both product-family and sellable
+variant identity plus immutable purchase snapshots, not JPA entities or mutable
+cart objects. Kafka publication is asynchronous and opt-in; the default profile
+only persists the event in PostgreSQL.
 
 The Kafka publisher currently provides bounded polling, broker-acknowledged
-publication, event metadata headers, and retry-at-next-poll behavior. Delivery
-is at least once: consumers must use the event ID for idempotency. A Kafka
-consumer, inbox/processed-event store, and dead-letter workflow remain future
-work.
+publication, event metadata headers, bounded retries, and quarantine after five
+failed attempts. Delivery is at least once: consumers must use the event ID for
+idempotency. See the [outbox operations runbook](docs/operations/outbox.md) for
+inspection, targeted replay, and the current single-publisher limitation. A
+Kafka consumer and inbox/processed-event store remain future work.
 
 ## Running Locally
 
@@ -159,9 +161,11 @@ SPRING_KAFKA_BOOTSTRAP_SERVERS=localhost:9092 \
 ./mvnw generate-resources spring-boot:run
 ```
 
-The publisher reads unpublished rows from `integration_outbox`, sends them to
-the `ordering.order-placed.v1` topic using the order ID as the Kafka key, and
-marks a row published only after the broker acknowledges the send. The event
+The publisher reads unpublished rows from `integration_outbox`, uses each
+stored event type as its Kafka topic, uses the order ID as the Kafka key, and
+marks a row published only after the broker acknowledges the send. New
+checkouts store `ordering.order-placed.v2`; existing stored v1 rows remain
+publishable to `ordering.order-placed.v1` for replay compatibility. The event
 type, version, and event ID are included as Kafka headers. Producer idempotence
 is enabled by default when Kafka is enabled. No Kafka service is included in
 the default Compose stack; run one separately or use an environment-specific
@@ -169,31 +173,13 @@ Compose profile.
 
 ### Outbox inspection and recovery
 
-An event-delivery failure does not roll back the already committed order. Check
-the outbox before investigating the order transaction:
-
-```sql
-SELECT event_id, event_type, aggregate_key, created_at,
-       published_at, attempt_count, last_error
-FROM integration_outbox
-WHERE published_at IS NULL
-ORDER BY created_at ASC;
-```
-
-Rows with `published_at IS NULL` are retried by the publisher on a later poll.
-Inspect `last_error` and `attempt_count`, restore broker connectivity or correct
-the broker configuration, then restart or leave the publisher running. Do not
-manually mark an event published unless the corresponding Kafka record has been
-verified, because doing so can permanently suppress delivery.
-
-If an order transaction fails, verify both the order and outbox counts using
-the checkout ID. A rolled-back checkout must leave neither a customer-order row
-nor an outbox row. If a broker send may have succeeded before the process failed,
-assume at-least-once delivery and deduplicate downstream using `event_id`.
-
-There is currently no automated dead-letter table or replay command. Preserve
-the outbox row and its error metadata while investigating; destructive deletion
-is not a recovery procedure.
+An event-delivery failure does not roll back the already committed order.
+Non-quarantined rows retry with backoff; after five failed attempts a row is
+quarantined and restoring broker connectivity does not release it. Use the
+[outbox operations runbook](docs/operations/outbox.md) to inspect due and
+quarantined work and to replay one quarantined event after resolving its cause.
+The runbook also covers at-least-once delivery, consumer deduplication, and why
+only one publisher instance is currently supported.
 
 ## Frontend CSS
 

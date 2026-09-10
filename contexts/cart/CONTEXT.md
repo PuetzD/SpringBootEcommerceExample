@@ -5,7 +5,7 @@ Cart maintains a Customer's or anonymous visitor's current, mutable shopping sel
 ## Language
 
 **Cart**:
-An active shopping selection associated with either a Customer or an anonymous browser session. A Cart contains at most one Cart Item for each selected Product.
+An active shopping selection associated with either a Customer or an anonymous browser session. A Cart contains at most one Cart Item for each selected Product Variant.
 _Avoid_: Basket, bag, order
 
 **Customer Cart**:
@@ -21,13 +21,13 @@ The opaque identifier that associates an anonymous browser session with its Gues
 _Avoid_: Customer ID, session ID
 
 **Cart Merge**:
-The transfer of a Guest Cart into a Customer Cart after sign-in. Quantities are added for matching Products, and the Guest Cart is discarded after the Customer Cart is persisted.
+The transfer of a Guest Cart into a Customer Cart after sign-in. Quantities are added for matching Product Variants, and the Guest Cart is discarded after the Customer Cart is persisted.
 _Avoid_: Cart replacement, Cart synchronization
 
 **Cart Item**:
-A Product selection and its desired Quantity within a Cart. It does not guarantee a Product's price, active status, or stock.
+A Product Variant selection and its desired Quantity within a Cart. It does not guarantee the Product family's or Product Variant's active status, current price, or stock.
 _Avoid_: Order Item, line item
 
 **Quantity**:
-The positive whole number of units selected for a Product.
+The positive whole number of units selected for a Product Variant.
 _Avoid_: Amount, count

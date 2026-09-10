@@ -8,8 +8,8 @@ Shared presentation support lives in `shared.web` (e.g. `SeoMetadata`, `Canonica
 
 - [Identity and Access](./contexts/account/CONTEXT.md): registers Accounts and establishes who may access the application
 - [Customer Profile](./contexts/customer/CONTEXT.md): represents Customers and their saved Addresses
-- [Catalog](./contexts/catalog/CONTEXT.md): describes Products offered for sale and their Categories, prices, and available stock
-- [Cart](./contexts/cart/CONTEXT.md): maintains the current shopping selection for a Customer or anonymous browser session
+- [Catalog](./contexts/catalog/CONTEXT.md): describes Product families and their sellable Product Variants, Categories, prices, and available stock
+- [Cart](./contexts/cart/CONTEXT.md): maintains Product Variant selections for a Customer or anonymous browser session
 - [Ordering](./contexts/ordering/CONTEXT.md): checks out a Cart and records the resulting purchase as an Order
 
 ## Relationships
@@ -19,19 +19,24 @@ acyclic; inbound adapters may depend on published input ports, while context
 internals are never shared.
 
 - **Identity and Access → Customer Profile**: When a Customer-role Account is registered, Identity and Access creates the corresponding Customer through Customer Profile's published input port (the dependency arrow points this way). Customer Profile stores the Account identifier as its own `AccountId` value object and does not consume the Account aggregate.
-- **Customer Profile → Cart**: A Customer Cart identifies its owner by Customer identifier and does not consume the Customer aggregate. A Guest Cart instead uses an opaque identifier associated with the anonymous browser session.
-- **Identity and Access → Cart**: After successful sign-in, Cart merges the Guest Cart into the Customer Cart by adding quantities for matching Products, persists the Customer Cart, and then removes the Guest Cart.
-- **Catalog → Cart**: Cart identifies selections by Product identifier. Catalog remains authoritative for whether a Product is active and for its current price and stock.
-- **Customer Profile + Catalog + Cart → Ordering**: Ordering obtains customer-owned Address details, the current Cart selection, and current purchasable Product details through context contracts. It stores snapshots rather than foreign aggregates.
-- **Catalog ↔ Ordering**: Catalog and Ordering share the stable meaning of Money. Ordering snapshots the current Catalog price when an Order is placed.
-- **Ordering → Catalog + Cart**: Successful checkout decreases Catalog stock and clears the Cart atomically with Order creation.
+- **Cart → Catalog**: Cart stores Product Variant identifiers and desired quantities. Its delivery adapter asks Catalog for display details; Catalog remains authoritative for family/variant activity, current price, and stock.
+- **Ordering → Customer Profile**: Checkout obtains the Customer-owned shipping and billing Address details through Customer Profile's published contract and stores immutable snapshots.
+- **Ordering → Cart**: Checkout loads the Customer Cart through Cart's published contract and clears it only when the Order is placed successfully.
+- **Ordering → Catalog**: Checkout resolves and purchases each selected Product Variant through Catalog's published contract. Ordering stores the returned product-family and variant identities, SKU, name, price, and quantity as purchase facts.
 - **Ordering → Integration platform**: Ordering records versioned immutable integration events in its transactional outbox. Kafka publication is asynchronous and post-commit; events expose identifiers and snapshots, never aggregates or persistence entities.
-- **Ordering ↔ Payment/Reservation/Fulfillment (planned capabilities)**: these capabilities own separate Payment, Reservation, Shipment, Return, and Refund lifecycles. They collaborate through immutable published contracts and authenticated idempotent operations; none becomes a shared aggregate or persistence entity.
-- **Administration → Customer, Catalog, Ordering**: Administration is a protected inbound delivery adapter, not a sixth bounded context. Each HTTP and React-Admin delivery surface consumes the owning context's published input ports, including Customer profile queries and Ordering order-summary queries; the owning context retains its language, policies, and transactions.
+
+Customer identifiers in Cart and Ordering and shared `Money` semantics are shared-kernel use, not
+consumer/provider relationships. Security and Administration compose published ports as inbound
+adapters, so they are not additional bounded contexts or arrows in this graph.
 
 No context shares a persistence entity with another context. Cross-context collaboration uses identifiers, immutable contracts, and application operations.
 
-The portfolio extensibility baseline models German B2C physical-goods commerce in EUR with simple SKU-backed Products and account-required checkout. Payment, tax, shipping, reservation, fulfillment, and privacy automation remain future capabilities with separate decisions and contracts. The operating assumptions are recorded in [the commerce operating model](./docs/superpowers/specs/2026-09-03-commerce-operating-model.md).
+The portfolio extensibility baseline models German B2C physical-goods commerce in EUR with
+SKU-backed Product Variants and account-required checkout. Payment, tax calculation, shipping-rate
+calculation, reservation, fulfillment, returns/refunds, and privacy automation remain planned
+capabilities rather than current context relationships. The operating assumptions and proposed
+boundaries are recorded in [ADR-0007](./docs/adr/0007-commerce-operating-model-baseline.md) and
+[ADR-0008](./docs/adr/0008-payment-and-reservation-boundaries.md).
 
 ## Identifier value objects
 
