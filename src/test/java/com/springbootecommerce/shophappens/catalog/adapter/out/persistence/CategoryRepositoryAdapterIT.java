@@ -168,7 +168,10 @@ class CategoryRepositoryAdapterIT extends AbstractIntegrationTest {
                                 categories.deleteForAdministration(
                                         id, new CategoryRevision(inserted.revision())))
                 .isInstanceOf(StaleCategoryRevisionException.class);
-        assertThat(findCategory(id).category().name()).isEqualTo("Task 8 stale delete current");
+        VersionedCategory reloaded = findCategory(id);
+        assertThat(reloaded.category().name()).isEqualTo("Task 8 stale delete current");
+        assertThat(reloaded.category().slug()).isEqualTo("task-8-stale-delete-current");
+        assertThat(reloaded.revision()).isEqualTo(1);
     }
 
     @Test
