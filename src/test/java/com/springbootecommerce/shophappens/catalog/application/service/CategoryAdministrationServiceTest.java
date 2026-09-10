@@ -81,6 +81,16 @@ class CategoryAdministrationServiceTest {
     }
 
     @Test
+    void repositoryIllegalArgumentFailureDuringCreatePassesThroughUnchanged() {
+        IllegalArgumentException failure =
+                new IllegalArgumentException("persistence mapping failed");
+        when(categories.insertForAdministration(any(Category.class))).thenThrow(failure);
+
+        assertThatThrownBy(() -> service.createCategory(new CreateCategoryCommand("Desk Tools")))
+                .isSameAs(failure);
+    }
+
+    @Test
     void renamesThroughTheAggregateUsingTheSuppliedRevision() {
         when(categories.findForAdministration(CATEGORY_ID))
                 .thenReturn(Optional.of(new VersionedCategory(existingCategory(), 2L)));
@@ -192,6 +202,24 @@ class CategoryAdministrationServiceTest {
                                 service.renameCategory(
                                         CATEGORY,
                                         new CategoryRevision(1L),
+                                        new RenameCategoryCommand("Office Supplies")))
+                .isSameAs(failure);
+    }
+
+    @Test
+    void repositoryIllegalArgumentFailureDuringRenamePassesThroughUnchanged() {
+        IllegalArgumentException failure =
+                new IllegalArgumentException("persistence mapping failed");
+        when(categories.findForAdministration(CATEGORY_ID))
+                .thenReturn(Optional.of(new VersionedCategory(existingCategory(), 2L)));
+        when(categories.updateForAdministration(any(Category.class), any(CategoryRevision.class)))
+                .thenThrow(failure);
+
+        assertThatThrownBy(
+                        () ->
+                                service.renameCategory(
+                                        CATEGORY,
+                                        new CategoryRevision(2L),
                                         new RenameCategoryCommand("Office Supplies")))
                 .isSameAs(failure);
     }
