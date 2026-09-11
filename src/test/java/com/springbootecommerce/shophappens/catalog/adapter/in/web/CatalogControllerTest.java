@@ -62,7 +62,8 @@ class CatalogControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("catalog/detail"))
                 .andExpect(model().attribute("product", product))
-                .andExpect(model().attribute("variants", List.of(product)));
+                .andExpect(model().attribute("variants", List.of(product)))
+                .andExpect(content().string(not(containsString("id=\"variant-selector\""))));
     }
 
     @Test

@@ -109,6 +109,10 @@ Use `./mvnw` for backend work, so you do not need a globally installed Maven.
 Frontend dependencies and assets are managed separately with npm; the Docker
 build composes the frontend and backend stages into the deployment image.
 
+The common local commands are also available through `make`. Run `make help` to
+see the targets. `make seed-demo` is destructive and replaces the local Compose
+database with the themed sample catalog.
+
 The simplest local setup on Windows, WSL, macOS, or Linux is:
 
 1. Install Java 21 and Node 22.

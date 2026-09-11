@@ -53,6 +53,28 @@ class DemoDataIT extends AbstractIntegrationTest {
                                 """,
                                 Long.class))
                 .isEqualTo(1L);
+        assertThat(
+                        jdbc.queryForObject(
+                                """
+                                select count(*) from (
+                                  select product_id
+                                  from product_variant
+                                  group by product_id
+                                  having count(*) > 1
+                                ) multi_variant_families
+                                """,
+                                Long.class))
+                .isEqualTo(6L);
+        assertThat(
+                        jdbc.queryForObject(
+                                """
+                                select count(distinct v.stock_quantity)
+                                from product_variant v
+                                join product p on p.id = v.product_id
+                                where p.sku = 'WEAP-001'
+                                """,
+                                Long.class))
+                .isEqualTo(3L);
     }
 
     @Test

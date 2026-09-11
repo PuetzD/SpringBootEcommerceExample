@@ -37,7 +37,7 @@
         </p>
         <p class="text-2xl font-semibold" th:text="${#numbers.formatDecimal(product.price().amount(), 1, 2) + ' EUR'}">0.00 EUR</p>
         <form
-            th:if="${!variants.isEmpty()}"
+            th:if="${variants.size() > 1}"
             th:action="@{/catalog/products/{sku}(sku=${navigationSku})}"
             method="get"
             class="mt-4 flex flex-wrap items-end gap-2">
