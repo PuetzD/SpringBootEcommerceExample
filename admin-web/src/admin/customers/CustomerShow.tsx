@@ -1,8 +1,10 @@
-import {ArrayField, BooleanField, Datagrid, DateField, FunctionField, NumberField, Show, SimpleShowLayout, TextField} from 'react-admin'
+import {ArrayField, BooleanField, Datagrid, DateField, FunctionField, NumberField, Show, SimpleShowLayout, TextField, useCreatePath} from 'react-admin'
 import {Link} from 'react-router-dom'
 import type {CustomerOrder} from '../../api/types'
 
 export function CustomerShow({id}: {id?: number}) {
+  const createPath = useCreatePath()
+
   return (
     <Show {...(id === undefined ? {} : {id})}>
       <SimpleShowLayout>
@@ -30,7 +32,12 @@ export function CustomerShow({id}: {id?: number}) {
               source="orderNumber"
               label="Order number"
               render={(order: CustomerOrder) => (
-                <Link className="link" to={order.orderUrl}>{order.orderNumber}</Link>
+                <Link
+                  className="link"
+                  to={createPath({resource: 'orders', id: order.orderNumber, type: 'show'})}
+                >
+                  {order.orderNumber}
+                </Link>
               )}
             />
             <NumberField source="total" options={{style: 'currency', currency: 'EUR'}} />

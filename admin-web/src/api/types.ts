@@ -127,7 +127,6 @@ export interface CustomerOrder {
     orderId: string
     total: number
     placedAt: string
-    orderUrl: string
 }
 
 export interface Customer {

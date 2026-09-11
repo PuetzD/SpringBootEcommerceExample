@@ -101,7 +101,6 @@ public class CustomerAdminApiController {
                 order.orderNumber(),
                 order.order().value(),
                 order.total().amount(),
-                order.placedAt(),
-                "/admin/orders/" + order.orderNumber());
+                order.placedAt());
     }
 }
