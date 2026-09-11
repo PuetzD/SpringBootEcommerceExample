@@ -238,4 +238,32 @@ describe('ApiClient', () => {
             const requestedUrls = vi.mocked(fetch).mock.calls.map(([url]) => String(url))
             expect(requestedUrls.filter((url) => url.includes('/api/admin/products'))).toHaveLength(1)
         })
+
+    it.each([
+            {status: 401, code: 'authentication.required', message: 'Unauthorized'},
+            {status: 403, code: 'authorization.denied', message: 'Forbidden'},
+        ])('preserves the original $status API error when CSRF refresh fails', async ({status, code, message}) => {
+            ; (global.fetch as any)
+                .mockResolvedValueOnce({
+                    ok: false,
+                    status,
+                    headers: new Headers({'content-type': 'application/json'}),
+                    json: async () => ({message, status, code, fieldErrors: {}}),
+                })
+                .mockResolvedValueOnce(new Response(null, {status: 503}))
+
+            const {ApiClient} = await import('../../api/client')
+            const csrfModule = await import('../../auth/CsrfProvider')
+            csrfModule.setToken('expired-token')
+
+            await expect(ApiClient.post('/api/admin/products', {name: 'Test'})).rejects.toMatchObject({
+                status,
+                code,
+                message,
+            })
+
+            const requestedUrls = vi.mocked(fetch).mock.calls.map(([url]) => String(url))
+            expect(requestedUrls.filter((url) => url.includes('/api/admin/products'))).toHaveLength(1)
+            expect(requestedUrls.filter((url) => url.includes('/api/admin/csrf'))).toHaveLength(1)
+        })
     })

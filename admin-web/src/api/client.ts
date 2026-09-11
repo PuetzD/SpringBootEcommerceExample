@@ -71,11 +71,16 @@ async function handleResponse<T>(response: Response): Promise<T> {
         message: 'Request failed',
         status: response.status,
     }
+    const error = new ApiError(errorBody)
     if (response.status === 401 || response.status === 403) {
         clearToken()
-        await refreshToken()
+        try {
+            await refreshToken()
+        } catch {
+            // Preserve the response that caused the refresh instead of replacing its API contract.
+        }
     }
-    throw new ApiError(errorBody)
+    throw error
 }
 
 export const ApiClient = {
