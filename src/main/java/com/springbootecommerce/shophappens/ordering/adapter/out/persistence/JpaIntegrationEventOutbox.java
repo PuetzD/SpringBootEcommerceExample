@@ -86,9 +86,8 @@ class JpaIntegrationEventOutbox implements IntegrationEventOutbox {
                             if (attempts >= 5) {
                                 event.setQuarantinedAt(now);
                             } else {
-                                event.setNextAttemptAt(
-                                        now.plusSeconds(
-                                                Math.min(60, 1L << Math.min(attempts - 1, 6))));
+                                long delaySeconds = Math.min(60L, 1L << (attempts - 1));
+                                event.setNextAttemptAt(now.plusSeconds(delaySeconds));
                             }
                             repository.save(event);
                         });

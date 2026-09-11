@@ -6,7 +6,6 @@ import com.springbootecommerce.shophappens.ordering.application.port.out.Integra
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
-import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -40,33 +39,48 @@ public class OutboxKafkaPublisher {
     public void publishPending() {
         for (PendingIntegrationEvent event : outbox.pending(BATCH_SIZE)) {
             try {
-                String version =
-                        switch (event.eventType()) {
-                            case "ordering.order-placed.v1" -> "1";
-                            case "ordering.order-placed.v2" -> "2";
-                            default ->
-                                    throw new IllegalArgumentException(
-                                            "Unsupported outbox event type");
-                        };
                 ProducerRecord<String, String> record =
                         new ProducerRecord<>(
                                 event.eventType(), event.aggregateKey(), event.payload());
                 record.headers()
                         .add("event-type", event.eventType().getBytes(StandardCharsets.UTF_8));
-                record.headers().add("event-version", version.getBytes(StandardCharsets.UTF_8));
+                record.headers()
+                        .add(
+                                "event-version",
+                                eventVersion(event.eventType()).getBytes(StandardCharsets.UTF_8));
                 record.headers()
                         .add(
                                 "event-id",
                                 event.eventId().toString().getBytes(StandardCharsets.UTF_8));
-                kafka.send(record).get(10, TimeUnit.SECONDS);
-            } catch (InterruptedException exception) {
-                Thread.currentThread().interrupt();
-                return;
-            } catch (Exception exception) {
+                kafka.send(record)
+                        .whenComplete(
+                                (result, exception) -> {
+                                    if (exception == null) {
+                                        statuses.markPublished(event.eventId(), Instant.now(clock));
+                                    } else {
+                                        Throwable cause =
+                                                exception.getCause() == null
+                                                        ? exception
+                                                        : exception.getCause();
+                                        statuses.markFailed(
+                                                event.eventId(), cause.getClass().getSimpleName());
+                                    }
+                                });
+            } catch (RuntimeException exception) {
                 statuses.markFailed(event.eventId(), exception.getClass().getSimpleName());
-                continue;
             }
-            statuses.markPublished(event.eventId(), Instant.now(clock));
         }
+    }
+
+    private static String eventVersion(String eventType) {
+        String prefix = "ordering.order-placed.v";
+        if (!eventType.startsWith(prefix) || eventType.length() == prefix.length()) {
+            throw new IllegalArgumentException("Unsupported outbox event type");
+        }
+        String version = eventType.substring(prefix.length());
+        if (version.chars().anyMatch(character -> character < '0' || character > '9')) {
+            throw new IllegalArgumentException("Unsupported outbox event type");
+        }
+        return version;
     }
 }

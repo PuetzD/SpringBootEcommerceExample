@@ -26,11 +26,16 @@ public class CatalogController {
     private final CanonicalUrlFactory canonicalUrlFactory;
 
     @GetMapping
-    public String list(Model model) {
+    public String list(@RequestParam(defaultValue = "0") int page, Model model) {
+        if (page < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Page must not be negative");
+        }
+        var catalogPage = catalog.findActivePage(page, 20);
         var seo = new SeoMetadata(LIST_TITLE, LIST_DESCRIPTION, "/catalog", "index,follow");
         model.addAttribute("seo", seo);
         model.addAttribute("canonicalUrl", canonicalUrlFactory.forPath(seo.canonicalPath()));
-        model.addAttribute("products", catalog.findActivePage(0, 20).products());
+        model.addAttribute("catalogPage", catalogPage);
+        model.addAttribute("products", catalogPage.products());
         return "catalog/list";
     }
 

@@ -3,6 +3,7 @@ package com.springbootecommerce.shophappens.ordering.application.event;
 import com.springbootecommerce.shophappens.ordering.domain.model.Order;
 import com.springbootecommerce.shophappens.ordering.domain.model.OrderAddress;
 import com.springbootecommerce.shophappens.ordering.domain.model.OrderItem;
+import com.springbootecommerce.shophappens.sharedkernel.money.Currency;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -15,7 +16,7 @@ public record OrderPlacedIntegrationEvent(
         long customerId,
         Instant occurredAt,
         BigDecimal total,
-        String currency,
+        Currency currency,
         List<Item> items,
         Address shippingAddress,
         Address billingAddress) {
@@ -33,7 +34,7 @@ public record OrderPlacedIntegrationEvent(
                 order.customerId().value(),
                 order.placedAt(),
                 order.total().amount(),
-                order.total().currency().name(),
+                order.total().currency(),
                 order.items().stream().map(Item::from).toList(),
                 Address.from(order.shippingAddress()),
                 Address.from(order.billingAddress()));
@@ -45,7 +46,6 @@ public record OrderPlacedIntegrationEvent(
             String sku,
             String productName,
             BigDecimal unitPrice,
-            String currency,
             int quantity) {
         static Item from(OrderItem item) {
             return new Item(
@@ -54,7 +54,6 @@ public record OrderPlacedIntegrationEvent(
                     item.sku(),
                     item.productName(),
                     item.unitPrice().amount(),
-                    item.unitPrice().currency().name(),
                     item.quantity());
         }
     }

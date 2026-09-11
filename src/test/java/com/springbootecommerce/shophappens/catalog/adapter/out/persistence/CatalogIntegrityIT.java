@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.springbootecommerce.shophappens.catalog.application.port.in.AmbiguousProductUpdateException;
+import com.springbootecommerce.shophappens.catalog.application.port.in.CreateProductCommand;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdminSearch;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductAdministrationUseCase;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
@@ -86,6 +87,36 @@ class CatalogIntegrityIT extends AbstractIntegrationTest {
                                 String.class,
                                 id.value()))
                 .isNull();
+    }
+
+    @Test
+    void releasesLegacySkuAfterRenamingDefaultVariant() {
+        Product original = family("RELEASE");
+        var originalId = original.id().orElseThrow();
+        var loaded = products.findForAdministration(originalId).orElseThrow();
+
+        var revised =
+                admin.updateVariant(
+                        new ProductReference(originalId.value()),
+                        original.defaultVariant().id().orElseThrow(),
+                        new ProductRevision(loaded.revision()),
+                        new UpdateProductVariantCommand(
+                                "RELEASED-SKU", new Money(new BigDecimal("13.00")), 4, null, true));
+
+        var replacement =
+                admin.createProduct(
+                        new CreateProductCommand(
+                                "BASE-RELEASE",
+                                "Replacement",
+                                "Replacement",
+                                new Money(new BigDecimal("11.00")),
+                                2,
+                                null,
+                                Set.of()));
+
+        assertThat(revised.productRevision().value()).isGreaterThan(loaded.revision());
+        assertThat(replacement.sku()).isEqualTo("BASE-RELEASE");
+        assertThat(products.findActiveBySku(new Sku("RELEASED-SKU"))).isPresent();
     }
 
     @Test

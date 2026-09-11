@@ -2,6 +2,7 @@ package com.springbootecommerce.shophappens.catalog.adapter.in.web;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -62,6 +63,30 @@ class CatalogControllerTest {
                 .andExpect(view().name("catalog/detail"))
                 .andExpect(model().attribute("product", product))
                 .andExpect(model().attribute("variants", List.of(product)));
+    }
+
+    @Test
+    void delegatesRequestedCatalogPageAndExposesNavigationMetadata() throws Exception {
+        var firstPageProduct = productSummary(7L, "PAGE-002", "Second page product", "18.99");
+        when(catalog.findActivePage(1, 20))
+                .thenReturn(new CatalogPage(List.of(firstPageProduct), 1, 20, 21, 2));
+
+        mockMvc.perform(get("/catalog").param("page", "1"))
+                .andExpect(status().isOk())
+                .andExpect(
+                        model().attribute(
+                                        "catalogPage",
+                                        new CatalogPage(List.of(firstPageProduct), 1, 20, 21, 2)))
+                .andExpect(model().attribute("products", List.of(firstPageProduct)))
+                .andExpect(content().string(containsString("Previous")))
+                .andExpect(content().string(not(containsString(">Next<"))));
+
+        verify(catalog).findActivePage(1, 20);
+    }
+
+    @Test
+    void rejectsNegativeCatalogPage() throws Exception {
+        mockMvc.perform(get("/catalog").param("page", "-1")).andExpect(status().isBadRequest());
     }
 
     @Test

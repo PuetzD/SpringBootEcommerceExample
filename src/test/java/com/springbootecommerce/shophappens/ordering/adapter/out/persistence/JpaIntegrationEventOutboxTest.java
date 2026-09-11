@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 
 import com.springbootecommerce.shophappens.ordering.application.event.OrderPlacedIntegrationEvent;
+import com.springbootecommerce.shophappens.sharedkernel.money.Currency;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
@@ -72,19 +73,12 @@ class JpaIntegrationEventOutboxTest {
         JsonNode item = payload.get("items").get(0);
         assertThat(item.propertyNames())
                 .containsExactlyInAnyOrder(
-                        "variantId",
-                        "productId",
-                        "sku",
-                        "productName",
-                        "unitPrice",
-                        "currency",
-                        "quantity");
+                        "variantId", "productId", "sku", "productName", "unitPrice", "quantity");
         assertThat(item.get("variantId").longValue()).isEqualTo(202L);
         assertThat(item.get("productId").longValue()).isEqualTo(7L);
         assertThat(item.get("sku").asString()).isEqualTo("ELEC-001");
         assertThat(item.get("productName").asString()).isEqualTo("Headphones");
         assertThat(item.get("unitPrice").decimalValue()).isEqualByComparingTo("19.99");
-        assertThat(item.get("currency").asString()).isEqualTo("EUR");
         assertThat(item.get("quantity").intValue()).isEqualTo(2);
         assertAddress(
                 payload.get("shippingAddress"),
@@ -138,16 +132,10 @@ class JpaIntegrationEventOutboxTest {
                 42L,
                 Instant.parse("2026-08-31T10:15:30Z"),
                 new BigDecimal("39.98"),
-                "EUR",
+                Currency.EUR,
                 List.of(
                         new OrderPlacedIntegrationEvent.Item(
-                                202L,
-                                7L,
-                                "ELEC-001",
-                                "Headphones",
-                                new BigDecimal("19.99"),
-                                "EUR",
-                                2)),
+                                202L, 7L, "ELEC-001", "Headphones", new BigDecimal("19.99"), 2)),
                 new OrderPlacedIntegrationEvent.Address(
                         "Jane Doe",
                         "Acme Inc",

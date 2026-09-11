@@ -27,7 +27,6 @@ CREATE TABLE product
     updated_at     TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT pk_product PRIMARY KEY (id),
-    CONSTRAINT uk_product_sku UNIQUE (sku),
     CONSTRAINT chk_product_price CHECK (price >= 0),
     CONSTRAINT chk_product_stock CHECK (stock_quantity >= 0)
 );

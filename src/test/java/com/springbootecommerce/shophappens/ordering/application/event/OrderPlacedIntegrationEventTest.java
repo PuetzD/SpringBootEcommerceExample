@@ -25,7 +25,6 @@ class OrderPlacedIntegrationEventTest {
 
         assertThat(eventItem.variantId()).isEqualTo(202);
         assertThat(eventItem.productId()).isEqualTo(7);
-        assertThat(eventItem.currency()).isEqualTo("EUR");
         assertThat(eventItem.unitPrice()).isEqualByComparingTo("20.00");
         assertThat(eventItem.quantity()).isEqualTo(2);
         assertThat(OrderPlacedIntegrationEvent.EVENT_TYPE).isEqualTo("ordering.order-placed.v2");

@@ -130,11 +130,11 @@ removed. The `prod` profile honors forwarded HTTPS headers and configures the se
 `Secure`, `HttpOnly`, and `SameSite=Strict`; `ProductionSessionCookieIT` covers login, authenticated
 reuse, and logout expiry for that profile.
 
-The application uses PostgreSQL and Redis. When running the application directly
+The application uses PostgreSQL, Redis, and Kafka. When running the application directly
 on the host, start those services first with Docker Compose:
 
 ```bash
-docker compose up -d postgres redis
+docker compose up -d postgres redis kafka
 npm ci
 npm run build:frontend
 ./mvnw spring-boot:run
@@ -217,7 +217,7 @@ checked against the JPA entities at startup via `ddl-auto: validate`:
 - `V3__create_cart_schema.sql` — customer carts
 - `V4__create_ordering_schema.sql` — orders, checkout idempotency, and order query indexes
 - `V5__create_integration_outbox.sql` — transactional integration events
-- `V8__create_catalog_attribute_schema.sql` — attribute definitions, values, and assignments
+- `V6__create_catalog_attribute_schema.sql` — attribute definitions, values, and assignments
 
 The optional seed is maintained in `scripts/demo-data.sql`, outside Flyway's
 migration locations. Use the Compose import command above instead of copying it
@@ -226,15 +226,15 @@ into a database manually.
 Do not edit an applied migration in a shared environment. Add a new numbered
 migration instead.
 
-## Optional Kafka Publishing
+## Kafka Publishing
 
-Kafka publishing is disabled by default, so local checkout works without a
-broker. To enable the publisher, provide a reachable Kafka broker and start the
-application with:
+Kafka publishing is enabled by default. The default Compose stack provides a
+single-node Kafka broker and the app connects to it automatically. When running
+the app directly on the host, use the same local broker or explicitly disable
+publishing:
 
 ```bash
-ORDERING_EVENTS_KAFKA_ENABLED=true \
-SPRING_KAFKA_BOOTSTRAP_SERVERS=localhost:9092 \
+ORDERING_EVENTS_KAFKA_ENABLED=false \
 ./mvnw generate-resources spring-boot:run
 ```
 
@@ -244,9 +244,8 @@ marks a row published only after the broker acknowledges the send. New
 checkouts store `ordering.order-placed.v2`; existing stored v1 rows remain
 publishable to `ordering.order-placed.v1` for replay compatibility. The event
 type, version, and event ID are included as Kafka headers. Producer idempotence
-is enabled by default when Kafka is enabled. No Kafka service is included in
-the default Compose stack; run one separately or use an environment-specific
-Compose profile.
+is enabled by default when Kafka is enabled. The default Compose stack includes
+a single-node Kafka broker.
 
 ### Outbox inspection and recovery
 

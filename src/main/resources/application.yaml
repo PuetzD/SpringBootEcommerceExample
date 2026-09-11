@@ -46,5 +46,5 @@ storefront:
 ordering:
   events:
     kafka:
-      enabled: ${ORDERING_EVENTS_KAFKA_ENABLED:false}
+      enabled: ${ORDERING_EVENTS_KAFKA_ENABLED:true}
       poll-delay: ${ORDERING_EVENTS_KAFKA_POLL_DELAY:1000}
