@@ -40,6 +40,69 @@ describe('ApiClient', () => {
             csrfModule.clearToken()
         })
 
+    it('waits for shared CSRF bootstrap before sending exactly one mutation', async () => {
+            let resolveBootstrap!: (response: Response) => void
+            const bootstrapResponse = new Promise<Response>((resolve) => {
+                resolveBootstrap = resolve
+            })
+            ; (global.fetch as any)
+                .mockReturnValueOnce(bootstrapResponse)
+                .mockResolvedValueOnce(new Response(JSON.stringify({id: 9}), {
+                    status: 200,
+                    headers: {'Content-Type': 'application/json'},
+                }))
+
+            const {ApiClient} = await import('../../api/client')
+            const csrfModule = await import('../../auth/CsrfProvider')
+            const bootstrap = csrfModule.refreshToken()
+            const mutation = ApiClient.post('/api/admin/products', {name: 'Test'})
+
+            await Promise.resolve()
+            expect(global.fetch).toHaveBeenCalledTimes(1)
+            expect(global.fetch).toHaveBeenCalledWith('/api/admin/csrf', {
+                credentials: 'same-origin',
+                headers: {Accept: 'application/json'},
+            })
+
+            resolveBootstrap(new Response(JSON.stringify({
+                headerName: 'X-BOOTSTRAP-CSRF',
+                token: 'ready-token',
+            }), {
+                status: 200,
+                headers: {'Content-Type': 'application/json'},
+            }))
+            await bootstrap
+            await mutation
+
+            expect(global.fetch).toHaveBeenCalledTimes(2)
+            expect(global.fetch).toHaveBeenNthCalledWith(2, '/api/admin/products', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-BOOTSTRAP-CSRF': 'ready-token',
+                },
+                body: '{"name":"Test"}',
+            })
+        })
+
+    it('rejects a mutation without sending it when CSRF bootstrap fails', async () => {
+            ; (global.fetch as any).mockResolvedValueOnce(new Response(null, {status: 503}))
+
+            const {ApiClient} = await import('../../api/client')
+
+            await expect(ApiClient.post('/api/admin/products', {name: 'Test'})).rejects.toThrow(
+                'Unable to obtain CSRF token',
+            )
+
+            expect(global.fetch).toHaveBeenCalledTimes(1)
+            expect(global.fetch).toHaveBeenCalledWith('/api/admin/csrf', {
+                credentials: 'same-origin',
+                headers: {Accept: 'application/json'},
+            })
+        })
+
     it('delete includes the dynamic CSRF header, quoted revision, and accepts 204', async () => {
             const csrfToken = 'csrf-456'
             ; (global.fetch as any).mockResolvedValueOnce({
@@ -86,9 +149,12 @@ describe('ApiClient', () => {
             })
 
             const { ApiClient } = await import('../../api/client')
+            const csrfModule = await import('../../auth/CsrfProvider')
+            csrfModule.setToken('csrf-put')
             await ApiClient.put('/api/admin/products/1', { name: 'Updated' }, { revision: 4 })
 
             expect((global.fetch as any).mock.calls[0][1].headers['If-Match']).toBe('"4"')
+            csrfModule.clearToken()
         })
 
     it('patches with credentials, CSRF and expected revision', async () => {
@@ -143,16 +209,16 @@ describe('ApiClient', () => {
             })
         })
 
-    it('does not retry an unauthorized request', async () => {
+    it('does not replay a forbidden mutation after refreshing CSRF', async () => {
             ; (global.fetch as any)
                 .mockResolvedValueOnce({
                     ok: false,
-                    status: 401,
+                    status: 403,
                     headers: new Headers({'content-type': 'application/json'}),
                     json: async () => ({
-                        message: 'Unauthorized',
-                        status: 401,
-                        code: 'authentication.required',
+                        message: 'Forbidden',
+                        status: 403,
+                        code: 'authorization.denied',
                         fieldErrors: {},
                     }),
                 })
@@ -165,7 +231,9 @@ describe('ApiClient', () => {
                 }))
 
             const {ApiClient} = await import('../../api/client')
-            await expect(ApiClient.get('/api/admin/products')).rejects.toMatchObject({status: 401})
+            const csrfModule = await import('../../auth/CsrfProvider')
+            csrfModule.setToken('expired-token')
+            await expect(ApiClient.post('/api/admin/products', {name: 'Test'})).rejects.toMatchObject({status: 403})
 
             const requestedUrls = vi.mocked(fetch).mock.calls.map(([url]) => String(url))
             expect(requestedUrls.filter((url) => url.includes('/api/admin/products'))).toHaveLength(1)

@@ -32,23 +32,34 @@ export async function refreshToken(): Promise<void> {
                     headers: {Accept: 'application/json'},
                 })
                 if (!response.ok) {
-                    clearToken()
-                    return
+                    throw new Error(`CSRF endpoint returned ${response.status}`)
                 }
                 const data = (await response.json()) as Partial<CsrfState>
                 if (typeof data.headerName === 'string' && typeof data.token === 'string') {
                     setToken(data.token, data.headerName)
                 } else {
-                    clearToken()
+                    throw new Error('CSRF endpoint returned an invalid response')
                 }
             } catch {
                 clearToken()
+                throw new Error('Unable to obtain CSRF token')
             }
         })().finally(() => {
             _refreshPromise = null
         })
     }
     await _refreshPromise
+}
+
+export async function requireCsrf(): Promise<CsrfState> {
+    if (!getCsrf()) {
+        await refreshToken()
+    }
+    const csrf = getCsrf()
+    if (!csrf) {
+        throw new Error('Unable to obtain CSRF token')
+    }
+    return csrf
 }
 
 interface CsrfContextValue {
@@ -71,7 +82,7 @@ export function CsrfProvider({children}: {children: ReactNode}) {
         const latestCsrf = getCsrf()
         setCsrf(latestCsrf)
         if (!latestCsrf) {
-            void refreshToken()
+            void refreshToken().catch(() => undefined)
         }
         return () => {
             _listeners.delete(setCsrf)

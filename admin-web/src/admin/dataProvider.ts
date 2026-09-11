@@ -2,6 +2,7 @@ import {HttpError, type DataProvider, type GetListParams} from 'react-admin'
 import {ApiClient, ApiError} from '../api/client'
 import type {
   Category,
+  CategoryOption,
   CategorySummary,
   Customer,
   CreateCategoryInput,
@@ -12,7 +13,13 @@ import type {
   ProductVariant,
 } from '../api/types'
 
-type CatalogResource = 'products' | 'categories' | 'orders' | 'customers' | 'productVariants'
+type CatalogResource =
+  | 'products'
+  | 'categories'
+  | 'categoryOptions'
+  | 'orders'
+  | 'customers'
+  | 'productVariants'
 
 type ProductMutationData = Partial<Product> & {
   categoryIds?: number[]
@@ -27,6 +34,7 @@ type ProductVariantMutationData = Partial<ProductVariant> & {productId?: number;
 const resourcePaths: Record<CatalogResource, string> = {
   products: '/api/admin/products',
   categories: '/api/admin/categories',
+  categoryOptions: '/api/admin/categories/options',
   orders: '/api/admin/orders',
   customers: '/api/admin/customers',
   productVariants: '/api/admin/products',
@@ -226,6 +234,11 @@ export const dataProvider = {
     }
     const path = resourcePath(resource)
 
+    if (resource === 'categoryOptions') {
+      const response = await runWithReactAdminError(() => ApiClient.get<CategoryOption[]>(path))
+      return {data: response.map(normalizeRecord), total: response.length}
+    }
+
     if (resource === 'products') {
       const response = await runWithReactAdminError(() =>
         ApiClient.get<PageResponse<Product>>(path, {params: normalizeProductListParams(params)}),
@@ -291,6 +304,11 @@ export const dataProvider = {
       throw new Error(`Unsupported react-admin method: getMany for ${resource}`)
     }
     const path = resourcePath(resource)
+    if (resource === 'categoryOptions') {
+      const response = await runWithReactAdminError(() => ApiClient.get<CategoryOption[]>(path))
+      const requestedIds = new Set(params.ids)
+      return {data: response.filter(({id}) => requestedIds.has(id)).map(normalizeRecord)}
+    }
     const records = await runWithReactAdminError(() =>
       Promise.all(params.ids.map((id) => ApiClient.get<Product | Category>(`${path}/${id}`))),
     )

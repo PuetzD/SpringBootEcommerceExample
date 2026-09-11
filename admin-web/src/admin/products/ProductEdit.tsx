@@ -11,7 +11,7 @@ export function ProductEdit() {
         <TextInput source="description" multiline />
         <BooleanInput source="active" />
         <TextInput source="revision" disabled />
-        <ReferenceArrayInput source="categoryIds" reference="categories">
+        <ReferenceArrayInput source="categoryIds" reference="categoryOptions">
           <AutocompleteArrayInput optionText="name" />
         </ReferenceArrayInput>
       </SimpleForm>

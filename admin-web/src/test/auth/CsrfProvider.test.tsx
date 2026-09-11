@@ -78,7 +78,7 @@ describe('CsrfProvider', () => {
         headers: {'Content-Type': 'application/json'},
       })))
 
-    await refreshToken()
+    await expect(refreshToken()).rejects.toThrow('Unable to obtain CSRF token')
     expect(getCsrf()).toBeNull()
 
     await refreshToken()

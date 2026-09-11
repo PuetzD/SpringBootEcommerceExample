@@ -10,7 +10,7 @@ export function ProductCreate() {
         <NumberInput source="price" validate={required('Required field')} />
         <NumberInput source="stockQuantity" validate={required('Required field')} />
         <TextInput source="imageUrl" />
-        <ReferenceArrayInput source="categoryIds" reference="categories">
+        <ReferenceArrayInput source="categoryIds" reference="categoryOptions">
           <AutocompleteArrayInput optionText="name" />
         </ReferenceArrayInput>
       </SimpleForm>

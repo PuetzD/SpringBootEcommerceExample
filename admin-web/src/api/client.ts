@@ -1,5 +1,5 @@
 import type {ApiErrorResponse, ApiQueryParams, ApiRequestOptions, FieldErrorResponse} from './types'
-import {clearToken, getCsrf, refreshToken} from '../auth/CsrfProvider'
+import {clearToken, getCsrf, refreshToken, requireCsrf} from '../auth/CsrfProvider'
 
 export class ApiError extends Error {
     status: number
@@ -23,6 +23,14 @@ function csrfHeaders(): Record<string, string> {
 
 function revisionHeaders(revision?: number): Record<string, string> {
     return revision === undefined ? {} : {'If-Match': `"${revision}"`}
+}
+
+async function mutationHeaders(revision?: number): Promise<Record<string, string>> {
+    const csrf = await requireCsrf()
+    return {
+        [csrf.headerName]: csrf.token,
+        ...revisionHeaders(revision),
+    }
 }
 
 function isRequestOptions(
@@ -89,14 +97,14 @@ export const ApiClient = {
 
     async post<T>(path: string, body: unknown, revisionOrOptions?: number | ApiRequestOptions): Promise<T> {
         const {revision} = normalizeMutationOptions(revisionOrOptions)
+        const headers = await mutationHeaders(revision)
         const response = await fetch(path, {
             method: 'POST',
             credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json',
                 Accept: 'application/json',
-                ...csrfHeaders(),
-                ...revisionHeaders(revision),
+                ...headers,
             },
             body: JSON.stringify(body),
         })
@@ -105,14 +113,14 @@ export const ApiClient = {
 
     async put<T>(path: string, body: unknown, revisionOrOptions?: number | ApiRequestOptions): Promise<T> {
         const {revision} = normalizeMutationOptions(revisionOrOptions)
+        const headers = await mutationHeaders(revision)
         const response = await fetch(path, {
             method: 'PUT',
             credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json',
                 Accept: 'application/json',
-                ...csrfHeaders(),
-                ...revisionHeaders(revision),
+                ...headers,
             },
             body: JSON.stringify(body),
         })
@@ -121,14 +129,14 @@ export const ApiClient = {
 
     async patch<T>(path: string, body: unknown, revisionOrOptions?: number | ApiRequestOptions): Promise<T> {
         const {revision} = normalizeMutationOptions(revisionOrOptions)
+        const headers = await mutationHeaders(revision)
         const response = await fetch(path, {
             method: 'PATCH',
             credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json',
                 Accept: 'application/json',
-                ...csrfHeaders(),
-                ...revisionHeaders(revision),
+                ...headers,
             },
             body: JSON.stringify(body),
         })
@@ -137,10 +145,11 @@ export const ApiClient = {
 
     async delete(path: string, revisionOrOptions?: number | ApiRequestOptions): Promise<void> {
         const {revision} = normalizeMutationOptions(revisionOrOptions)
+        const headers = await mutationHeaders(revision)
         const response = await fetch(path, {
             method: 'DELETE',
             credentials: 'same-origin',
-            headers: {Accept: 'application/json', ...csrfHeaders(), ...revisionHeaders(revision)},
+            headers: {Accept: 'application/json', ...headers},
         })
         await handleResponse<void>(response)
     },
