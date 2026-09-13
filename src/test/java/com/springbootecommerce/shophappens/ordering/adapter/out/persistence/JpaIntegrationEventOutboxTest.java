@@ -40,7 +40,7 @@ class JpaIntegrationEventOutboxTest {
         verify(repository).save(saved.capture());
         OutboxEventJpaEntity entity = saved.getValue();
         assertThat(entity.getEventId()).isEqualTo(event.eventId());
-        assertThat(entity.getEventType()).isEqualTo("ordering.order-placed.v2");
+        assertThat(entity.getEventType()).isEqualTo("ordering.order-placed.v1");
         assertThat(entity.getAggregateKey()).isEqualTo("22222222-2222-2222-2222-222222222222");
         assertThat(entity.getCreatedAt()).isEqualTo(CREATED_AT);
         assertThat(entity.getNextAttemptAt()).isEqualTo(CREATED_AT);

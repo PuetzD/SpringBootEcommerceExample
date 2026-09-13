@@ -96,7 +96,8 @@ class OutboxKafkaPublisherTest {
         publisher.publishPending();
 
         verifyNoInteractions(kafka);
-        verify(statuses).markFailed(eventId, "IllegalArgumentException");
+        verify(statuses)
+                .markFailed(eventId, "IllegalArgumentException: Unsupported outbox event type");
         verify(statuses, never()).markPublished(any(), any());
     }
 
@@ -117,7 +118,7 @@ class OutboxKafkaPublisherTest {
 
         publisher.publishPending();
 
-        verify(statuses).markFailed(timedOutId, "IllegalStateException");
+        verify(statuses).markFailed(timedOutId, "IllegalStateException: broker");
         verify(statuses, never()).markPublished(timedOutId, PUBLISHED_AT);
         verify(statuses).markPublished(healthyId, PUBLISHED_AT);
         verify(kafka, times(2)).send(any(ProducerRecord.class));
@@ -142,11 +143,11 @@ class OutboxKafkaPublisherTest {
         publisher.publishPending();
 
         verify(kafka, times(2)).send(any(ProducerRecord.class));
-        verify(statuses).markFailed(interruptedId, "IllegalStateException");
+        verify(statuses).markFailed(interruptedId, "IllegalStateException: broker");
         verify(statuses).markPublished(untouchedId, PUBLISHED_AT);
     }
 
     private static PendingIntegrationEvent pending(UUID eventId, String aggregateKey) {
-        return new PendingIntegrationEvent(eventId, "ordering.order-placed.v2", aggregateKey, "{}");
+        return new PendingIntegrationEvent(eventId, "ordering.order-placed.v1", aggregateKey, "{}");
     }
 }

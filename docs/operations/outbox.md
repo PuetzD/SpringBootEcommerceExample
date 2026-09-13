@@ -4,9 +4,10 @@ The optional Kafka publisher provides at-least-once delivery. A retry keeps the 
 and payload, so consumers must deduplicate by `event-id`. Run only one publisher instance; the
 current query does not lease rows between workers.
 
-New checkouts append `ordering.order-placed.v2`. The publisher also accepts previously stored
-`ordering.order-placed.v1` rows so they can be replayed without rewriting their type, payload, or
-identity; the stored event type is the Kafka topic and the matching version is sent in headers.
+New checkouts append `ordering.order-placed.v1`. The stored event type is the Kafka topic and the
+matching version is sent in headers. A process-local
+in-flight guard prevents an asynchronous send from being selected again before its callback updates
+the outbox row.
 
 ## Inspect delivery state
 

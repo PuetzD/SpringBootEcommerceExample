@@ -98,7 +98,7 @@ class CheckoutServiceTest {
         ArgumentCaptor<OrderPlacedIntegrationEvent> event =
                 ArgumentCaptor.forClass(OrderPlacedIntegrationEvent.class);
         org.mockito.Mockito.verify(outbox).append(event.capture());
-        assertThat(OrderPlacedIntegrationEvent.EVENT_TYPE).isEqualTo("ordering.order-placed.v2");
+        assertThat(OrderPlacedIntegrationEvent.EVENT_TYPE).isEqualTo("ordering.order-placed.v1");
         assertThat(event.getValue().orderId()).isEqualTo(result.order().value());
     }
 

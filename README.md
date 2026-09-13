@@ -67,7 +67,7 @@ sequenceDiagram
 ```
 
 Successful checkouts produce the immutable, versioned
-`ordering.order-placed.v2` event. It contains both product-family and sellable
+`ordering.order-placed.v1` event. It contains both product-family and sellable
 variant identity plus immutable purchase snapshots, not JPA entities or mutable
 cart objects. Kafka publication is asynchronous and opt-in; the default profile
 only persists the event in PostgreSQL.
@@ -232,21 +232,20 @@ migration instead.
 
 ## Kafka Publishing
 
-Kafka publishing is enabled by default. The default Compose stack provides a
-single-node Kafka broker and the app connects to it automatically. When running
-the app directly on the host, use the same local broker or explicitly disable
-publishing:
+Kafka publishing is opt-in. The default Compose stack enables it explicitly and
+provides a single-node Kafka broker. When running the app directly on the host,
+use the same local broker or enable publishing explicitly:
 
 ```bash
-ORDERING_EVENTS_KAFKA_ENABLED=false \
+ORDERING_EVENTS_KAFKA_ENABLED=true \
 ./mvnw generate-resources spring-boot:run
 ```
 
 The publisher reads unpublished rows from `integration_outbox`, uses each
 stored event type as its Kafka topic, uses the order ID as the Kafka key, and
 marks a row published only after the broker acknowledges the send. New
-checkouts store `ordering.order-placed.v2`; existing stored v1 rows remain
-publishable to `ordering.order-placed.v1` for replay compatibility. The event
+checkouts store `ordering.order-placed.v1`; the stored event type remains the
+Kafka topic for replay compatibility. The event
 type, version, and event ID are included as Kafka headers. Producer idempotence
 is enabled by default when Kafka is enabled. The default Compose stack includes
 a single-node Kafka broker.

@@ -6,7 +6,12 @@ import com.springbootecommerce.shophappens.ordering.application.port.out.Integra
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -17,11 +22,13 @@ import org.springframework.stereotype.Component;
 @ConditionalOnProperty(name = "ordering.events.kafka.enabled", havingValue = "true")
 public class OutboxKafkaPublisher {
     private static final int BATCH_SIZE = 100;
+    private static final Logger log = LoggerFactory.getLogger(OutboxKafkaPublisher.class);
 
     private final IntegrationEventOutbox outbox;
     private final UpdateOutboxStatusUseCase statuses;
     private final KafkaTemplate<String, String> kafka;
     private final Clock clock;
+    private final Set<UUID> inFlight = ConcurrentHashMap.newKeySet();
 
     @Autowired
     public OutboxKafkaPublisher(
@@ -38,6 +45,9 @@ public class OutboxKafkaPublisher {
     @Scheduled(fixedDelayString = "${ordering.events.kafka.poll-delay:1000}")
     public void publishPending() {
         for (PendingIntegrationEvent event : outbox.pending(BATCH_SIZE)) {
+            if (!inFlight.add(event.eventId())) {
+                continue;
+            }
             try {
                 ProducerRecord<String, String> record =
                         new ProducerRecord<>(
@@ -55,21 +65,34 @@ public class OutboxKafkaPublisher {
                 kafka.send(record)
                         .whenComplete(
                                 (result, exception) -> {
-                                    if (exception == null) {
-                                        statuses.markPublished(event.eventId(), Instant.now(clock));
-                                    } else {
-                                        Throwable cause =
-                                                exception.getCause() == null
-                                                        ? exception
-                                                        : exception.getCause();
-                                        statuses.markFailed(
-                                                event.eventId(), cause.getClass().getSimpleName());
+                                    try {
+                                        if (exception == null) {
+                                            statuses.markPublished(
+                                                    event.eventId(), Instant.now(clock));
+                                        } else {
+                                            statuses.markFailed(
+                                                    event.eventId(), diagnostic(exception));
+                                        }
+                                    } catch (RuntimeException statusException) {
+                                        log.error(
+                                                "Could not update outbox status for {}",
+                                                event.eventId(),
+                                                statusException);
+                                    } finally {
+                                        inFlight.remove(event.eventId());
                                     }
                                 });
             } catch (RuntimeException exception) {
-                statuses.markFailed(event.eventId(), exception.getClass().getSimpleName());
+                inFlight.remove(event.eventId());
+                statuses.markFailed(event.eventId(), diagnostic(exception));
             }
         }
+    }
+
+    private static String diagnostic(Throwable exception) {
+        Throwable cause = exception.getCause() == null ? exception : exception.getCause();
+        String message = cause.getMessage();
+        return cause.getClass().getSimpleName() + (message == null ? "" : ": " + message);
     }
 
     private static String eventVersion(String eventType) {

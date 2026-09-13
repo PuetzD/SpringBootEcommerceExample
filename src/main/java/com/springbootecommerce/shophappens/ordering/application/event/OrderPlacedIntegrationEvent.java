@@ -20,7 +20,7 @@ public record OrderPlacedIntegrationEvent(
         List<Item> items,
         Address shippingAddress,
         Address billingAddress) {
-    public static final String EVENT_TYPE = "ordering.order-placed.v2";
+    public static final String EVENT_TYPE = "ordering.order-placed.v1";
 
     public OrderPlacedIntegrationEvent {
         items = List.copyOf(items);
