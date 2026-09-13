@@ -53,7 +53,7 @@ sequenceDiagram
     Ordering->>Profile: resolve owned address snapshots
     Ordering->>Catalog: purchase Product Variants using current facts
     Ordering->>Ordering: compare purchase with unexpired review
-    Ordering->>DB: save Order and outbox v2 row
+    Ordering->>DB: save Order and outbox v1 row
     Ordering->>Cart: clear Customer Cart
     alt every check succeeds
         DB-->>Ordering: commit stock + Order + outbox + Cart
@@ -75,9 +75,11 @@ only persists the event in PostgreSQL.
 The Kafka publisher currently provides bounded polling, broker-acknowledged
 publication, event metadata headers, bounded retries, and quarantine after five
 failed attempts. Delivery is at least once: consumers must use the event ID for
-idempotency. See the [outbox operations runbook](docs/operations/outbox.md) for
-inspection, targeted replay, and the current single-publisher limitation. A
-Kafka consumer and inbox/processed-event store remain future work.
+idempotency. The order-confirmation consumer uses the same event ID to send an
+asynchronous customer email through Spring Mail. Local Compose routes it to
+Mailpit at `http://localhost:8025`; email delivery does not change checkout
+success. See the [outbox operations runbook](docs/operations/outbox.md) for
+inspection, targeted replay, and the current single-publisher limitation.
 
 ### Architectural decisions
 
@@ -252,6 +254,15 @@ Kafka topic for replay compatibility. The event
 type, version, and event ID are included as Kafka headers. Producer idempotence
 is enabled by default when Kafka is enabled. The default Compose stack includes
 a single-node Kafka broker.
+
+### Customer order confirmation email
+
+Compose enables the order-confirmation consumer and sends through the existing
+Spring Mail configuration. Configure `NOTIFICATIONS_EMAIL_FROM` for the sender
+address. The event contains the placement-time customer recipient snapshot, so
+the email does not depend on later Customer Profile changes. Delivery state is
+stored in `order_confirmation_delivery`; transient failures retry and repeated
+failures are quarantined after five attempts.
 
 ### Outbox inspection and recovery
 

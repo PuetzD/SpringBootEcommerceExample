@@ -20,6 +20,7 @@ import com.springbootecommerce.shophappens.ordering.application.port.out.Checkou
 import com.springbootecommerce.shophappens.ordering.application.port.out.CheckoutLock;
 import com.springbootecommerce.shophappens.ordering.application.port.out.CustomerAddressGateway;
 import com.springbootecommerce.shophappens.ordering.application.port.out.CustomerCartGateway;
+import com.springbootecommerce.shophappens.ordering.application.port.out.CustomerContactGateway;
 import com.springbootecommerce.shophappens.ordering.application.port.out.IntegrationEventOutbox;
 import com.springbootecommerce.shophappens.ordering.application.port.out.OrderNumberGenerator;
 import com.springbootecommerce.shophappens.ordering.application.port.out.OrderRepository;
@@ -55,6 +56,7 @@ class CheckoutServiceTest {
     @Mock OrderRepository orders;
     @Mock CustomerAddressGateway addresses;
     @Mock CustomerCartGateway carts;
+    @Mock CustomerContactGateway contacts;
     @Mock CatalogPurchaseGateway catalog;
     @Mock OrderNumberGenerator numbers;
     @Mock CheckoutLock checkoutLock;
@@ -70,6 +72,7 @@ class CheckoutServiceTest {
                 new CheckoutService(
                         orders,
                         addresses,
+                        contacts,
                         carts,
                         catalog,
                         numbers,
@@ -90,6 +93,8 @@ class CheckoutServiceTest {
                 .thenReturn(List.of(purchasedProduct(7L, 2, "19.99")));
         when(numbers.next()).thenReturn(new OrderNumber("ORD-20260828-ABC123DEF456"));
         when(orders.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(contacts.contact(new CustomerId(42L)))
+                .thenReturn(new CustomerContactGateway.CustomerContact("Ada", "ada@example.com"));
 
         PlacedOrder result = service.place(command);
 
@@ -100,6 +105,8 @@ class CheckoutServiceTest {
         org.mockito.Mockito.verify(outbox).append(event.capture());
         assertThat(OrderPlacedIntegrationEvent.EVENT_TYPE).isEqualTo("ordering.order-placed.v1");
         assertThat(event.getValue().orderId()).isEqualTo(result.order().value());
+        assertThat(event.getValue().customerGivenName()).isEqualTo("Ada");
+        assertThat(event.getValue().customerContactEmail()).isEqualTo("ada@example.com");
     }
 
     @Test

@@ -84,6 +84,7 @@ services:
       ORDERING_EVENTS_KAFKA_ENABLED: "true"
       SPRING_MAIL_HOST: mailpit
       SPRING_MAIL_PORT: 1025
+      NOTIFICATIONS_EMAIL_ENABLED: "true"
     ports:
       - "8080:8080"
 

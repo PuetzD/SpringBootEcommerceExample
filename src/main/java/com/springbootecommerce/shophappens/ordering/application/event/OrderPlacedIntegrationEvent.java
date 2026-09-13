@@ -14,6 +14,8 @@ public record OrderPlacedIntegrationEvent(
         UUID orderId,
         String orderNumber,
         long customerId,
+        String customerGivenName,
+        String customerContactEmail,
         Instant occurredAt,
         BigDecimal total,
         Currency currency,
@@ -26,12 +28,15 @@ public record OrderPlacedIntegrationEvent(
         items = List.copyOf(items);
     }
 
-    public static OrderPlacedIntegrationEvent from(Order order) {
+    public static OrderPlacedIntegrationEvent from(
+            Order order, String customerGivenName, String customerContactEmail) {
         return new OrderPlacedIntegrationEvent(
                 UUID.randomUUID(),
                 order.orderId().value(),
                 order.orderNumber().value(),
                 order.customerId().value(),
+                customerGivenName,
+                customerContactEmail,
                 order.placedAt(),
                 order.total().amount(),
                 order.total().currency(),

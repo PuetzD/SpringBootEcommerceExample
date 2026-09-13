@@ -53,6 +53,8 @@ class JpaIntegrationEventOutboxTest {
                         "orderId",
                         "orderNumber",
                         "customerId",
+                        "customerGivenName",
+                        "customerContactEmail",
                         "occurredAt",
                         "total",
                         "currency",
@@ -66,6 +68,8 @@ class JpaIntegrationEventOutboxTest {
         assertThat(payload.get("orderNumber").asString()).isEqualTo("ORD-20260831-ABC123DEF456");
         assertThat(payload.get("customerId").isIntegralNumber()).isTrue();
         assertThat(payload.get("customerId").longValue()).isEqualTo(42L);
+        assertThat(payload.get("customerGivenName").asString()).isEqualTo("Jane");
+        assertThat(payload.get("customerContactEmail").asString()).isEqualTo("jane@example.com");
         assertThat(payload.get("occurredAt").asString()).isEqualTo("2026-08-31T10:15:30Z");
         assertThat(payload.get("total").isNumber()).isTrue();
         assertThat(payload.get("total").decimalValue()).isEqualByComparingTo("39.98");
@@ -130,6 +134,8 @@ class JpaIntegrationEventOutboxTest {
                 UUID.fromString("22222222-2222-2222-2222-222222222222"),
                 "ORD-20260831-ABC123DEF456",
                 42L,
+                "Jane",
+                "jane@example.com",
                 Instant.parse("2026-08-31T10:15:30Z"),
                 new BigDecimal("39.98"),
                 Currency.EUR,
