@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 @ConditionalOnProperty(name = "ordering.events.kafka.enabled", havingValue = "true")
 public class OutboxKafkaPublisher {
     private static final int BATCH_SIZE = 100;
-    private static final Logger log = LoggerFactory.getLogger(OutboxKafkaPublisher.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OutboxKafkaPublisher.class);
 
     private final IntegrationEventOutbox outbox;
     private final UpdateOutboxStatusUseCase statuses;
@@ -74,7 +74,7 @@ public class OutboxKafkaPublisher {
                                                     event.eventId(), diagnostic(exception));
                                         }
                                     } catch (RuntimeException statusException) {
-                                        log.error(
+                                        LOG.error(
                                                 "Could not update outbox status for {}",
                                                 event.eventId(),
                                                 statusException);
