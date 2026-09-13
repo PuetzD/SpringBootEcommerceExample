@@ -8,7 +8,7 @@ CREATE TABLE integration_outbox (
     published_at TIMESTAMPTZ,
     attempt_count INTEGER NOT NULL DEFAULT 0,
     last_error TEXT,
-    next_attempt_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    next_attempt_at TIMESTAMPTZ NOT NULL DEFAULT (CURRENT_TIMESTAMP + INTERVAL '1 minute'),
     quarantined_at TIMESTAMPTZ,
     version BIGINT NOT NULL DEFAULT 0,
     CONSTRAINT pk_integration_outbox PRIMARY KEY (event_id),
