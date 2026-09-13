@@ -36,6 +36,9 @@ class OrderItemJpaEntity {
     @Column(name = "product_id", nullable = false)
     private long productId;
 
+    @Column(name = "variant_id", nullable = false)
+    private long variantId;
+
     @Column(name = "sku", nullable = false, length = 50)
     private String sku;
 
@@ -54,6 +57,7 @@ class OrderItemJpaEntity {
     static OrderItemJpaEntity create(
             OrderJpaEntity order,
             int lineNumber,
+            long variantId,
             long productId,
             String sku,
             String productName,
@@ -64,6 +68,7 @@ class OrderItemJpaEntity {
         entity.order = order;
         entity.orderId = order.getId();
         entity.lineNumber = lineNumber;
+        entity.variantId = variantId;
         entity.productId = productId;
         entity.sku = sku;
         entity.productName = productName;

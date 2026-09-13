@@ -16,7 +16,9 @@ class PostgresCartMergeLedgerIT extends AbstractIntegrationTest {
     void claimsEachGuestCartOnlyOnce() {
         GuestCartId guest = GuestCartId.random();
 
+        assertThat(ledger.isConsumed(guest)).isFalse();
         assertThat(ledger.claim(guest, new CustomerId(42L))).isTrue();
+        assertThat(ledger.isConsumed(guest)).isTrue();
         assertThat(ledger.claim(guest, new CustomerId(42L))).isFalse();
     }
 }

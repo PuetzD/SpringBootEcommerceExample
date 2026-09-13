@@ -1,0 +1,21 @@
+<!doctype html>
+<html
+    lang="en"
+    xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{fragments/layout :: page(${seo}, ~{::main}, ~{::#page-scripts})}">
+<head></head>
+<body>
+  <main class="flex-grow py-12">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h1 class="text-2xl font-bold mb-6">Cart update interrupted</h1>
+      <div role="alert" class="alert alert-warning">
+        <span th:text="${message}">The cart could not be updated.</span>
+      </div>
+      <p class="mt-8">
+        <a th:href="@{/cart}" class="btn">Reload cart</a>
+      </p>
+    </div>
+  </main>
+  <th:block id="page-scripts"></th:block>
+</body>
+</html>

@@ -6,7 +6,7 @@ Promote stable shared identifier value objects into the shared kernel.
 
 ## Status
 
-Accepted
+Superseded by [ADR-0004](./0004-shared-kernel-identifiers-and-money.md)
 
 ## Context
 
@@ -17,9 +17,9 @@ meaning of `Money`.
 
 ## Decision
 
-The shared kernel contains the canonical `AccountId`, `CustomerId`, and
-`ProductId` values. Context-local identifiers such as `Sku`, `CategoryId`,
-`AddressId`, `CartId`, and `OrderId` remain owned by their respective contexts.
+This decision originally promoted `AccountId`, `CustomerId`, and `ProductId`.
+ADR-0004 now owns the complete shared-kernel boundary, including `Money`, and
+ADR-0010 adds the stable sellable `ProductVariantId` meaning.
 
 ## Consequences
 

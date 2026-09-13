@@ -67,8 +67,8 @@ public class CategoryAdminApiController {
     }
 
     @GetMapping("/categories/options")
-    public List<CategoryOption> listCategoryOptions() {
-        return categoryAdminQuery.listCategoryOptions();
+    public List<CategorySummaryResponse> listCategoryOptions() {
+        return categoryAdminQuery.listCategoryOptions().stream().map(this::toResponse).toList();
     }
 
     @PostMapping("/categories")
@@ -85,7 +85,7 @@ public class CategoryAdminApiController {
     @PutMapping("/categories/{id}")
     public CategoryResponse updateCategory(
             @PathVariable @Positive long id,
-            @RequestHeader("If-Match") String ifMatch,
+            @RequestHeader(value = "If-Match", required = false) String ifMatch,
             @Valid @RequestBody UpdateCategoryRequest request) {
         return toResponse(
                 categoryAdministrationUseCase.renameCategory(
@@ -96,7 +96,8 @@ public class CategoryAdminApiController {
 
     @DeleteMapping("/categories/{id}")
     public ResponseEntity<Void> deleteCategory(
-            @PathVariable @Positive long id, @RequestHeader("If-Match") String ifMatch) {
+            @PathVariable @Positive long id,
+            @RequestHeader(value = "If-Match", required = false) String ifMatch) {
         categoryAdministrationUseCase.deleteCategory(
                 new CategoryReference(id),
                 new CategoryRevision(ExpectedRevisionParser.parse(ifMatch)));
@@ -113,5 +114,10 @@ public class CategoryAdminApiController {
                 "/api/admin/categories/" + category.category().value(),
                 "/api/admin/categories/" + category.category().value(),
                 "/api/admin/categories/" + category.category().value());
+    }
+
+    private CategorySummaryResponse toResponse(CategoryOption category) {
+        return new CategorySummaryResponse(
+                category.category().value(), category.name(), category.slug());
     }
 }

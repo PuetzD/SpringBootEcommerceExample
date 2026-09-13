@@ -2,8 +2,10 @@ package com.springbootecommerce.shophappens.administration.web;
 
 import com.springbootecommerce.shophappens.administration.web.api.ApiErrorResponse;
 import com.springbootecommerce.shophappens.administration.web.api.CustomerAdminApiController;
+import com.springbootecommerce.shophappens.catalog.application.port.in.AmbiguousProductUpdateException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryInUseException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryNotFoundException;
+import com.springbootecommerce.shophappens.catalog.application.port.in.DuplicateCatalogAttributeException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.DuplicateCategoryException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.DuplicateSkuException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.InvalidCatalogOperationException;
@@ -68,6 +70,17 @@ public class AdminApiExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleResponseStatus(
             ResponseStatusException ex, HttpServletRequest request) {
         int status = ex.getStatusCode() != null ? ex.getStatusCode().value() : 500;
+        if (status >= HttpStatus.INTERNAL_SERVER_ERROR.value()) {
+            LOGGER.error(
+                    "Unexpected admin API failure for {} {}",
+                    request.getMethod(),
+                    request.getRequestURI(),
+                    ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(
+                            new ApiErrorResponse(
+                                    "An unexpected error occurred", 500, "internal.error"));
+        }
         String message =
                 ex.getReason() != null && !ex.getReason().isBlank()
                         ? ex.getReason()
@@ -123,6 +136,18 @@ public class AdminApiExceptionHandler {
     @ExceptionHandler(DuplicateCategoryException.class)
     public ResponseEntity<ApiErrorResponse> handleDuplicateCategory(DuplicateCategoryException ex) {
         return response(ex.getMessage(), HttpStatus.CONFLICT, "catalog.category.conflict");
+    }
+
+    @ExceptionHandler(DuplicateCatalogAttributeException.class)
+    public ResponseEntity<ApiErrorResponse> handleDuplicateCatalogAttribute(
+            DuplicateCatalogAttributeException ex) {
+        return response(ex.getMessage(), HttpStatus.CONFLICT, "catalog.attribute.conflict");
+    }
+
+    @ExceptionHandler(AmbiguousProductUpdateException.class)
+    public ResponseEntity<ApiErrorResponse> handleAmbiguousProductUpdate(
+            AmbiguousProductUpdateException ex) {
+        return response(ex.getMessage(), HttpStatus.CONFLICT, "catalog.variant.required");
     }
 
     @ExceptionHandler(StaleProductRevisionException.class)

@@ -5,4 +5,6 @@ import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 
 public interface CartMergeLedger {
     boolean claim(GuestCartId guestCartId, CustomerId customerId);
+
+    boolean isConsumed(GuestCartId guestCartId);
 }

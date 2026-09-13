@@ -5,18 +5,21 @@ import com.springbootecommerce.shophappens.cart.application.port.in.ClearCustome
 import com.springbootecommerce.shophappens.cart.application.port.in.CustomerCartQuery;
 import com.springbootecommerce.shophappens.cart.application.port.in.CustomerCartSnapshot;
 import com.springbootecommerce.shophappens.cart.application.port.in.CustomerCartUseCase;
+import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartConsumedException;
 import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartReference;
 import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartSnapshot;
 import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartUseCase;
+import com.springbootecommerce.shophappens.cart.application.port.out.CartMergeLedger;
 import com.springbootecommerce.shophappens.cart.application.port.out.CustomerCartRepository;
 import com.springbootecommerce.shophappens.cart.application.port.out.GuestCartRepository;
+import com.springbootecommerce.shophappens.cart.application.port.out.GuestCartWriteGuard;
 import com.springbootecommerce.shophappens.cart.domain.model.Cart;
 import com.springbootecommerce.shophappens.cart.domain.model.CartId;
 import com.springbootecommerce.shophappens.cart.domain.model.CartOwner;
 import com.springbootecommerce.shophappens.cart.domain.model.GuestCartId;
 import com.springbootecommerce.shophappens.cart.domain.model.Quantity;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
-import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,24 +35,50 @@ public class CartService
                 ClearCustomerCartUseCase {
     private final GuestCartRepository guests;
     private final CustomerCartRepository customers;
+    private final GuestCartWriteGuard guestWrites;
+    private final CartMergeLedger mergeLedger;
 
     @Override
-    public void changeQuantity(GuestCartReference guest, ProductId product, int quantity) {
+    @Transactional(timeout = 10)
+    public void add(GuestCartReference guest, ProductVariantId variant, int quantity) {
         GuestCartId guestId = new GuestCartId(guest.value());
+        requireWritableGuest(guestId);
         Cart cart =
                 guests.find(guestId)
                         .orElseGet(() -> Cart.empty(CartId.random(), new CartOwner.Guest(guestId)));
-        cart.changeQuantity(product, new Quantity(quantity));
+        cart.add(variant, new Quantity(quantity));
         guests.save(cart);
     }
 
     @Override
-    public void remove(GuestCartReference guest, ProductId product) {
+    @Transactional
+    public void add(CustomerId customer, ProductVariantId variant, int quantity) {
+        Cart cart = customers.findOrCreate(customer);
+        cart.add(variant, new Quantity(quantity));
+        customers.save(cart);
+    }
+
+    @Override
+    @Transactional(timeout = 10)
+    public void changeQuantity(GuestCartReference guest, ProductVariantId variant, int quantity) {
         GuestCartId guestId = new GuestCartId(guest.value());
+        requireWritableGuest(guestId);
         Cart cart =
                 guests.find(guestId)
                         .orElseGet(() -> Cart.empty(CartId.random(), new CartOwner.Guest(guestId)));
-        cart.remove(product);
+        cart.changeQuantity(variant, new Quantity(quantity));
+        guests.save(cart);
+    }
+
+    @Override
+    @Transactional(timeout = 10)
+    public void remove(GuestCartReference guest, ProductVariantId variant) {
+        GuestCartId guestId = new GuestCartId(guest.value());
+        requireWritableGuest(guestId);
+        Cart cart =
+                guests.find(guestId)
+                        .orElseGet(() -> Cart.empty(CartId.random(), new CartOwner.Guest(guestId)));
+        cart.remove(variant);
         guests.save(cart);
     }
 
@@ -68,17 +97,17 @@ public class CartService
 
     @Override
     @Transactional
-    public void changeQuantity(CustomerId customer, ProductId product, int quantity) {
+    public void changeQuantity(CustomerId customer, ProductVariantId variant, int quantity) {
         Cart cart = customers.findOrCreate(customer);
-        cart.changeQuantity(product, new Quantity(quantity));
+        cart.changeQuantity(variant, new Quantity(quantity));
         customers.save(cart);
     }
 
     @Override
     @Transactional
-    public void remove(CustomerId customer, ProductId product) {
+    public void remove(CustomerId customer, ProductVariantId variant) {
         Cart cart = customers.findOrCreate(customer);
-        cart.remove(product);
+        cart.remove(variant);
         customers.save(cart);
     }
 
@@ -107,7 +136,14 @@ public class CartService
 
     private List<CartItemSnapshot> toItemSnapshots(Cart cart) {
         return cart.items().stream()
-                .map(item -> new CartItemSnapshot(item.productId(), item.quantity().value()))
+                .map(item -> new CartItemSnapshot(item.variantId(), item.quantity().value()))
                 .toList();
+    }
+
+    private void requireWritableGuest(GuestCartId id) {
+        guestWrites.acquire(id);
+        if (mergeLedger.isConsumed(id)) {
+            throw new GuestCartConsumedException();
+        }
     }
 }

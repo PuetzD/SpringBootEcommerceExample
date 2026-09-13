@@ -1,6 +1,10 @@
 package com.springbootecommerce.shophappens.ordering.adapter.out.persistence;
 
+import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutReview;
+import com.springbootecommerce.shophappens.ordering.application.port.in.PrepareCheckoutUseCase;
+import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -37,16 +41,29 @@ class CheckoutSeeds {
 
     static long seedProduct(JdbcTemplate jdbc, int initialStock) {
         UUID skuTag = UUID.randomUUID();
-        return jdbc.queryForObject(
-                """
+        String sku = "ELEC-001-" + skuTag.toString().substring(0, 8);
+        long productId =
+                jdbc.queryForObject(
+                        """
                 insert into product (sku, name, price, stock_quantity, active)
                 values (?, ?, ?, ?, true) returning id
                 """,
-                Long.class,
-                "ELEC-001-" + skuTag.toString().substring(0, 8),
-                "Headphones",
+                        Long.class,
+                        sku,
+                        "Headphones",
+                        PRODUCT_PRICE,
+                        initialStock);
+        jdbc.update(
+                """
+                insert into product_variant
+                    (product_id, sku, price, stock_quantity, active, is_default)
+                values (?, ?, ?, ?, true, true)
+                """,
+                productId,
+                sku,
                 PRODUCT_PRICE,
                 initialStock);
+        return productId;
     }
 
     static CustomerCartSeed seedCustomerCart(JdbcTemplate jdbc, long productId, int quantity) {
@@ -105,10 +122,19 @@ class CheckoutSeeds {
         jdbc.update(
                 "insert into customer_cart (id, customer_id) values (?, ?)", cartId, customerId);
         jdbc.update(
-                "insert into customer_cart_item (cart_id, product_id, quantity) values (?, ?, ?)",
+                "insert into customer_cart_item (cart_id, variant_id, quantity) values (?, ?, ?)",
                 cartId,
-                productId,
+                jdbc.queryForObject(
+                        "select id from product_variant where product_id = ? and is_default = true",
+                        Long.class,
+                        productId),
                 quantity);
         return new CustomerCartSeed(customerId, shippingAddressId, billingAddressId, cartId);
+    }
+
+    static CheckoutReview review(PrepareCheckoutUseCase preparation, Clock clock, long customerId) {
+        CustomerId customer = new CustomerId(customerId);
+        return new CheckoutReview(
+                customer, preparation.prepare(customer).items(), clock.instant().plusSeconds(900));
     }
 }

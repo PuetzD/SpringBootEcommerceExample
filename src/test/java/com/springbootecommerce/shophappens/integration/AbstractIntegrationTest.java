@@ -9,7 +9,9 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.postgresql.PostgreSQLContainer;
+import org.testcontainers.utility.DockerImageName;
 
 @SpringBootTest
 @ActiveProfiles("it")
@@ -24,9 +26,14 @@ public abstract class AbstractIntegrationTest {
     static final GenericContainer<?> redis =
             new GenericContainer<>("redis:7").withExposedPorts(6379);
 
+    @Container
+    static final KafkaContainer kafka =
+            new KafkaContainer(DockerImageName.parse("apache/kafka:4.3.1"));
+
     @DynamicPropertySource
     static void redisProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.data.redis.host", redis::getHost);
         registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379));
+        registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
     }
 }

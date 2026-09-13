@@ -2,17 +2,24 @@ import {HttpError, type DataProvider, type GetListParams} from 'react-admin'
 import {ApiClient, ApiError} from '../api/client'
 import type {
   Category,
+  CategoryOption,
   CategorySummary,
   Customer,
   CreateCategoryInput,
   CreateProductInput,
   PageResponse,
   Product,
-  UpdateProductInput,
   Order,
+  ProductVariant,
 } from '../api/types'
 
-type CatalogResource = 'products' | 'categories' | 'orders' | 'customers'
+type CatalogResource =
+  | 'products'
+  | 'categories'
+  | 'categoryOptions'
+  | 'orders'
+  | 'customers'
+  | 'productVariants'
 
 type ProductMutationData = Partial<Product> & {
   categoryIds?: number[]
@@ -22,12 +29,15 @@ type ProductMutationData = Partial<Product> & {
 
 type CategoryMutationData = Partial<Category>
 type ProductRecord = Product & {categoryIds: number[]}
+type ProductVariantMutationData = Partial<ProductVariant> & {productId?: number; revision?: number}
 
 const resourcePaths: Record<CatalogResource, string> = {
   products: '/api/admin/products',
   categories: '/api/admin/categories',
+  categoryOptions: '/api/admin/categories/options',
   orders: '/api/admin/orders',
   customers: '/api/admin/customers',
+  productVariants: '/api/admin/products',
 }
 
 function unsupportedMethod(method: string) {
@@ -178,22 +188,6 @@ function toCreateProductInput(data: ProductMutationData): CreateProductInput {
   }
 }
 
-function toUpdateProductInput(
-  data: ProductMutationData,
-  revision: number,
-): UpdateProductInput {
-  return {
-    revision,
-    name: requireString(data.name, 'name'),
-    description: data.description ?? null,
-    price: requireNumber(data.price, 'price'),
-    stockQuantity: requireNumber(data.stockQuantity, 'stockQuantity'),
-    imageUrl: data.imageUrl ?? null,
-    active: requireBoolean(data.active, 'active'),
-    categoryIds: categoryIds(data),
-  }
-}
-
 function toReactAdminError(error: unknown) {
   if (!(error instanceof ApiError)) {
     return error
@@ -231,7 +225,19 @@ async function runWithReactAdminError<T>(request: () => Promise<T>): Promise<T> 
 
 export const dataProvider = {
   async getList(resource, params) {
+    if (resource === 'productVariants') {
+      const productId = Number(params.filter?.productId)
+      const response = await runWithReactAdminError(() =>
+        ApiClient.get<ProductVariant[]>(resourcePaths.productVariants + '/' + productId + '/variants'),
+      )
+      return {data: response.map(normalizeRecord), total: response.length}
+    }
     const path = resourcePath(resource)
+
+    if (resource === 'categoryOptions') {
+      const response = await runWithReactAdminError(() => ApiClient.get<CategoryOption[]>(path))
+      return {data: response.map(normalizeRecord), total: response.length}
+    }
 
     if (resource === 'products') {
       const response = await runWithReactAdminError(() =>
@@ -298,6 +304,11 @@ export const dataProvider = {
       throw new Error(`Unsupported react-admin method: getMany for ${resource}`)
     }
     const path = resourcePath(resource)
+    if (resource === 'categoryOptions') {
+      const response = await runWithReactAdminError(() => ApiClient.get<CategoryOption[]>(path))
+      const requestedIds = new Set(params.ids)
+      return {data: response.filter(({id}) => requestedIds.has(id)).map(normalizeRecord)}
+    }
     const records = await runWithReactAdminError(() =>
       Promise.all(params.ids.map((id) => ApiClient.get<Product | Category>(`${path}/${id}`))),
     )
@@ -317,14 +328,43 @@ export const dataProvider = {
     }
     const path = resourcePath(resource)
 
+    if (resource === 'productVariants') {
+      const data = params.data as ProductVariantMutationData
+      const previousData = params.previousData as ProductVariantMutationData | undefined
+      const productId = data.productId ?? previousData?.productId
+      const revision = resolveRevision(data, previousData)
+      if (productId === undefined) throw new Error('productId is required')
+      const response = await runWithReactAdminError(() =>
+        ApiClient.put<ProductVariant>(
+          path + '/' + productId + '/variants/' + params.id,
+          {
+            sku: requireString(data.sku, 'sku'),
+            price: requireNumber(data.price, 'price'),
+            stockQuantity: requireNumber(data.stockQuantity, 'stockQuantity'),
+            imageUrl: data.imageUrl ?? null,
+            active: requireBoolean(data.active, 'active'),
+            revision,
+          },
+          {revision},
+        ),
+      )
+      return {data: normalizeRecord(response)}
+    }
+
     if (resource === 'products') {
       const data = params.data as ProductMutationData
       const previousData = params.previousData as ProductMutationData
       const revision = resolveRevision(data, previousData)
       const response = await runWithReactAdminError(() =>
-        ApiClient.put<Product>(
-          `${path}/${params.id}`,
-          toUpdateProductInput(data, revision),
+        ApiClient.patch<Product>(
+          `${path}/${params.id}/family`,
+          {
+            revision,
+            name: requireString(data.name, 'name'),
+            description: data.description ?? null,
+            active: requireBoolean(data.active, 'active'),
+            categoryIds: categoryIds(data),
+          },
           {revision},
         ),
       )
@@ -352,6 +392,27 @@ export const dataProvider = {
     }
     const path = resourcePath(resource)
 
+    if (resource === 'productVariants') {
+      const data = params.data as ProductVariantMutationData
+      const productId = data.productId
+      const revision = resolveRevision(data)
+      if (productId === undefined) throw new Error('productId is required')
+      const response = await runWithReactAdminError(() =>
+        ApiClient.post<ProductVariant>(
+          path + '/' + productId + '/variants',
+          {
+            sku: requireString(data.sku, 'sku'),
+            price: requireNumber(data.price, 'price'),
+            stockQuantity: requireNumber(data.stockQuantity, 'stockQuantity'),
+            imageUrl: data.imageUrl ?? null,
+            active: requireBoolean(data.active, 'active'),
+          },
+          {revision},
+        ),
+      )
+      return {data: normalizeRecord(response)}
+    }
+
     if (resource === 'products') {
       const response = await runWithReactAdminError(() =>
         ApiClient.post<Product>(path, toCreateProductInput(params.data as ProductMutationData)),
@@ -372,8 +433,21 @@ export const dataProvider = {
     }
     const path = resourcePath(resource)
     const previousData = params.previousData as ProductMutationData | CategoryMutationData | undefined
-    const revision = resolveRevision(previousData ?? {})
 
+    if (resource === 'productVariants') {
+      const variant = previousData as ProductVariantMutationData | undefined
+      if (variant?.productId === undefined) throw new Error('productId is required')
+      const revision = resolveRevision({revision: variant.productRevision})
+      await runWithReactAdminError(() =>
+        ApiClient.delete(
+          path + '/' + variant.productId + '/variants/' + params.id,
+          {revision},
+        ),
+      )
+      return {data: normalizeRecord((previousData ?? {id: params.id}) as {id: number})}
+    }
+
+    const revision = resolveRevision(previousData ?? {})
     await runWithReactAdminError(() =>
       ApiClient.delete(`${path}/${params.id}`, {revision}),
     )

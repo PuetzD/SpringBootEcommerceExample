@@ -1,6 +1,9 @@
 package com.springbootecommerce.shophappens.ordering.application.service;
 
 import com.springbootecommerce.shophappens.ordering.application.event.OrderPlacedIntegrationEvent;
+import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutItem;
+import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutReview;
+import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutReviewChangedException;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderReference;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderCommand;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderUseCase;
@@ -25,6 +28,7 @@ import com.springbootecommerce.shophappens.ordering.domain.model.OrderNumber;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -56,6 +60,13 @@ public class CheckoutService implements PlaceOrderUseCase {
             return toPlacedOrder(existing.get());
         }
 
+        CheckoutReview review = command.review();
+        if (review == null
+                || !review.customer().equals(cid)
+                || !clock.instant().isBefore(review.expiresAt())) {
+            throw new CheckoutReviewChangedException();
+        }
+
         CheckoutCart cart = carts.load(cid);
         if (cart.empty()) {
             throw new EmptyCheckoutException();
@@ -66,15 +77,36 @@ public class CheckoutService implements PlaceOrderUseCase {
 
         List<RequestedProduct> requested =
                 cart.products().stream()
-                        .map(p -> new RequestedProduct(p.productId(), p.quantity()))
+                        .map(p -> new RequestedProduct(p.variantId(), p.quantity()))
                         .toList();
         List<PurchasedProduct> purchased = catalog.purchase(requested);
+        List<CheckoutItem> purchasedFacts =
+                purchased.stream()
+                        .map(
+                                product ->
+                                        new CheckoutItem(
+                                                product.variantId(),
+                                                product.productId(),
+                                                product.sku(),
+                                                product.name(),
+                                                product.unitPrice(),
+                                                product.quantity()))
+                        .sorted(Comparator.comparingLong(item -> item.variant().value()))
+                        .toList();
+        List<CheckoutItem> reviewedFacts =
+                review.items().stream()
+                        .sorted(Comparator.comparingLong(item -> item.variant().value()))
+                        .toList();
+        if (!reviewedFacts.equals(purchasedFacts)) {
+            throw new CheckoutReviewChangedException();
+        }
 
         List<OrderItem> items =
                 purchased.stream()
                         .map(
                                 p ->
                                         new OrderItem(
+                                                p.variantId(),
                                                 p.productId(),
                                                 p.sku(),
                                                 p.name(),

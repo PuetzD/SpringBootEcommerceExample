@@ -10,9 +10,9 @@ CREATE TABLE customer_cart (
 
 CREATE TABLE customer_cart_item (
     cart_id UUID NOT NULL,
-    product_id BIGINT NOT NULL,
+    variant_id BIGINT NOT NULL,
     quantity INTEGER NOT NULL,
-    CONSTRAINT pk_customer_cart_item PRIMARY KEY (cart_id, product_id),
+    CONSTRAINT pk_customer_cart_item PRIMARY KEY (cart_id, variant_id),
     CONSTRAINT fk_customer_cart_item_cart FOREIGN KEY (cart_id)
         REFERENCES customer_cart (id) ON DELETE CASCADE,
     CONSTRAINT chk_customer_cart_item_quantity CHECK (quantity BETWEEN 1 AND 999)

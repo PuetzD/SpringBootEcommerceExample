@@ -11,8 +11,10 @@ import com.springbootecommerce.shophappens.catalog.application.port.out.ProductR
 import com.springbootecommerce.shophappens.catalog.domain.model.Category;
 import com.springbootecommerce.shophappens.catalog.domain.model.CategoryId;
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
+import com.springbootecommerce.shophappens.catalog.domain.model.ProductVariant;
 import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
 import java.util.List;
@@ -146,13 +148,18 @@ class CategoryQueryServiceTest {
             Set<CategoryId> categoryIds) {
         return Product.restore(
                 new ProductId(id),
-                new Sku(sku),
                 name,
                 "Description",
-                new Money(new BigDecimal(price)),
-                stock,
-                "/images/product-placeholder.svg",
                 true,
-                categoryIds);
+                categoryIds,
+                List.of(
+                        ProductVariant.restore(
+                                new ProductVariantId(id * 100 + 1),
+                                new Sku(sku),
+                                new Money(new BigDecimal(price)),
+                                stock,
+                                "/images/product-placeholder.svg",
+                                true,
+                                true)));
     }
 }

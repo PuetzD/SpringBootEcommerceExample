@@ -1,7 +1,7 @@
 package com.springbootecommerce.shophappens.cart.domain.model;
 
 import com.springbootecommerce.shophappens.cart.domain.exception.CartItemNotFoundException;
-import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -42,13 +42,19 @@ public final class Cart {
         return List.copyOf(items.values());
     }
 
-    public void changeQuantity(ProductId productId, Quantity quantity) {
-        items.put(productId.value(), new CartItem(productId, quantity));
+    public void changeQuantity(ProductVariantId variantId, Quantity quantity) {
+        items.put(variantId.value(), new CartItem(variantId, quantity));
     }
 
-    public void remove(ProductId productId) {
-        if (items.remove(productId.value()) == null) {
-            throw new CartItemNotFoundException(productId);
+    public void add(ProductVariantId variantId, Quantity added) {
+        CartItem current = items.get(variantId.value());
+        Quantity result = current == null ? added : current.quantity().add(added);
+        items.put(variantId.value(), new CartItem(variantId, result));
+    }
+
+    public void remove(ProductVariantId variantId) {
+        if (items.remove(variantId.value()) == null) {
+            throw new CartItemNotFoundException(variantId);
         }
     }
 
@@ -64,11 +70,11 @@ public final class Cart {
                 .forEach(
                         item ->
                                 items.merge(
-                                        item.productId().value(),
+                                        item.variantId().value(),
                                         item,
                                         (current, incoming) ->
                                                 new CartItem(
-                                                        current.productId(),
+                                                        current.variantId(),
                                                         current.quantity()
                                                                 .add(incoming.quantity()))));
     }

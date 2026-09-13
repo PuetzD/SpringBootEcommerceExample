@@ -1,15 +1,15 @@
 package com.springbootecommerce.shophappens.cart.domain.exception;
 
-import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 
 public final class CartItemNotFoundException extends RuntimeException {
-    private final ProductId productId;
+    private final ProductVariantId variantId;
 
-    public CartItemNotFoundException(ProductId productId) {
-        this.productId = productId;
+    public CartItemNotFoundException(ProductVariantId variantId) {
+        this.variantId = variantId;
     }
 
-    public ProductId getProductId() {
-        return productId;
+    public ProductVariantId getVariantId() {
+        return variantId;
     }
 }

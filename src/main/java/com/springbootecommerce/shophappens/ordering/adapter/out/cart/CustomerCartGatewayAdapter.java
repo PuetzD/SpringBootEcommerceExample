@@ -22,7 +22,7 @@ public class CustomerCartGatewayAdapter implements CustomerCartGateway {
         CustomerCartSnapshot snapshot = cartQuery.get(customerId);
         List<RequestedProduct> products =
                 snapshot.items().stream()
-                        .map(item -> new RequestedProduct(item.product(), item.quantity()))
+                        .map(item -> new RequestedProduct(item.variant(), item.quantity()))
                         .toList();
         return new CheckoutCart(products);
     }

@@ -1,11 +1,12 @@
 import {HttpError} from 'react-admin'
 import {ApiError} from '../../api/client'
-import type {Category, Customer, Order, PageResponse, Product} from '../../api/types'
+import type {Category, CategoryOption, Customer, Order, PageResponse, Product, ProductVariant} from '../../api/types'
 
-const {get, post, put, remove} = vi.hoisted(() => ({
+const {get, post, put, patch, remove} = vi.hoisted(() => ({
   get: vi.fn(),
   post: vi.fn(),
   put: vi.fn(),
+  patch: vi.fn(),
   remove: vi.fn(),
 }))
 
@@ -18,6 +19,7 @@ vi.mock('../../api/client', async () => {
       get,
       post,
       put,
+      patch,
       delete: remove,
     },
   }
@@ -200,6 +202,39 @@ describe('dataProvider', () => {
     expect(get).toHaveBeenNthCalledWith(2, '/api/admin/categories/8')
   })
 
+  it('exposes every Category option through the provider reference resource', async () => {
+    const options: CategoryOption[] = Array.from({length: 26}, (_, index) => ({
+      id: index + 1,
+      name: index === 25 ? 'Zulu' : `Category ${index + 1}`,
+      slug: index === 25 ? 'zulu' : `category-${index + 1}`,
+    }))
+    get.mockResolvedValue(options)
+
+    await expect(
+      dataProvider.getList('categoryOptions', {
+        pagination: {page: 1, perPage: 25},
+        sort: {field: 'name', order: 'ASC'},
+        filter: {},
+      }),
+    ).resolves.toEqual({data: options, total: 26})
+
+    expect(get).toHaveBeenCalledWith('/api/admin/categories/options')
+  })
+
+  it('resolves selected Category options from the complete reference resource', async () => {
+    const options: CategoryOption[] = [
+      {id: 1, name: 'Alpha', slug: 'alpha'},
+      {id: 26, name: 'Zulu', slug: 'zulu'},
+    ]
+    get.mockResolvedValue(options)
+
+    await expect(dataProvider.getMany('categoryOptions', {ids: [26]})).resolves.toEqual({
+      data: [{id: 26, name: 'Zulu', slug: 'zulu'}],
+    })
+
+    expect(get).toHaveBeenCalledWith('/api/admin/categories/options')
+  })
+
   it('normalizes requested product records for react-admin reference inputs', async () => {
     get.mockImplementation((path: string) =>
       Promise.resolve({...product, id: Number(path.split('/').pop())}),
@@ -228,35 +263,87 @@ describe('dataProvider', () => {
     ).resolves.toEqual({data: normalizedProduct})
   })
 
-  it('updates products with body revision and the shared If-Match transport option', async () => {
-    put.mockResolvedValue(product)
+  it('loads product variants through the nested catalog endpoint', async () => {
+    const variant = {
+      id: 12,
+      productId: 9,
+      sku: 'SKU-9-BLUE',
+      price: 209.99,
+      stockQuantity: 4,
+      imageUrl: null,
+      active: true,
+      defaultVariant: false,
+      productRevision: 4,
+    }
+    get.mockResolvedValue([variant])
+
+    await expect(
+      dataProvider.getList('productVariants', {
+        pagination: {page: 1, perPage: 100},
+        filter: {productId: 9},
+      }),
+    ).resolves.toEqual({data: [variant], total: 1})
+
+    expect(get).toHaveBeenCalledWith('/api/admin/products/9/variants')
+  })
+
+  it('updates a product variant with the product revision', async () => {
+    const variant = {
+      id: 12,
+      productId: 9,
+      sku: 'SKU-9-BLUE',
+      price: 209.99,
+      stockQuantity: 4,
+      imageUrl: null,
+      active: true,
+      defaultVariant: false,
+      productRevision: 5,
+    }
+    put.mockResolvedValue(variant)
+
+    await expect(
+      dataProvider.update('productVariants', {
+        id: variant.id,
+        data: {...variant, price: 219.99, revision: 4},
+        previousData: variant,
+      }),
+    ).resolves.toEqual({data: variant})
+
+    expect(put).toHaveBeenCalledWith(
+      '/api/admin/products/9/variants/12',
+      expect.objectContaining({revision: 4, price: 219.99}),
+      {revision: 4},
+    )
+  })
+
+  it('updates family fields without sending default commercial values', async () => {
+    patch.mockResolvedValue(product)
 
     await expect(
       dataProvider.update('products', {
         id: product.id,
         data: {
           ...product,
-          name: 'Router Pro',
+          name: 'Family',
+          price: 999,
           categoryIds: [3],
         },
         previousData: product,
       }),
     ).resolves.toEqual({data: normalizedProduct})
 
-    expect(put).toHaveBeenCalledWith(
-      '/api/admin/products/9',
+    expect(patch).toHaveBeenCalledWith(
+      '/api/admin/products/9/family',
       {
         revision: 4,
-        name: 'Router Pro',
+        name: 'Family',
         description: 'Mesh router',
-        price: 199.99,
-        stockQuantity: 8,
-        imageUrl: null,
         active: true,
         categoryIds: [3],
       },
       {revision: 4},
     )
+    expect(put).not.toHaveBeenCalled()
   })
 
   it('updates categories with the shared If-Match transport option and a rename body', async () => {
@@ -288,6 +375,48 @@ describe('dataProvider', () => {
     ).resolves.toEqual({data: category})
 
     expect(remove).toHaveBeenCalledWith('/api/admin/categories/7', {revision: 2})
+  })
+
+  it('deletes a variant using its response productRevision', async () => {
+    const variant: ProductVariant = {
+      id: 12,
+      productId: 9,
+      sku: 'BLUE',
+      price: 20,
+      stockQuantity: 4,
+      imageUrl: null,
+      active: true,
+      defaultVariant: false,
+      productRevision: 4,
+    }
+    remove.mockResolvedValue(undefined)
+
+    await expect(
+      dataProvider.delete('productVariants', {id: 12, previousData: variant}),
+    ).resolves.toEqual({data: variant})
+
+    expect(remove).toHaveBeenCalledWith('/api/admin/products/9/variants/12', {revision: 4})
+  })
+
+  it('rejects a missing variant revision before HTTP', async () => {
+    const variant: ProductVariant = {
+      id: 12,
+      productId: 9,
+      sku: 'BLUE',
+      price: 20,
+      stockQuantity: 4,
+      imageUrl: null,
+      active: true,
+      defaultVariant: false,
+      productRevision: 4,
+    }
+    const {productRevision, ...missingRevision} = variant
+    expect(productRevision).toBe(4)
+
+    await expect(
+      dataProvider.delete('productVariants', {id: 12, previousData: missingRevision}),
+    ).rejects.toThrow('revision is required')
+    expect(remove).not.toHaveBeenCalled()
   })
 
   it.each([

@@ -6,7 +6,7 @@ import com.springbootecommerce.shophappens.cart.domain.model.CartId;
 import com.springbootecommerce.shophappens.cart.domain.model.CartOwner;
 import com.springbootecommerce.shophappens.cart.domain.model.GuestCartId;
 import com.springbootecommerce.shophappens.cart.domain.model.Quantity;
-import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
@@ -62,7 +62,7 @@ class RedisGuestCartRepository implements GuestCartRepository {
                 .map(
                         item ->
                                 new GuestCartDocument.Item(
-                                        item.productId().value(), item.quantity().value()))
+                                        item.variantId().value(), item.quantity().value()))
                 .toList();
     }
 
@@ -79,7 +79,7 @@ class RedisGuestCartRepository implements GuestCartRepository {
                 .forEach(
                         item ->
                                 cart.changeQuantity(
-                                        new ProductId(item.productId()),
+                                        new ProductVariantId(item.variantId()),
                                         new Quantity(item.quantity())));
         return cart;
     }

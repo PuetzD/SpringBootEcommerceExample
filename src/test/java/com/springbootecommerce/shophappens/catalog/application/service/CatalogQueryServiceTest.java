@@ -9,8 +9,10 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.ProductSu
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductPage;
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductRepository;
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
+import com.springbootecommerce.shophappens.catalog.domain.model.ProductVariant;
 import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
 import java.util.List;
@@ -120,16 +122,109 @@ class CatalogQueryServiceTest {
         assertThat(result).isEmpty();
     }
 
+    @Test
+    void selectedVariantKeepsItsCommercialFacts() {
+        var selected = new ProductVariantId(202);
+        when(productRepository.findActiveByVariantId(selected))
+                .thenReturn(Optional.of(twoVariants(true)));
+
+        var summary = service.findActiveByVariantId(selected).orElseThrow();
+
+        assertThat(summary.product()).isEqualTo(new ProductReference(7));
+        assertThat(summary.variant()).isEqualTo(selected);
+        assertThat(summary.sku()).isEqualTo("SHIRT-L");
+        assertThat(summary.price()).isEqualTo(new Money(new BigDecimal("20.00")));
+        assertThat(summary.stockQuantity()).isEqualTo(8);
+        assertThat(summary.imageUrl()).isEqualTo("/large.png");
+
+        when(productRepository.findActiveByVariantId(selected))
+                .thenReturn(Optional.of(twoVariants(false)));
+        assertThat(service.findActiveByVariantId(selected)).isEmpty();
+    }
+
+    @Test
+    void activeVariantsExcludeWithdrawnChildrenAndKeepFamilyIdentity() {
+        when(productRepository.findActiveById(new ProductId(7)))
+                .thenReturn(Optional.of(twoVariants(false)));
+
+        assertThat(service.findActiveVariants(new ProductReference(7)))
+                .singleElement()
+                .satisfies(
+                        summary -> {
+                            assertThat(summary.product()).isEqualTo(new ProductReference(7));
+                            assertThat(summary.variant()).isEqualTo(new ProductVariantId(101));
+                            assertThat(summary.sku()).isEqualTo("SHIRT-S");
+                        });
+    }
+
+    @Test
+    void inactiveFamilyPublishesNeitherSelectedNorListedVariants() {
+        var selected = new ProductVariantId(202);
+        var inactiveFamily =
+                Product.restore(
+                        new ProductId(7),
+                        "Shirt",
+                        "Cotton",
+                        false,
+                        Set.of(),
+                        twoVariants(true).variants());
+        when(productRepository.findActiveByVariantId(selected))
+                .thenReturn(Optional.of(inactiveFamily));
+        when(productRepository.findActiveById(new ProductId(7)))
+                .thenReturn(Optional.of(inactiveFamily));
+
+        assertThat(service.findActiveByVariantId(selected)).isEmpty();
+        assertThat(service.findActiveVariants(new ProductReference(7))).isEmpty();
+    }
+
+    @Test
+    void unknownFamilyHasNoActiveVariants() {
+        when(productRepository.findActiveById(new ProductId(404))).thenReturn(Optional.empty());
+
+        assertThat(service.findActiveVariants(new ProductReference(404))).isEmpty();
+    }
+
+    private Product twoVariants(boolean selectedActive) {
+        return Product.restore(
+                new ProductId(7),
+                "Shirt",
+                "Cotton",
+                true,
+                Set.of(),
+                List.of(
+                        ProductVariant.restore(
+                                new ProductVariantId(101),
+                                new Sku("SHIRT-S"),
+                                new Money(new BigDecimal("10.00")),
+                                3,
+                                "/small.png",
+                                true,
+                                true),
+                        ProductVariant.restore(
+                                new ProductVariantId(202),
+                                new Sku("SHIRT-L"),
+                                new Money(new BigDecimal("20.00")),
+                                8,
+                                "/large.png",
+                                selectedActive,
+                                false)));
+    }
+
     private Product restoredProduct(long id, String sku, String name, String price, int stock) {
         return Product.restore(
                 new ProductId(id),
-                new Sku(sku),
                 name,
                 "Description",
-                new Money(new BigDecimal(price)),
-                stock,
-                "/images/product-placeholder.svg",
                 true,
-                Set.of());
+                Set.of(),
+                List.of(
+                        ProductVariant.restore(
+                                new ProductVariantId(id * 100 + 1),
+                                new Sku(sku),
+                                new Money(new BigDecimal(price)),
+                                stock,
+                                "/images/product-placeholder.svg",
+                                true,
+                                true)));
     }
 }

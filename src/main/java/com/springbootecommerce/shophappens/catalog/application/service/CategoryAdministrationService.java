@@ -27,13 +27,13 @@ public class CategoryAdministrationService implements CategoryAdministrationUseC
     @Override
     @Transactional
     public CategoryAdminView createCategory(CreateCategoryCommand command) {
+        Category category;
         try {
-            VersionedCategory saved =
-                    categories.insertForAdministration(Category.create(command.name()));
-            return toView(saved);
+            category = Category.create(command.name());
         } catch (IllegalArgumentException exception) {
             throw new InvalidCatalogOperationException(exception.getMessage());
         }
+        return toView(categories.insertForAdministration(category));
     }
 
     @Override
@@ -48,17 +48,10 @@ public class CategoryAdministrationService implements CategoryAdministrationUseC
                         .orElseThrow(() -> new CategoryNotFoundException(reference));
         try {
             current.category().rename(command.name());
-            return toView(categories.updateForAdministration(current.category(), expectedRevision));
-        } catch (CategoryNotFoundException
-                | com.springbootecommerce.shophappens.catalog.application.port.in
-                        .DuplicateCategoryException
-                | com.springbootecommerce.shophappens.catalog.application.port.in
-                        .StaleCategoryRevisionException
-                | CategoryInUseException exception) {
-            throw exception;
         } catch (IllegalArgumentException exception) {
             throw new InvalidCatalogOperationException(exception.getMessage());
         }
+        return toView(categories.updateForAdministration(current.category(), expectedRevision));
     }
 
     @Override

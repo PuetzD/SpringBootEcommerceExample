@@ -1,5 +1,5 @@
 package com.springbootecommerce.shophappens.cart.application.port.in;
 
-import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 
-public record CartItemSnapshot(ProductId product, int quantity) {}
+public record CartItemSnapshot(ProductVariantId variant, int quantity) {}

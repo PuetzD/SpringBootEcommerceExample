@@ -1,7 +1,8 @@
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
 import MenuOutlinedIcon from '@mui/icons-material/MenuOutlined'
 import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined'
-import {getToken, refreshToken} from "../../auth/CsrfProvider.tsx";
+import {ApiClient} from '../../api/client'
+import {getCsrf, refreshToken} from '../../auth/CsrfProvider'
 
 type AdminHeaderProps = {
     isDrawerOpen: boolean
@@ -54,19 +55,13 @@ export function AdminHeader({isDrawerOpen, onToggle}: AdminHeaderProps) {
 }
 
 export async function logout() {
-    if (!getToken()) {
-        await refreshToken();
+    if (!getCsrf()) {
+        await refreshToken()
     }
-    const csrfToken = getToken();
-    if (!csrfToken) {
-        throw new Error('Unable to obtain CSRF token');
+    const csrf = getCsrf()
+    if (!csrf) {
+        throw new Error('Unable to obtain CSRF token')
     }
-    await fetch('/admin/logout', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-            'X-CSRF-Token': csrfToken,
-        }
-    });
+    await ApiClient.post<void>('/admin/logout', undefined)
     window.location.assign('/admin/login?logout')
 }

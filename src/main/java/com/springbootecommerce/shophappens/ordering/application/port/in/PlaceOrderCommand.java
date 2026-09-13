@@ -6,4 +6,5 @@ public record PlaceOrderCommand(
         CustomerId customer,
         CheckoutReference checkout,
         long shippingAddress,
-        long billingAddress) {}
+        long billingAddress,
+        CheckoutReview review) {}

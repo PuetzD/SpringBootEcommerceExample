@@ -5,9 +5,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.springbootecommerce.shophappens.catalog.domain.exception.InsufficientStockException;
 import com.springbootecommerce.shophappens.catalog.domain.exception.ProductUnavailableException;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -99,14 +102,145 @@ class ProductTest {
         assertThat(product.active()).isTrue();
     }
 
+    @Test
+    void createsOneDefaultVariantFromSimpleProductFields() {
+        Product product = productWithStock(5);
+
+        assertThat(product.variants()).hasSize(1);
+        assertThat(product.defaultVariant().sku()).isEqualTo(new Sku("ELEC-001"));
+        assertThat(product.defaultVariant().price()).isEqualTo(new Money(new BigDecimal("19.99")));
+        assertThat(product.defaultVariant().stockQuantity()).isEqualTo(5);
+        assertThat(product.defaultVariant().isDefault()).isTrue();
+    }
+
+    @Test
+    void cannotDeleteTheLastVariant() {
+        Product product = productWithStock(5);
+
+        assertThatThrownBy(() -> product.removeVariant(product.defaultVariant()))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void addingVariantKeepsExactlyOneDefaultVariant() {
+        Product product = productWithStock(5);
+        ProductVariant additional =
+                ProductVariant.create(
+                        new Sku("ELEC-002"),
+                        new Money(new BigDecimal("24.99")),
+                        2,
+                        "/blue.png",
+                        true,
+                        false);
+
+        product.addVariant(additional);
+
+        assertThat(product.variants()).hasSize(2);
+        assertThat(product.variants()).filteredOn(ProductVariant::isDefault).hasSize(1);
+        assertThat(product.variants())
+                .extracting(ProductVariant::sku)
+                .containsExactlyInAnyOrder(new Sku("ELEC-001"), new Sku("ELEC-002"));
+    }
+
+    @Test
+    void familyEditsPreserveWithdrawnVariant() {
+        var regular =
+                ProductVariant.restore(
+                        new ProductVariantId(101),
+                        new Sku("TEE-A"),
+                        new Money(new BigDecimal("10.00")),
+                        5,
+                        null,
+                        true,
+                        true);
+        var withdrawn =
+                ProductVariant.restore(
+                        new ProductVariantId(202),
+                        new Sku("TEE-B"),
+                        new Money(new BigDecimal("20.00")),
+                        8,
+                        null,
+                        false,
+                        false);
+        var family =
+                Product.restore(
+                        new ProductId(11),
+                        "Tee",
+                        "Cotton",
+                        true,
+                        Set.of(),
+                        List.of(regular, withdrawn));
+
+        family.reviseDetails("Renamed tee", "Cotton", family.price(), null);
+        family.activate();
+
+        assertThat(withdrawn.active()).isFalse();
+
+        family.deactivate();
+
+        assertThat(regular.active()).isTrue();
+        assertThatThrownBy(() -> family.purchase(new ProductVariantId(101), 1))
+                .isInstanceOf(ProductUnavailableException.class);
+
+        family.activate();
+
+        assertThat(withdrawn.active()).isFalse();
+        assertThatThrownBy(() -> family.purchase(new ProductVariantId(202), 1))
+                .isInstanceOf(ProductUnavailableException.class);
+    }
+
+    @Test
+    void defaultAliasIgnoresCollectionOrderAndTracksRename() {
+        var regular =
+                ProductVariant.restore(
+                        new ProductVariantId(101),
+                        new Sku("TEE-A"),
+                        new Money(new BigDecimal("10.00")),
+                        5,
+                        null,
+                        true,
+                        true);
+        var sibling =
+                ProductVariant.restore(
+                        new ProductVariantId(202),
+                        new Sku("TEE-B"),
+                        new Money(new BigDecimal("20.00")),
+                        8,
+                        null,
+                        true,
+                        false);
+        var family =
+                Product.restore(
+                        new ProductId(11),
+                        "Tee",
+                        "Cotton",
+                        true,
+                        Set.of(),
+                        List.of(sibling, regular));
+
+        assertThat(family.sku()).isEqualTo(new Sku("TEE-A"));
+
+        family.reviseVariant(
+                new ProductVariantId(101), new Sku("TEE-NEW"), regular.price(), 5, null, true);
+
+        assertThat(family.sku()).isEqualTo(new Sku("TEE-NEW"));
+    }
+
     private Product productWithStock(int stock) {
-        return Product.create(
-                new Sku("ELEC-001"),
+        return Product.restore(
+                new ProductId(7L),
                 "Headphones",
                 "Description",
-                new Money(new BigDecimal("19.99")),
-                stock,
-                "/images/product-placeholder.svg",
-                Set.of(new CategoryId(3L)));
+                true,
+                Set.of(new CategoryId(3L)),
+                List.of(
+                        ProductVariant.restore(
+                                new ProductVariantId(701L),
+                                new Sku("ELEC-001"),
+                                new Money(new BigDecimal("19.99")),
+                                stock,
+                                "/images/product-placeholder.svg",
+                                true,
+                                true)));
     }
 }

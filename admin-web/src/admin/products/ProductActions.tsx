@@ -1,4 +1,4 @@
-import {DeleteButton, useNotify, useRecordContext, useUpdate} from 'react-admin'
+import {DeleteButton, UpdateWithConfirmButton, useNotify, useRecordContext} from 'react-admin'
 
 type ProductRecord = {
   id: number
@@ -15,30 +15,26 @@ type ProductRecord = {
 
 export function ProductActions() {
   const record = useRecordContext<ProductRecord>()
-  const [update, {isPending}] = useUpdate()
   const notify = useNotify()
 
   if (!record) return null
 
   if (!record.active) {
     return (
-      <button
-        type="button"
+      <UpdateWithConfirmButton
         aria-label={`Activate ${record.name}`}
-        disabled={isPending}
-        onClick={() =>
-          update(
-            'products',
-            {id: record.id, data: {...record, active: true}, previousData: record},
-            {
-              onSuccess: () => notify('Product activated', {type: 'success'}),
-              onError: () => notify('Unable to activate product', {type: 'error'}),
-            },
-          )
-        }
-      >
-        Activate
-      </button>
+        confirmContent="The product will be available for sale."
+        confirmTitle={`Activate ${record.name}?`}
+        data={{...record, active: true}}
+        label="Activate"
+        mutationMode="pessimistic"
+        record={record}
+        resource="products"
+        mutationOptions={{
+          onSuccess: () => notify('Product activated', {type: 'success'}),
+          onError: () => notify('Unable to activate product', {type: 'error'}),
+        }}
+      />
     )
   }
 

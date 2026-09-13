@@ -11,10 +11,12 @@ import com.springbootecommerce.shophappens.ordering.adapter.out.persistence.Chec
 import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutReference;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderCommand;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderUseCase;
+import com.springbootecommerce.shophappens.ordering.application.port.in.PrepareCheckoutUseCase;
 import com.springbootecommerce.shophappens.ordering.application.port.out.CheckoutCart;
 import com.springbootecommerce.shophappens.ordering.application.port.out.RequestedProduct;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
-import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
+import java.time.Clock;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -26,26 +28,29 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 class CheckoutRollbackIT extends AbstractIntegrationTest {
     @Autowired PlaceOrderUseCase checkout;
     @Autowired JdbcTemplate jdbc;
+    @Autowired PrepareCheckoutUseCase preparation;
+    @Autowired Clock clock;
     @MockitoBean CustomerCartGatewayAdapter cartGateway;
 
     @Test
     void catalogSucceedsButCartClearThrowsAndRollsBack() {
         Seed seed = CheckoutSeeds.seed(jdbc);
         CheckoutReference checkoutId = new CheckoutReference(UUID.randomUUID());
+
+        List<RequestedProduct> cartItems =
+                jdbc.query(
+                        "select variant_id, quantity from customer_cart_item where cart_id = ?",
+                        cartRowMapper(),
+                        seed.cartId());
+        when(cartGateway.load(org.mockito.ArgumentMatchers.any()))
+                .thenReturn(new CheckoutCart(cartItems));
         PlaceOrderCommand command =
                 new PlaceOrderCommand(
                         new CustomerId(seed.customerId()),
                         checkoutId,
                         seed.shippingAddressId(),
-                        seed.billingAddressId());
-
-        List<RequestedProduct> cartItems =
-                jdbc.query(
-                        "select product_id, quantity from customer_cart_item where cart_id = ?",
-                        cartRowMapper(),
-                        seed.cartId());
-        when(cartGateway.load(org.mockito.ArgumentMatchers.any()))
-                .thenReturn(new CheckoutCart(cartItems));
+                        seed.billingAddressId(),
+                        CheckoutSeeds.review(preparation, clock, seed.customerId()));
         doThrow(new RuntimeException("cart clear failure"))
                 .when(cartGateway)
                 .clear(org.mockito.ArgumentMatchers.any());
@@ -65,7 +70,7 @@ class CheckoutRollbackIT extends AbstractIntegrationTest {
                 .isZero();
         assertThat(
                         jdbc.queryForObject(
-                                "select stock_quantity from product where id = ?",
+                                "select stock_quantity from product_variant where product_id = ? and is_default = true",
                                 Integer.class,
                                 seed.productId()))
                 .isEqualTo(seed.initialStock());
@@ -74,6 +79,6 @@ class CheckoutRollbackIT extends AbstractIntegrationTest {
     private static RowMapper<RequestedProduct> cartRowMapper() {
         return (rs, rowNum) ->
                 new RequestedProduct(
-                        new ProductId(rs.getLong("product_id")), rs.getInt("quantity"));
+                        new ProductVariantId(rs.getLong("variant_id")), rs.getInt("quantity"));
     }
 }

@@ -12,7 +12,7 @@ export interface FieldErrorResponse {
 
 export type ApiQueryValue = string | number | boolean
 
-export type ApiQueryParams = Record<string, ApiQueryValue | undefined>
+export type ApiQueryParams = Record<string, ApiQueryValue | null | undefined>
 
 export interface ApiRequestOptions {
     params?: ApiQueryParams
@@ -46,6 +46,18 @@ export interface Product {
     categories: CategorySummary[]
 }
 
+export interface ProductVariant {
+    id: number
+    productId: number
+    sku: string
+    price: number
+    stockQuantity: number
+    imageUrl: string | null
+    active: boolean
+    defaultVariant: boolean
+    productRevision: number
+}
+
 export interface CategoryOption {
     id: number
     name: string
@@ -61,10 +73,12 @@ export interface Category {
 }
 
 export interface OrderItem {
+    variantId: number
     productId: number
     sku: string
     productName: string
     unitPrice: number
+    currency: string
     quantity: number
     lineTotal: number
 }
@@ -113,7 +127,6 @@ export interface CustomerOrder {
     orderId: string
     total: number
     placedAt: string
-    orderUrl: string
 }
 
 export interface Customer {

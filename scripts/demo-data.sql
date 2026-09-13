@@ -3,13 +3,16 @@
 
 BEGIN;
 
-TRUNCATE TABLE customer_cart_item, customer_cart, consumed_guest_cart,
+TRUNCATE TABLE integration_outbox, customer_order, catalog_attribute_definition,
+             customer_cart_item, customer_cart, consumed_guest_cart,
              address, customer, account, product_category, product, category
     RESTART IDENTITY CASCADE;
 
 INSERT INTO account (id, email, password_hash, role)
 VALUES (1, 'customer@shop-happens.com', '{noop}123', 'CUSTOMER'),
        (2, 'admin@shop-happens.com', '{noop}123', 'ADMIN');
+
+SELECT setval(pg_get_serial_sequence('account', 'id'), (SELECT max(id) FROM account), true);
 
 INSERT INTO customer (account_id, given_name, family_name, contact_email)
 VALUES (1, 'Bard', 'the Magnificent Debugger', 'customer@shop-happens.com');
@@ -104,6 +107,90 @@ VALUES ('WEAP-001', '+1 Sword of Clean Code',
        ('GOOD-007', 'D20 of All Arguments',
         'Settles every dispute with great authority. Usually in someone else''s favor.', 9.99, 64,
         '/images/product-placeholder.svg', TRUE);
+
+INSERT INTO product_variant
+    (product_id, sku, price, stock_quantity, image_url, active, is_default)
+SELECT id, sku, price, stock_quantity, image_url, active, TRUE
+FROM product
+ORDER BY id;
+
+INSERT INTO product_variant
+    (product_id, sku, price, stock_quantity, image_url, active, is_default)
+SELECT id, 'DUCK-BRONZE', 29.99, 3, image_url, TRUE, FALSE
+FROM product
+WHERE sku = 'WEAP-002';
+
+INSERT INTO product_variant
+    (product_id, sku, price, stock_quantity, image_url, active, is_default)
+SELECT id, 'SWORD-STEEL', 69.99, 4, image_url, TRUE, FALSE
+FROM product
+WHERE sku = 'WEAP-001';
+
+INSERT INTO product_variant
+    (product_id, sku, price, stock_quantity, image_url, active, is_default)
+SELECT id, 'SWORD-OBSIDIAN', 129.99, 0, image_url, TRUE, FALSE
+FROM product
+WHERE sku = 'WEAP-001';
+
+INSERT INTO product_variant
+    (product_id, sku, price, stock_quantity, image_url, active, is_default)
+SELECT id, 'DUCK-GLASS', 24.99, 18, image_url, TRUE, FALSE
+FROM product
+WHERE sku = 'WEAP-002';
+
+INSERT INTO product_variant
+    (product_id, sku, price, stock_quantity, image_url, active, is_default)
+SELECT id, 'DUCK-RETIRED', 99.99, 4, image_url, FALSE, FALSE
+FROM product
+WHERE sku = 'WEAP-002';
+
+INSERT INTO product_variant
+    (product_id, sku, price, stock_quantity, image_url, active, is_default)
+SELECT id, 'KEY-MECH', 149.99, 2, image_url, TRUE, FALSE
+FROM product
+WHERE sku = 'WEAP-003';
+
+INSERT INTO product_variant
+    (product_id, sku, price, stock_quantity, image_url, active, is_default)
+SELECT id, 'KEY-QUIET', 139.99, 0, image_url, TRUE, FALSE
+FROM product
+WHERE sku = 'WEAP-003';
+
+INSERT INTO product_variant
+    (product_id, sku, price, stock_quantity, image_url, active, is_default)
+SELECT id, 'MANA-SMALL', 3.99, 80, image_url, TRUE, FALSE
+FROM product
+WHERE sku = 'MAGI-003';
+
+INSERT INTO product_variant
+    (product_id, sku, price, stock_quantity, image_url, active, is_default)
+SELECT id, 'MANA-LARGE', 9.99, 12, image_url, TRUE, FALSE
+FROM product
+WHERE sku = 'MAGI-003';
+
+INSERT INTO product_variant
+    (product_id, sku, price, stock_quantity, image_url, active, is_default)
+SELECT id, 'DRAGON-HATCHLING', 79.99, 8, image_url, TRUE, FALSE
+FROM product
+WHERE sku = 'MONS-003';
+
+INSERT INTO product_variant
+    (product_id, sku, price, stock_quantity, image_url, active, is_default)
+SELECT id, 'DRAGON-ANCIENT', 399.99, 0, image_url, TRUE, FALSE
+FROM product
+WHERE sku = 'MONS-003';
+
+INSERT INTO product_variant
+    (product_id, sku, price, stock_quantity, image_url, active, is_default)
+SELECT id, 'MUG-TRAVEL', 16.99, 21, image_url, TRUE, FALSE
+FROM product
+WHERE sku = 'GOOD-002';
+
+INSERT INTO product_variant
+    (product_id, sku, price, stock_quantity, image_url, active, is_default)
+SELECT id, 'MUG-GUILD', 24.99, 6, image_url, TRUE, FALSE
+FROM product
+WHERE sku = 'GOOD-002';
 
 INSERT INTO product_category (product_id, category_id)
 SELECT p.id, c.id

@@ -1,5 +1,6 @@
-import {render, screen} from '@testing-library/react'
+import {fireEvent, render, screen, waitFor, within} from '@testing-library/react'
 import {AdminContext, ResourceContextProvider} from 'react-admin'
+import {RouterProvider, createMemoryRouter} from 'react-router-dom'
 import {CustomerList} from '../../../admin/customers/CustomerList'
 import {CustomerShow} from '../../../admin/customers/CustomerShow'
 
@@ -31,7 +32,6 @@ const customer = {
       orderId: '00000000-0000-0000-0000-000000000009',
       total: 19.99,
       placedAt: '2026-09-05T09:00:00Z',
-      orderUrl: '/admin/orders/ORD-20260905-ORDERADMIN1',
     },
   ],
 }
@@ -52,21 +52,34 @@ describe('Customer resource', () => {
     expect(await screen.findByText('Alice')).toBeTruthy()
     expect(screen.getByText('Example')).toBeTruthy()
     expect(screen.getByText('alice@example.com')).toBeTruthy()
+    expect(within(screen.getByRole('table')).queryByRole('button', {name: 'ra.sort.sort_by'})).toBeNull()
     expect(screen.queryByRole('button', {name: /create|edit|delete/i})).toBeNull()
   })
 
-  it('renders addresses and links order numbers to order detail', async () => {
-    render(
-      <AdminContext dataProvider={{getOne: vi.fn().mockResolvedValue({data: customer})}}>
-        <ResourceContextProvider value="customers">
-          <CustomerShow id={customer.id} />
-        </ResourceContextProvider>
-      </AdminContext>,
+  it('navigates from a customer order to its show route under the admin basename', async () => {
+    const router = createMemoryRouter(
+      [{
+        path: '*',
+        element: (
+          <AdminContext dataProvider={{getOne: vi.fn().mockResolvedValue({data: customer})}}>
+            <ResourceContextProvider value="customers">
+              <CustomerShow id={customer.id} />
+            </ResourceContextProvider>
+          </AdminContext>
+        ),
+      }],
+      {basename: '/admin', initialEntries: [`/admin/customers/${customer.id}/show`]},
     )
+
+    render(<RouterProvider router={router} />)
 
     expect(await screen.findByText('alice@example.com')).toBeTruthy()
     expect(screen.getByText('Main Street 1')).toBeTruthy()
     const orderLink = screen.getByRole('link', {name: customer.orders[0].orderNumber})
-    expect(orderLink.getAttribute('href')).toBe(`#${customer.orders[0].orderUrl}`)
+    const orderShowPath = `/admin/orders/${customer.orders[0].orderNumber}/show`
+    expect(orderLink.getAttribute('href')).toBe(orderShowPath)
+
+    fireEvent.click(orderLink)
+    await waitFor(() => expect(router.state.location.pathname).toBe(orderShowPath))
   })
 })

@@ -8,15 +8,18 @@ import com.springbootecommerce.shophappens.catalog.domain.model.CategoryId;
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
 import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import java.util.List;
 import java.util.Optional;
 
 public interface ProductRepository {
     Optional<Product> findById(ProductId id);
 
-    Optional<Product> findForPurchase(ProductId id);
+    List<Product> findAllForPurchase(List<ProductVariantId> ids);
 
     Optional<Product> findActiveById(ProductId id);
+
+    Optional<Product> findActiveByVariantId(ProductVariantId id);
 
     Optional<Product> findActiveBySku(Sku sku);
 
@@ -31,6 +34,8 @@ public interface ProductRepository {
     ProductAdminPage searchForAdministration(ProductAdminSearch search);
 
     Optional<VersionedProduct> findForAdministration(ProductId id);
+
+    Optional<VersionedProduct> findForAdministrationUpdate(ProductId id);
 
     Optional<ProductAdminView> findAdminViewById(ProductId id);
 

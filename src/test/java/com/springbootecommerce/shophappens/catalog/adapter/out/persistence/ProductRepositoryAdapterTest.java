@@ -8,8 +8,10 @@ import static org.mockito.Mockito.when;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductNotFoundException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductRevision;
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
+import com.springbootecommerce.shophappens.catalog.domain.model.ProductVariant;
 import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
 import java.util.List;
@@ -52,14 +54,19 @@ class ProductRepositoryAdapterTest {
         Product product =
                 Product.restore(
                         new ProductId(1L),
-                        new Sku("SKU-1"),
                         "Widget",
                         "Description",
-                        new Money(BigDecimal.TEN),
-                        1,
-                        null,
                         true,
-                        java.util.Set.of());
+                        java.util.Set.of(),
+                        List.of(
+                                ProductVariant.restore(
+                                        new ProductVariantId(101L),
+                                        new Sku("SKU-1"),
+                                        new Money(BigDecimal.TEN),
+                                        1,
+                                        null,
+                                        true,
+                                        true)));
 
         assertThatThrownBy(() -> adapter.updateForAdministration(product, new ProductRevision(0)))
                 .isInstanceOf(ProductNotFoundException.class);

@@ -12,10 +12,10 @@ export function CustomerList() {
       pagination={<Pagination rowsPerPageOptions={[5, 10, 20, 25, 50]} />}
     >
       <Datagrid rowClick="show" bulkActionButtons={false}>
-        <TextField source="id" label="Customer ID" />
-        <TextField source="givenName" label="First name" />
-        <TextField source="familyName" label="Last name" />
-        <TextField source="contactEmail" label="Email" />
+        <TextField source="id" label="Customer ID" sortable={false} />
+        <TextField source="givenName" label="First name" sortable={false} />
+        <TextField source="familyName" label="Last name" sortable={false} />
+        <TextField source="contactEmail" label="Email" sortable={false} />
       </Datagrid>
     </List>
   )

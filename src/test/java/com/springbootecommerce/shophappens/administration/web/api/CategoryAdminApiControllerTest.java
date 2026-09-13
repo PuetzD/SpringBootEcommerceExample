@@ -2,6 +2,8 @@ package com.springbootecommerce.shophappens.administration.web.api;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -9,6 +11,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -17,10 +20,14 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryA
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdminView;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdministrationQuery;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryAdministrationUseCase;
+import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryInUseException;
+import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryOption;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CategoryRevision;
 import com.springbootecommerce.shophappens.catalog.application.port.in.CreateCategoryCommand;
+import com.springbootecommerce.shophappens.catalog.application.port.in.DuplicateCategoryException;
 import com.springbootecommerce.shophappens.catalog.application.port.in.RenameCategoryCommand;
+import com.springbootecommerce.shophappens.catalog.application.port.in.StaleCategoryRevisionException;
 import com.springbootecommerce.shophappens.security.SecurityConfiguration;
 import com.springbootecommerce.shophappens.security.service.CartMergingAuthenticationSuccessHandler;
 import java.util.List;
@@ -62,7 +69,49 @@ class CategoryAdminApiControllerTest {
         mockMvc.perform(get("/api/admin/categories").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").value(7))
-                .andExpect(jsonPath("$.content[0].slug").value("tools"));
+                .andExpect(jsonPath("$.content[0].slug").value("tools"))
+                .andExpect(jsonPath("$.content[0].revision").value(0))
+                .andExpect(jsonPath("$.content[0].productCount").value(3))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(20))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1));
+
+        verify(categoryAdminQuery).listCategories(new CategoryAdminSearch(0, 20));
+    }
+
+    @Test
+    void adminCanLoadCategoryDetail() throws Exception {
+        when(categoryAdminQuery.findCategory(new CategoryReference(7L)))
+                .thenReturn(
+                        Optional.of(
+                                new CategoryAdminView(
+                                        new CategoryReference(7L),
+                                        "Tools",
+                                        "tools",
+                                        new CategoryRevision(2),
+                                        3)));
+
+        mockMvc.perform(get("/api/admin/categories/7").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(7))
+                .andExpect(jsonPath("$.name").value("Tools"))
+                .andExpect(jsonPath("$.slug").value("tools"))
+                .andExpect(jsonPath("$.revision").value(2))
+                .andExpect(jsonPath("$.productCount").value(3));
+    }
+
+    @Test
+    void adminCanLoadCategoryOptions() throws Exception {
+        when(categoryAdminQuery.listCategoryOptions())
+                .thenReturn(
+                        List.of(new CategoryOption(new CategoryReference(7L), "Tools", "tools")));
+
+        mockMvc.perform(get("/api/admin/categories/options").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(7))
+                .andExpect(jsonPath("$[0].name").value("Tools"))
+                .andExpect(jsonPath("$[0].slug").value("tools"));
     }
 
     @Test
@@ -78,6 +127,11 @@ class CategoryAdminApiControllerTest {
     void customerReceivesForbiddenForCategories() throws Exception {
         mockMvc.perform(get("/api/admin/categories").with(user("customer").roles("CUSTOMER")))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void anonymousReceivesUnauthorizedForCategories() throws Exception {
+        mockMvc.perform(get("/api/admin/categories")).andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -98,7 +152,9 @@ class CategoryAdminApiControllerTest {
                                 .with(csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"name\":\"\"}"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("request.validation"))
+                .andExpect(jsonPath("$.fieldErrors.name").value("Name is required"));
     }
 
     @Test
@@ -119,7 +175,11 @@ class CategoryAdminApiControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"name\":\"Tools\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("Tools"));
+                .andExpect(header().string("Location", "/api/admin/categories/7"))
+                .andExpect(jsonPath("$.name").value("Tools"))
+                .andExpect(jsonPath("$.revision").value(0));
+
+        verify(categoryAdministrationUseCase).createCategory(new CreateCategoryCommand("Tools"));
     }
 
     @Test
@@ -144,7 +204,14 @@ class CategoryAdminApiControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"name\":\"Updated tools\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Updated tools"));
+                .andExpect(jsonPath("$.name").value("Updated tools"))
+                .andExpect(jsonPath("$.revision").value(1));
+
+        verify(categoryAdministrationUseCase)
+                .renameCategory(
+                        new CategoryReference(7L),
+                        new CategoryRevision(0),
+                        new RenameCategoryCommand("Updated tools"));
     }
 
     @Test
@@ -155,5 +222,91 @@ class CategoryAdminApiControllerTest {
                                 .with(csrf())
                                 .header("If-Match", "\"0\""))
                 .andExpect(status().isNoContent());
+
+        verify(categoryAdministrationUseCase)
+                .deleteCategory(new CategoryReference(7L), new CategoryRevision(0));
+    }
+
+    @Test
+    void missingRenamePreconditionUsesCatalogErrorEnvelope() throws Exception {
+        mockMvc.perform(
+                        put("/api/admin/categories/7")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"name\":\"Updated tools\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("catalog.invalid"));
+    }
+
+    @Test
+    void missingDeletePreconditionUsesCatalogErrorEnvelope() throws Exception {
+        mockMvc.perform(
+                        delete("/api/admin/categories/7")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("catalog.invalid"));
+    }
+
+    @Test
+    void categoryMutationRequiresCsrf() throws Exception {
+        mockMvc.perform(
+                        post("/api/admin/categories")
+                                .with(user("admin").roles("ADMIN"))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"name\":\"Tools\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void duplicateCategoryUsesStableConflictEnvelope() throws Exception {
+        when(categoryAdministrationUseCase.createCategory(any(CreateCategoryCommand.class)))
+                .thenThrow(new DuplicateCategoryException("Tools", "tools"));
+
+        mockMvc.perform(
+                        post("/api/admin/categories")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"name\":\"Tools\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("catalog.category.conflict"));
+    }
+
+    @Test
+    void staleRenameUsesStableConflictEnvelope() throws Exception {
+        when(categoryAdministrationUseCase.renameCategory(
+                        eq(new CategoryReference(7L)),
+                        eq(new CategoryRevision(2L)),
+                        any(RenameCategoryCommand.class)))
+                .thenThrow(
+                        new StaleCategoryRevisionException(
+                                new CategoryReference(7L), new CategoryRevision(2L)));
+
+        mockMvc.perform(
+                        put("/api/admin/categories/7")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf())
+                                .header("If-Match", "\"2\"")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"name\":\"Updated tools\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("catalog.category.stale"));
+    }
+
+    @Test
+    void inUseDeleteUsesStableConflictEnvelope() throws Exception {
+        doThrow(new CategoryInUseException(new CategoryReference(7L)))
+                .when(categoryAdministrationUseCase)
+                .deleteCategory(new CategoryReference(7L), new CategoryRevision(2L));
+
+        mockMvc.perform(
+                        delete("/api/admin/categories/7")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf())
+                                .header("If-Match", "\"2\""))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("catalog.category.in-use"));
     }
 }

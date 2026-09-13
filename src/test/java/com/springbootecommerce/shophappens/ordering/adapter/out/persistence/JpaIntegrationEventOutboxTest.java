@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 
 import com.springbootecommerce.shophappens.ordering.application.event.OrderPlacedIntegrationEvent;
+import com.springbootecommerce.shophappens.sharedkernel.money.Currency;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
@@ -26,7 +27,7 @@ class JpaIntegrationEventOutboxTest {
     private static final Instant CREATED_AT = Instant.parse("2026-08-31T10:15:31Z");
 
     @Test
-    void persistsTheVersionedOrderPlacedPayloadWithoutChangingItsWireSchema() throws Exception {
+    void persistsTheVersionedOrderPlacedPayloadWithSelectedSellableAndCurrency() throws Exception {
         OrderPlacedIntegrationEvent event = event();
         JpaIntegrationEventOutbox outbox =
                 new JpaIntegrationEventOutbox(
@@ -42,6 +43,8 @@ class JpaIntegrationEventOutboxTest {
         assertThat(entity.getEventType()).isEqualTo("ordering.order-placed.v1");
         assertThat(entity.getAggregateKey()).isEqualTo("22222222-2222-2222-2222-222222222222");
         assertThat(entity.getCreatedAt()).isEqualTo(CREATED_AT);
+        assertThat(entity.getNextAttemptAt()).isEqualTo(CREATED_AT);
+        assertThat(entity.getQuarantinedAt()).isNull();
 
         JsonNode payload = objectMapper.readTree(entity.getPayload());
         assertThat(payload.propertyNames())
@@ -52,6 +55,7 @@ class JpaIntegrationEventOutboxTest {
                         "customerId",
                         "occurredAt",
                         "total",
+                        "currency",
                         "items",
                         "shippingAddress",
                         "billingAddress");
@@ -65,10 +69,12 @@ class JpaIntegrationEventOutboxTest {
         assertThat(payload.get("occurredAt").asString()).isEqualTo("2026-08-31T10:15:30Z");
         assertThat(payload.get("total").isNumber()).isTrue();
         assertThat(payload.get("total").decimalValue()).isEqualByComparingTo("39.98");
+        assertThat(payload.get("currency").asString()).isEqualTo("EUR");
         JsonNode item = payload.get("items").get(0);
         assertThat(item.propertyNames())
                 .containsExactlyInAnyOrder(
-                        "productId", "sku", "productName", "unitPrice", "quantity");
+                        "variantId", "productId", "sku", "productName", "unitPrice", "quantity");
+        assertThat(item.get("variantId").longValue()).isEqualTo(202L);
         assertThat(item.get("productId").longValue()).isEqualTo(7L);
         assertThat(item.get("sku").asString()).isEqualTo("ELEC-001");
         assertThat(item.get("productName").asString()).isEqualTo("Headphones");
@@ -126,9 +132,10 @@ class JpaIntegrationEventOutboxTest {
                 42L,
                 Instant.parse("2026-08-31T10:15:30Z"),
                 new BigDecimal("39.98"),
+                Currency.EUR,
                 List.of(
                         new OrderPlacedIntegrationEvent.Item(
-                                7L, "ELEC-001", "Headphones", new BigDecimal("19.99"), 2)),
+                                202L, 7L, "ELEC-001", "Headphones", new BigDecimal("19.99"), 2)),
                 new OrderPlacedIntegrationEvent.Address(
                         "Jane Doe",
                         "Acme Inc",

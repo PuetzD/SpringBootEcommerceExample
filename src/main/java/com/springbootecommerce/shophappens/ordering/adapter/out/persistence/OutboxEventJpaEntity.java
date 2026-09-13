@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -45,6 +46,16 @@ class OutboxEventJpaEntity {
     @Column(name = "last_error", columnDefinition = "text")
     private String lastError;
 
+    @Column(name = "next_attempt_at", nullable = false)
+    private Instant nextAttemptAt;
+
+    @Column(name = "quarantined_at")
+    private Instant quarantinedAt;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private long version;
+
     static OutboxEventJpaEntity create(
             UUID eventId,
             String eventType,
@@ -58,6 +69,7 @@ class OutboxEventJpaEntity {
         entity.aggregateKey = aggregateKey;
         entity.payload = payload;
         entity.createdAt = createdAt;
+        entity.nextAttemptAt = createdAt;
         return entity;
     }
 }

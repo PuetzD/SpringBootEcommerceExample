@@ -69,6 +69,7 @@ public class CategoryQueryService implements BrowseCategoriesUseCase {
                 product.description(),
                 product.price(),
                 product.stockQuantity(),
-                product.imageUrl());
+                product.imageUrl(),
+                product.defaultVariant().id().orElseThrow());
     }
 }

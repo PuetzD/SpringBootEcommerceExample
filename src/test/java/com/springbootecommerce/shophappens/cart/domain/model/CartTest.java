@@ -1,13 +1,14 @@
 package com.springbootecommerce.shophappens.cart.domain.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
-import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import org.junit.jupiter.api.Test;
 
 class CartTest {
-    private static final ProductId HEADPHONES = new ProductId(7L);
+    private static final ProductVariantId HEADPHONES = new ProductVariantId(701L);
 
     @Test
     void keepsOneItemPerProductAndChangesIntentOnly() {
@@ -25,13 +26,38 @@ class CartTest {
         customer.changeQuantity(HEADPHONES, new Quantity(2));
         Cart guest = Cart.empty(CartId.random(), new CartOwner.Guest(GuestCartId.random()));
         guest.changeQuantity(HEADPHONES, new Quantity(3));
-        guest.changeQuantity(new ProductId(8L), new Quantity(1));
+        guest.changeQuantity(new ProductVariantId(801L), new Quantity(1));
 
         customer.merge(guest);
 
         assertThat(customer.items())
                 .containsExactly(
                         new CartItem(HEADPHONES, new Quantity(5)),
-                        new CartItem(new ProductId(8L), new Quantity(1)));
+                        new CartItem(new ProductVariantId(801L), new Quantity(1)));
+    }
+
+    @Test
+    void addAndSetHaveDifferentMeaningsAndDoNotTouchSiblings() {
+        Cart cart = Cart.empty(CartId.random(), new CartOwner.Guest(GuestCartId.random()));
+        var small = new ProductVariantId(101);
+        var large = new ProductVariantId(202);
+        cart.changeQuantity(small, new Quantity(5));
+        cart.changeQuantity(large, new Quantity(2));
+
+        cart.add(small, new Quantity(1));
+
+        assertThat(cart.items())
+                .containsExactly(
+                        new CartItem(small, new Quantity(6)), new CartItem(large, new Quantity(2)));
+
+        cart.changeQuantity(small, new Quantity(1));
+        assertThat(cart.items())
+                .containsExactly(
+                        new CartItem(small, new Quantity(1)), new CartItem(large, new Quantity(2)));
+
+        cart.changeQuantity(small, new Quantity(999));
+        assertThatThrownBy(() -> cart.add(small, new Quantity(1)))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThat(cart.items().getFirst().quantity().value()).isEqualTo(999);
     }
 }

@@ -39,14 +39,19 @@ export function ProductList() {
       pagination={<Pagination rowsPerPageOptions={[5, 10, 20, 25, 50]} />}
     >
       <Datagrid rowClick="edit" bulkActionButtons={false}>
-        <TextField source="sku" />
-        <TextField source="name" />
-        <NumberField source="price" options={{style: 'currency', currency: 'EUR'}} />
-        <NumberField source="stockQuantity" />
-        <BooleanField source="active" />
+        <TextField source="sku" sortable={false} />
+        <TextField source="name" sortable={false} />
+        <NumberField
+          source="price"
+          sortable={false}
+          options={{style: 'currency', currency: 'EUR'}}
+        />
+        <NumberField source="stockQuantity" sortable={false} />
+        <BooleanField source="active" sortable={false} />
         <FunctionField
           source="categories"
           label="Categories"
+          sortable={false}
           render={(record: {categories?: {name: string}[]}) =>
             record.categories?.map(({name}) => name).join(', ') ?? ''}
         />

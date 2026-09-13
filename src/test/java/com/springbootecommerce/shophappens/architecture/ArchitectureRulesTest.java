@@ -307,7 +307,8 @@ class ArchitectureRulesTest {
                         "..catalog.application.service..",
                         "..catalog.application.port.out..",
                         "..catalog.domain..",
-                        "..catalog.adapter..")
+                        "..catalog.adapter..",
+                        "..catalog.application.command..")
                 .check(imported);
     }
 

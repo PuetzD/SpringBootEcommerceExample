@@ -8,6 +8,9 @@ CREATE TABLE integration_outbox (
     published_at TIMESTAMPTZ,
     attempt_count INTEGER NOT NULL DEFAULT 0,
     last_error TEXT,
+    next_attempt_at TIMESTAMPTZ NOT NULL DEFAULT (CURRENT_TIMESTAMP + INTERVAL '1 minute'),
+    quarantined_at TIMESTAMPTZ,
+    version BIGINT NOT NULL DEFAULT 0,
     CONSTRAINT pk_integration_outbox PRIMARY KEY (event_id),
     CONSTRAINT chk_integration_outbox_attempt_count CHECK (attempt_count >= 0)
 );
@@ -15,6 +18,10 @@ CREATE TABLE integration_outbox (
 CREATE INDEX ix_integration_outbox_unpublished
     ON integration_outbox (created_at)
     WHERE published_at IS NULL;
+
+CREATE INDEX ix_integration_outbox_eligible
+    ON integration_outbox (next_attempt_at, created_at, event_id)
+    WHERE published_at IS NULL AND quarantined_at IS NULL;
 
 CREATE INDEX ix_integration_outbox_aggregate
     ON integration_outbox (aggregate_type, aggregate_key);

@@ -63,7 +63,7 @@ public class CustomerProfileService
     @Override
     @Transactional
     public AddressReference save(CustomerReference customer, SaveAddressCommand command) {
-        var aggregate = requireCustomer(customer);
+        var aggregate = requireCustomerForUpdate(customer);
         var details =
                 new AddressDetails(
                         command.recipientName(),
@@ -96,8 +96,28 @@ public class CustomerProfileService
 
     @Override
     @Transactional
+    public void makeDefaultShipping(CustomerReference customer, AddressReference address) {
+        var aggregate = requireCustomerForUpdate(customer);
+        var addressId = new AddressId(address.value());
+        var owned = aggregate.address(addressId);
+        aggregate.updateAddress(addressId, owned.details(), true, owned.defaultBilling());
+        customers.save(aggregate);
+    }
+
+    @Override
+    @Transactional
+    public void makeDefaultBilling(CustomerReference customer, AddressReference address) {
+        var aggregate = requireCustomerForUpdate(customer);
+        var addressId = new AddressId(address.value());
+        var owned = aggregate.address(addressId);
+        aggregate.updateAddress(addressId, owned.details(), owned.defaultShipping(), true);
+        customers.save(aggregate);
+    }
+
+    @Override
+    @Transactional
     public void remove(CustomerReference customer, AddressReference address) {
-        var aggregate = requireCustomer(customer);
+        var aggregate = requireCustomerForUpdate(customer);
         aggregate.removeAddress(new AddressId(address.value()));
         customers.save(aggregate);
     }
@@ -137,6 +157,12 @@ public class CustomerProfileService
     private Customer requireCustomer(CustomerReference customer) {
         return customers
                 .findById(new CustomerId(customer.value()))
+                .orElseThrow(() -> new CustomerNotFoundException(customer));
+    }
+
+    private Customer requireCustomerForUpdate(CustomerReference customer) {
+        return customers
+                .findForUpdate(new CustomerId(customer.value()))
                 .orElseThrow(() -> new CustomerNotFoundException(customer));
     }
 

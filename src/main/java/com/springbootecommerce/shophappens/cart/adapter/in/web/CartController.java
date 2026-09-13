@@ -2,29 +2,33 @@ package com.springbootecommerce.shophappens.cart.adapter.in.web;
 
 import com.springbootecommerce.shophappens.cart.application.port.in.CartItemSnapshot;
 import com.springbootecommerce.shophappens.cart.application.port.in.CustomerCartUseCase;
+import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartConsumedException;
 import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartSnapshot;
 import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartUseCase;
 import com.springbootecommerce.shophappens.catalog.application.port.in.BrowseCatalogUseCase;
-import com.springbootecommerce.shophappens.catalog.application.port.in.ProductReference;
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductSummary;
 import com.springbootecommerce.shophappens.customer.application.port.in.CurrentCustomerIdentity;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
 import com.springbootecommerce.shophappens.shared.web.SeoMetadata;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
-import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import jakarta.servlet.http.HttpSession;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.TransactionException;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 @RequiredArgsConstructor
@@ -56,16 +60,18 @@ public class CartController {
                 items.stream()
                         .map(
                                 item ->
-                                        catalog.findActiveById(
-                                                        new ProductReference(
-                                                                item.product().value()))
-                                                .map(p -> new CartLine(item, p)))
-                        .flatMap(Optional::stream)
+                                        new CartLine(
+                                                item,
+                                                catalog.findActiveByVariantId(item.variant())
+                                                        .orElse(null)))
                         .toList();
 
         addSeo(model);
         model.addAttribute("lines", lines);
-        model.addAttribute("cartEmpty", lines.isEmpty());
+        model.addAttribute("cartEmpty", items.isEmpty());
+        model.addAttribute(
+                "checkoutAllowed",
+                !items.isEmpty() && lines.stream().allMatch(CartLine::available));
         model.addAttribute("customer", customer.orElse(null));
         return "cart/detail";
     }
@@ -73,29 +79,72 @@ public class CartController {
     @PostMapping("/items")
     public String addItem(
             HttpSession session,
-            @RequestParam("product") long productId,
+            @RequestParam("variant") long variantId,
             @RequestParam("quantity") String rawQuantity) {
         int quantity = parseQuantity(rawQuantity);
+        ProductVariantId variant = requireVariantId(variantId);
+        if (catalog.findActiveByVariantId(variant).isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
         Optional<CustomerReference> customer = currentCustomer.current();
-        if (customer.isPresent()) {
-            customerCart.changeQuantity(
-                    new CustomerId(customer.get().value()), new ProductId(productId), quantity);
-        } else {
-            guestCart.changeQuantity(
-                    guestSessions.getOrCreate(session), new ProductId(productId), quantity);
+        try {
+            if (customer.isPresent()) {
+                customerCart.add(new CustomerId(customer.get().value()), variant, quantity);
+            } else {
+                guestCart.add(guestSessions.getOrCreate(session), variant, quantity);
+            }
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
         }
         return "redirect:/cart";
     }
 
-    @PostMapping("/items/{productId}/remove")
-    public String remove(HttpSession session, @PathVariable long productId) {
+    @PostMapping("/items/{variantId}/quantity")
+    public String changeQuantity(
+            HttpSession session,
+            @PathVariable long variantId,
+            @RequestParam("quantity") String rawQuantity) {
+        ProductVariantId variant = requireVariantId(variantId);
+        int quantity = parseQuantity(rawQuantity);
         Optional<CustomerReference> customer = currentCustomer.current();
         if (customer.isPresent()) {
-            customerCart.remove(new CustomerId(customer.get().value()), new ProductId(productId));
+            customerCart.changeQuantity(new CustomerId(customer.get().value()), variant, quantity);
         } else {
-            guestCart.remove(guestSessions.getOrCreate(session), new ProductId(productId));
+            guestCart.changeQuantity(guestSessions.getOrCreate(session), variant, quantity);
         }
         return "redirect:/cart";
+    }
+
+    @PostMapping("/items/{variantId}/remove")
+    public String remove(HttpSession session, @PathVariable long variantId) {
+        ProductVariantId variant = requireVariantId(variantId);
+        Optional<CustomerReference> customer = currentCustomer.current();
+        if (customer.isPresent()) {
+            customerCart.remove(new CustomerId(customer.get().value()), variant);
+        } else {
+            guestCart.remove(guestSessions.getOrCreate(session), variant);
+        }
+        return "redirect:/cart";
+    }
+
+    @ExceptionHandler(GuestCartConsumedException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public String consumedGuestCart(GuestCartConsumedException exception, Model model) {
+        return conflict(exception.getMessage(), model);
+    }
+
+    @ExceptionHandler({DataAccessException.class, TransactionException.class})
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public String cartStorageUnavailable(Model model) {
+        return conflict("Cart could not be saved. Reload your cart to check its contents.", model);
+    }
+
+    private static ProductVariantId requireVariantId(long value) {
+        if (value < 1) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Variant ID must be positive");
+        }
+        return new ProductVariantId(value);
     }
 
     private static int parseQuantity(String rawQuantity) {
@@ -124,5 +173,15 @@ public class CartController {
         model.addAttribute("canonicalUrl", canonicalUrlFactory.forPath(seo.canonicalPath()));
     }
 
-    public record CartLine(CartItemSnapshot item, ProductSummary product) {}
+    private String conflict(String message, Model model) {
+        addSeo(model);
+        model.addAttribute("message", message);
+        return "cart/conflict";
+    }
+
+    public record CartLine(CartItemSnapshot item, ProductSummary product) {
+        public boolean available() {
+            return product != null;
+        }
+    }
 }

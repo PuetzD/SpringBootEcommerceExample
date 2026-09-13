@@ -5,6 +5,8 @@ import com.springbootecommerce.shophappens.customer.application.port.in.Customer
 import com.springbootecommerce.shophappens.ordering.application.exception.CheckoutAddressUnavailableException;
 import com.springbootecommerce.shophappens.ordering.application.exception.CheckoutItemUnavailableException;
 import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutPreparation;
+import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutReview;
+import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutReviewChangedException;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderCommand;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderUseCase;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PrepareCheckoutUseCase;
@@ -12,7 +14,9 @@ import com.springbootecommerce.shophappens.ordering.domain.exception.EmptyChecko
 import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
 import com.springbootecommerce.shophappens.shared.web.SeoMetadata;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import java.time.Clock;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -35,11 +39,13 @@ public class CheckoutController {
     private final PlaceOrderUseCase orders;
     private final CurrentCustomerIdentity currentCustomer;
     private final CanonicalUrlFactory canonicalUrlFactory;
+    private final CheckoutReviewSession reviews;
+    private final Clock clock;
 
     @GetMapping
-    public String form(Model model) {
+    public String form(Model model, HttpSession session) {
         CustomerReference customer = currentCustomerOrThrow();
-        addModel(model, customer, new CheckoutForm());
+        addModel(model, customer, new CheckoutForm(), session);
         return "ordering/checkout";
     }
 
@@ -47,21 +53,30 @@ public class CheckoutController {
     public String place(
             @Valid @ModelAttribute("checkoutForm") CheckoutForm form,
             BindingResult bindingResult,
-            Model model) {
+            Model model,
+            HttpSession session) {
         CustomerReference customer = currentCustomerOrThrow();
         if (bindingResult.hasErrors()) {
-            addModel(model, customer, form);
+            addModel(model, customer, form, session);
             return "ordering/checkout";
         }
-        var result =
-                orders.place(
-                        new PlaceOrderCommand(
-                                new CustomerId(customer.value()),
-                                new com.springbootecommerce.shophappens.ordering.application.port.in
-                                        .CheckoutReference(form.getCheckoutId()),
-                                form.getShippingAddressId(),
-                                form.getBillingAddressId()));
-        return "redirect:/orders/" + result.orderNumber();
+        try {
+            var result =
+                    orders.place(
+                            new PlaceOrderCommand(
+                                    new CustomerId(customer.value()),
+                                    new com.springbootecommerce.shophappens.ordering.application
+                                            .port.in.CheckoutReference(form.getCheckoutId()),
+                                    form.getShippingAddressId(),
+                                    form.getBillingAddressId(),
+                                    reviews.find(session, form.getCheckoutId()).orElse(null)));
+            reviews.remove(session, form.getCheckoutId());
+            return "redirect:/orders/" + result.orderNumber();
+        } catch (CheckoutReviewChangedException exception) {
+            addModel(model, customer, form, session);
+            model.addAttribute("checkoutError", exception.getMessage());
+            return "ordering/checkout";
+        }
     }
 
     @ExceptionHandler(CheckoutAddressUnavailableException.class)
@@ -70,9 +85,9 @@ public class CheckoutController {
     }
 
     @ExceptionHandler({EmptyCheckoutException.class, CheckoutItemUnavailableException.class})
-    public String checkoutFailure(Model model) {
+    public String checkoutFailure(Model model, HttpSession session) {
         CustomerReference customer = currentCustomerOrThrow();
-        addModel(model, customer, new CheckoutForm());
+        addModel(model, customer, new CheckoutForm(), session);
         model.addAttribute("checkoutError", "Some items are no longer available.");
         return "ordering/checkout";
     }
@@ -86,7 +101,8 @@ public class CheckoutController {
                                         HttpStatus.NOT_FOUND, "Customer not found"));
     }
 
-    private void addModel(Model model, CustomerReference customer, CheckoutForm form) {
+    private void addModel(
+            Model model, CustomerReference customer, CheckoutForm form, HttpSession session) {
         CheckoutPreparation result = preparation.prepare(new CustomerId(customer.value()));
         if (form.getCheckoutId() == null) {
             form.setCheckoutId(UUID.randomUUID());
@@ -102,6 +118,15 @@ public class CheckoutController {
                     .filter(address -> address.defaultBilling())
                     .findFirst()
                     .ifPresent(address -> form.setBillingAddressId(address.addressId()));
+        }
+        if (!result.items().isEmpty() && result.unavailableVariants().isEmpty()) {
+            reviews.put(
+                    session,
+                    form.getCheckoutId(),
+                    new CheckoutReview(
+                            result.customer(), result.items(), clock.instant().plusSeconds(900)));
+        } else {
+            reviews.remove(session, form.getCheckoutId());
         }
         model.addAttribute("checkoutForm", form);
         model.addAttribute("checkout", result);

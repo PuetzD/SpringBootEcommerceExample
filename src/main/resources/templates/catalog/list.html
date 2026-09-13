@@ -39,6 +39,25 @@
         </div>
       </article>
     </div>
+
+    <nav
+        th:if="${catalogPage.totalPages() > 1}"
+        class="flex justify-center gap-4 mt-8"
+        aria-label="Catalog pages">
+      <a
+          th:if="${catalogPage.page() > 0}"
+          th:href="@{/catalog(page=${catalogPage.page() - 1})}"
+          class="btn btn-outline"
+          rel="prev">Previous</a>
+      <span th:text="|${catalogPage.page() + 1} of ${catalogPage.totalPages()}|"
+            aria-current="page"
+            class="self-center">1 of 1</span>
+      <a
+          th:if="${catalogPage.page() + 1 < catalogPage.totalPages()}"
+          th:href="@{/catalog(page=${catalogPage.page() + 1})}"
+          class="btn btn-outline"
+          rel="next">Next</a>
+    </nav>
   </main>
   <th:block id="page-scripts"></th:block>
 </body>

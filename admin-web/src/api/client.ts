@@ -1,5 +1,5 @@
 import type {ApiErrorResponse, ApiQueryParams, ApiRequestOptions, FieldErrorResponse} from './types'
-import {clearToken, getToken, refreshToken} from '../auth/CsrfProvider'
+import {clearToken, getCsrf, refreshToken, requireCsrf} from '../auth/CsrfProvider'
 
 export class ApiError extends Error {
     status: number
@@ -17,12 +17,20 @@ export class ApiError extends Error {
 }
 
 function csrfHeaders(): Record<string, string> {
-    const token = getToken()
-    return token ? {'X-CSRF-TOKEN': token} : {}
+    const csrf = getCsrf()
+    return csrf ? {[csrf.headerName]: csrf.token} : {}
 }
 
 function revisionHeaders(revision?: number): Record<string, string> {
     return revision === undefined ? {} : {'If-Match': `"${revision}"`}
+}
+
+async function mutationHeaders(revision?: number): Promise<Record<string, string>> {
+    const csrf = await requireCsrf()
+    return {
+        [csrf.headerName]: csrf.token,
+        ...revisionHeaders(revision),
+    }
 }
 
 function isRequestOptions(
@@ -63,11 +71,16 @@ async function handleResponse<T>(response: Response): Promise<T> {
         message: 'Request failed',
         status: response.status,
     }
+    const error = new ApiError(errorBody)
     if (response.status === 401 || response.status === 403) {
         clearToken()
-        await refreshToken()
+        try {
+            await refreshToken()
+        } catch {
+            // Preserve the response that caused the refresh instead of replacing its API contract.
+        }
     }
-    throw new ApiError(errorBody)
+    throw error
 }
 
 export const ApiClient = {
@@ -76,7 +89,7 @@ export const ApiClient = {
         const url = new URL(path, window.location.origin)
         if (params) {
             Object.entries(params).forEach(([key, value]) => {
-                if (value !== undefined) url.searchParams.append(key, String(value))
+                if (value !== undefined && value !== null) url.searchParams.append(key, String(value))
             })
         }
         const response = await fetch(url.toString(), {
@@ -87,14 +100,16 @@ export const ApiClient = {
         return handleResponse<T>(response)
     },
 
-    async post<T>(path: string, body: unknown): Promise<T> {
+    async post<T>(path: string, body: unknown, revisionOrOptions?: number | ApiRequestOptions): Promise<T> {
+        const {revision} = normalizeMutationOptions(revisionOrOptions)
+        const headers = await mutationHeaders(revision)
         const response = await fetch(path, {
             method: 'POST',
             credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json',
                 Accept: 'application/json',
-                ...csrfHeaders(),
+                ...headers,
             },
             body: JSON.stringify(body),
         })
@@ -103,14 +118,30 @@ export const ApiClient = {
 
     async put<T>(path: string, body: unknown, revisionOrOptions?: number | ApiRequestOptions): Promise<T> {
         const {revision} = normalizeMutationOptions(revisionOrOptions)
+        const headers = await mutationHeaders(revision)
         const response = await fetch(path, {
             method: 'PUT',
             credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json',
                 Accept: 'application/json',
-                ...csrfHeaders(),
-                ...revisionHeaders(revision),
+                ...headers,
+            },
+            body: JSON.stringify(body),
+        })
+        return handleResponse<T>(response)
+    },
+
+    async patch<T>(path: string, body: unknown, revisionOrOptions?: number | ApiRequestOptions): Promise<T> {
+        const {revision} = normalizeMutationOptions(revisionOrOptions)
+        const headers = await mutationHeaders(revision)
+        const response = await fetch(path, {
+            method: 'PATCH',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                ...headers,
             },
             body: JSON.stringify(body),
         })
@@ -119,10 +150,11 @@ export const ApiClient = {
 
     async delete(path: string, revisionOrOptions?: number | ApiRequestOptions): Promise<void> {
         const {revision} = normalizeMutationOptions(revisionOrOptions)
+        const headers = await mutationHeaders(revision)
         const response = await fetch(path, {
             method: 'DELETE',
             credentials: 'same-origin',
-            headers: {Accept: 'application/json', ...csrfHeaders(), ...revisionHeaders(revision)},
+            headers: {Accept: 'application/json', ...headers},
         })
         await handleResponse<void>(response)
     },

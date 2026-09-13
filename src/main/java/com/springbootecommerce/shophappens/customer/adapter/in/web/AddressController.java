@@ -8,6 +8,7 @@ import com.springbootecommerce.shophappens.customer.application.port.in.Customer
 import com.springbootecommerce.shophappens.customer.application.port.in.ManageCustomerAddressesUseCase;
 import com.springbootecommerce.shophappens.customer.application.port.in.ManageCustomerAddressesUseCase.SaveAddressCommand;
 import com.springbootecommerce.shophappens.customer.application.port.in.OwnedAddressQuery;
+import com.springbootecommerce.shophappens.customer.application.port.in.OwnedAddressUnavailableException;
 import com.springbootecommerce.shophappens.customer.domain.exception.AddressNotOwnedException;
 import com.springbootecommerce.shophappens.shared.web.CanonicalUrlFactory;
 import com.springbootecommerce.shophappens.shared.web.SeoMetadata;
@@ -96,16 +97,14 @@ public class AddressController {
     @PostMapping("/{addressId}/default-shipping")
     public String defaultShipping(@PathVariable long addressId) {
         CustomerReference customer = currentCustomer();
-        AddressSnapshot snapshot = addresses.getOwned(customer, new AddressReference(addressId));
-        manager.save(customer, preserveCommand(snapshot, true, snapshot.defaultBilling()));
+        manager.makeDefaultShipping(customer, new AddressReference(addressId));
         return "redirect:/account/addresses";
     }
 
     @PostMapping("/{addressId}/default-billing")
     public String defaultBilling(@PathVariable long addressId) {
         CustomerReference customer = currentCustomer();
-        AddressSnapshot snapshot = addresses.getOwned(customer, new AddressReference(addressId));
-        manager.save(customer, preserveCommand(snapshot, snapshot.defaultShipping(), true));
+        manager.makeDefaultBilling(customer, new AddressReference(addressId));
         return "redirect:/account/addresses";
     }
 
@@ -116,7 +115,11 @@ public class AddressController {
         return "redirect:/account/addresses";
     }
 
-    @ExceptionHandler({AddressNotOwnedException.class, CustomerNotFoundException.class})
+    @ExceptionHandler({
+        AddressNotOwnedException.class,
+        CustomerNotFoundException.class,
+        OwnedAddressUnavailableException.class
+    })
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public void notFound() {}
 
@@ -143,23 +146,6 @@ public class AddressController {
                 form.getPhoneNumber(),
                 form.isDefaultShipping(),
                 form.isDefaultBilling());
-    }
-
-    private SaveAddressCommand preserveCommand(
-            AddressSnapshot snapshot, boolean defaultShipping, boolean defaultBilling) {
-        return new SaveAddressCommand(
-                snapshot.address(),
-                snapshot.recipientName(),
-                snapshot.companyName(),
-                snapshot.addressLine1(),
-                snapshot.addressLine2(),
-                snapshot.city(),
-                snapshot.region(),
-                snapshot.postalCode(),
-                snapshot.countryCode(),
-                snapshot.phoneNumber(),
-                defaultShipping,
-                defaultBilling);
     }
 
     private void addSeo(Model model, String title, String canonicalPath) {

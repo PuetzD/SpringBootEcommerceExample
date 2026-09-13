@@ -6,8 +6,11 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.ProductRe
 import com.springbootecommerce.shophappens.catalog.application.port.in.ProductSummary;
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductRepository;
 import com.springbootecommerce.shophappens.catalog.domain.model.Product;
+import com.springbootecommerce.shophappens.catalog.domain.model.ProductVariant;
 import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -51,18 +54,47 @@ public class CatalogQueryService implements BrowseCatalogUseCase {
     }
 
     @Override
+    public Optional<ProductSummary> findActiveByVariantId(ProductVariantId variant) {
+        return productRepository
+                .findActiveByVariantId(variant)
+                .filter(Product::active)
+                .filter(product -> product.variant(variant).active())
+                .map(product -> toSummary(product, product.variant(variant)));
+    }
+
+    @Override
+    public List<ProductSummary> findActiveVariants(ProductReference product) {
+        return productRepository
+                .findActiveById(new ProductId(product.value()))
+                .filter(Product::active)
+                .stream()
+                .flatMap(
+                        family ->
+                                family.variants().stream()
+                                        .filter(ProductVariant::active)
+                                        .map(variant -> toSummary(family, variant)))
+                .sorted(Comparator.comparingLong(summary -> summary.variant().value()))
+                .toList();
+    }
+
+    @Override
     public Optional<ProductSummary> findActiveBySku(String sku) {
         return productRepository.findActiveBySku(new Sku(sku)).map(this::toSummary);
     }
 
     private ProductSummary toSummary(Product product) {
+        return toSummary(product, product.defaultVariant());
+    }
+
+    private ProductSummary toSummary(Product product, ProductVariant variant) {
         return new ProductSummary(
-                new ProductReference(product.id().get().value()),
-                product.sku().value(),
+                new ProductReference(product.id().orElseThrow().value()),
+                variant.sku().value(),
                 product.name(),
                 product.description(),
-                product.price(),
-                product.stockQuantity(),
-                product.imageUrl());
+                variant.price(),
+                variant.stockQuantity(),
+                variant.imageUrl(),
+                variant.id().orElseThrow());
     }
 }

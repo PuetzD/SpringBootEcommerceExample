@@ -6,7 +6,7 @@ import com.springbootecommerce.shophappens.cart.domain.model.CartItem;
 import com.springbootecommerce.shophappens.cart.domain.model.CartOwner;
 import com.springbootecommerce.shophappens.cart.domain.model.Quantity;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
-import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +20,7 @@ class CustomerCartPersistenceMapper {
                         jpa.getVersion());
         for (CustomerCartItemJpaEntity item : jpa.getItems()) {
             cart.changeQuantity(
-                    new ProductId(item.getProductId()), new Quantity(item.getQuantity()));
+                    new ProductVariantId(item.getVariantId()), new Quantity(item.getQuantity()));
         }
         return cart;
     }
@@ -31,6 +31,6 @@ class CustomerCartPersistenceMapper {
 
     private CustomerCartItemJpaEntity toJpaItem(CustomerCartJpaEntity owner, CartItem item) {
         return CustomerCartItemJpaEntity.create(
-                owner, item.productId().value(), item.quantity().value());
+                owner, item.variantId().value(), item.quantity().value());
     }
 }

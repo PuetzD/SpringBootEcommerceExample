@@ -114,6 +114,7 @@ class JpaOrderRepositoryAdapter implements OrderRepository {
 
     private OrderItemView toItem(OrderItemJpaEntity item) {
         return new OrderItemView(
+                item.getVariantId(),
                 item.getProductId(),
                 item.getSku(),
                 item.getProductName(),

@@ -19,6 +19,7 @@ import com.springbootecommerce.shophappens.ordering.application.port.out.Purchas
 import com.springbootecommerce.shophappens.ordering.application.port.out.RequestedProduct;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
 import java.util.List;
@@ -41,37 +42,68 @@ class ContextGatewayContractTest {
                 .thenReturn(
                         new CustomerCartSnapshot(
                                 new CustomerId(42L),
-                                List.of(new CartItemSnapshot(new ProductId(7L), 2))));
+                                List.of(new CartItemSnapshot(new ProductVariantId(701L), 2))));
 
         CheckoutCart result = cartGateway.load(new CustomerId(42L));
 
-        assertThat(result.products()).containsExactly(new RequestedProduct(new ProductId(7L), 2));
+        assertThat(result.products())
+                .containsExactly(new RequestedProduct(new ProductVariantId(701L), 2));
     }
 
     @Test
     void mapsPurchasedCatalogFactsIntoOrderFacts() {
         var catalogGateway = new CatalogPurchaseGatewayAdapter(purchase);
-        when(purchase.purchase(List.of(new PurchaseLine(new ProductReference(7L), 2))))
+        when(purchase.purchase(List.of(new PurchaseLine(new ProductVariantId(701L), 2))))
                 .thenReturn(
                         List.of(
                                 new PurchasedProductSnapshot(
+                                        new ProductVariantId(701L),
                                         new ProductReference(7L),
                                         "ELEC-001",
                                         "Headphones",
                                         new Money(new BigDecimal("19.99")),
                                         2)));
 
-        assertThat(catalogGateway.purchase(List.of(new RequestedProduct(new ProductId(7L), 2))))
+        assertThat(
+                        catalogGateway.purchase(
+                                List.of(new RequestedProduct(new ProductVariantId(701L), 2))))
                 .containsExactly(purchasedProduct(7L, 2, "19.99"));
+    }
+
+    @Test
+    void preservesDistinctFamilyAndVariantIdentityAcrossCatalogBoundary() {
+        var catalogGateway = new CatalogPurchaseGatewayAdapter(purchase);
+        var variant = new ProductVariantId(202);
+        when(purchase.purchase(List.of(new PurchaseLine(variant, 2))))
+                .thenReturn(
+                        List.of(
+                                new PurchasedProductSnapshot(
+                                        variant,
+                                        new ProductReference(7),
+                                        "SHIRT-L",
+                                        "Shirt",
+                                        new Money(new BigDecimal("20.00")),
+                                        2)));
+
+        assertThat(catalogGateway.purchase(List.of(new RequestedProduct(variant, 2))))
+                .containsExactly(
+                        new PurchasedProduct(
+                                variant,
+                                new ProductId(7),
+                                "SHIRT-L",
+                                "Shirt",
+                                new Money(new BigDecimal("20.00")),
+                                2));
     }
 
     @Test
     void rejectsCatalogResultSetThatDiffersFromRequest() {
         var catalogGateway = new CatalogPurchaseGatewayAdapter(purchase);
-        when(purchase.purchase(List.of(new PurchaseLine(new ProductReference(7L), 2))))
+        when(purchase.purchase(List.of(new PurchaseLine(new ProductVariantId(701L), 2))))
                 .thenReturn(
                         List.of(
                                 new PurchasedProductSnapshot(
+                                        new ProductVariantId(701L),
                                         new ProductReference(7L),
                                         "ELEC-001",
                                         "Headphones",
@@ -81,12 +113,15 @@ class ContextGatewayContractTest {
         assertThatThrownBy(
                         () ->
                                 catalogGateway.purchase(
-                                        List.of(new RequestedProduct(new ProductId(7L), 2))))
+                                        List.of(
+                                                new RequestedProduct(
+                                                        new ProductVariantId(701L), 2))))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     private static PurchasedProduct purchasedProduct(long productId, int quantity, String price) {
         return new PurchasedProduct(
+                new ProductVariantId(productId * 100 + 1),
                 new ProductId(productId),
                 "ELEC-001",
                 "Headphones",

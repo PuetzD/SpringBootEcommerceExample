@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.springbootecommerce.shophappens.ordering.domain.exception.EmptyCheckoutException;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Currency;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
@@ -27,6 +28,7 @@ class OrderTest {
                         new CustomerId(42L),
                         List.of(
                                 new OrderItem(
+                                        new ProductVariantId(701L),
                                         new ProductId(7L),
                                         "ELEC-001",
                                         "Headphones",
@@ -60,6 +62,7 @@ class OrderTest {
                                         new CustomerId(42L),
                                         List.of(
                                                 new OrderItem(
+                                                        new ProductVariantId(701L),
                                                         new ProductId(7L),
                                                         "ELEC-001",
                                                         "Headphones",
@@ -102,7 +105,12 @@ class OrderTest {
                         new CustomerId(42L),
                         List.of(
                                 new OrderItem(
-                                        new ProductId(7L), "ELEC-001", "Headphones", unitPrice, 2)),
+                                        new ProductVariantId(701L),
+                                        new ProductId(7L),
+                                        "ELEC-001",
+                                        "Headphones",
+                                        unitPrice,
+                                        2)),
                         shippingAddress(),
                         billingAddress(),
                         Instant.parse("2026-08-28T08:00:00Z"),
@@ -117,6 +125,7 @@ class OrderTest {
                 new ArrayList<>(
                         List.of(
                                 new OrderItem(
+                                        new ProductVariantId(701L),
                                         new ProductId(7L),
                                         "ELEC-001",
                                         "Headphones",
@@ -161,6 +170,7 @@ class OrderTest {
                 new CustomerId(42L),
                 List.of(
                         new OrderItem(
+                                new ProductVariantId(701L),
                                 new ProductId(7L),
                                 "ELEC-001",
                                 "Headphones",

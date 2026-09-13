@@ -10,18 +10,19 @@ Accepted
 
 ## Context
 
-Several bounded contexts collaborate using Account, Customer, and Product
-identifiers, and Catalog and Ordering need the same stable monetary meaning.
-Duplicating these value-object meanings in each context creates accidental
-differences and makes context contracts harder to understand.
+Several bounded contexts collaborate using Account, Customer, Product-family,
+and sellable Product Variant identifiers, and Catalog and Ordering need the same stable monetary
+meaning. Duplicating these value-object meanings in each context creates accidental differences and
+makes context contracts harder to understand.
 
 ## Decision
 
 The shared kernel contains only the stable `AccountId`, `CustomerId`,
-`ProductId`, and `Money` meanings. Contexts may use these immutable values in
-published contracts. Aggregates, commands, exceptions, repositories, and
-framework types remain owned by their contexts and are not part of the shared
-kernel.
+`ProductId`, `ProductVariantId`, `Money`, and `Currency` meanings. Contexts may
+use these immutable values in published contracts. Aggregates, commands,
+exceptions, repositories, framework types, and context-local identifiers such
+as `Sku`, `CategoryId`, `AddressId`, `CartId`, and `OrderId` remain owned by
+their contexts and are not part of the shared kernel.
 
 ## Consequences
 
@@ -33,6 +34,6 @@ in every consuming context.
 ## Alternatives Considered
 
 - Keep separate copies in every context: rejected because the identifier and
-  Money meanings are byte-identical and semantically shared.
+  Money meanings are semantically shared and duplicated invariants could drift.
 - Share aggregates or persistence models: rejected because it couples context
   internals and bypasses published contracts.

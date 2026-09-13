@@ -1,12 +1,18 @@
 package com.springbootecommerce.shophappens.ordering.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.springbootecommerce.shophappens.ordering.application.event.OrderPlacedIntegrationEvent;
+import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutItem;
 import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutReference;
+import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutReview;
+import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutReviewChangedException;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderCommand;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlacedOrder;
 import com.springbootecommerce.shophappens.ordering.application.port.out.CatalogPurchaseGateway;
@@ -28,6 +34,7 @@ import com.springbootecommerce.shophappens.ordering.domain.model.OrderItem;
 import com.springbootecommerce.shophappens.ordering.domain.model.OrderNumber;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
+import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -73,13 +80,13 @@ class CheckoutServiceTest {
 
     @Test
     void placesInRequiredOrderAndReturnsPersistedResult() {
-        var command = command(42L, CHECKOUT_ID, 11L, 12L);
+        var command = command(review(42L, "ELEC-001", "19.99", 2, PLACED_AT.plusSeconds(900)));
         when(orders.findByCheckout(new CustomerId(42L), new CheckoutId(CHECKOUT_ID)))
                 .thenReturn(Optional.empty());
         when(carts.load(new CustomerId(42L))).thenReturn(cartWith(7L, 2));
         when(addresses.shipping(new CustomerId(42L), 11L)).thenReturn(shippingAddress());
         when(addresses.billing(new CustomerId(42L), 12L)).thenReturn(billingAddress());
-        when(catalog.purchase(List.of(new RequestedProduct(new ProductId(7L), 2))))
+        when(catalog.purchase(List.of(new RequestedProduct(new ProductVariantId(701L), 2))))
                 .thenReturn(List.of(purchasedProduct(7L, 2, "19.99")));
         when(numbers.next()).thenReturn(new OrderNumber("ORD-20260828-ABC123DEF456"));
         when(orders.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -100,20 +107,104 @@ class CheckoutServiceTest {
         when(orders.findByCheckout(new CustomerId(42L), new CheckoutId(CHECKOUT_ID)))
                 .thenReturn(Optional.of(existingOrder()));
 
-        PlacedOrder result = service.place(command(42L, CHECKOUT_ID, 11L, 12L));
+        PlacedOrder result = service.place(command(null));
 
         assertThat(result.orderNumber()).isEqualTo("ORD-20260828-EXISTING0101");
         verifyNoInteractions(carts, catalog, addresses, numbers);
     }
 
-    private static PlaceOrderCommand command(
-            long customer, UUID checkout, long shipping, long billing) {
+    @Test
+    void rejectsMissingReviewBeforeLoadingTheCart() {
+        when(orders.findByCheckout(new CustomerId(42L), new CheckoutId(CHECKOUT_ID)))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.place(command(null)))
+                .isInstanceOf(CheckoutReviewChangedException.class);
+
+        verifyNoInteractions(carts, catalog, addresses, numbers, outbox);
+    }
+
+    @Test
+    void rejectsReviewOwnedByAnotherCustomer() {
+        when(orders.findByCheckout(new CustomerId(42L), new CheckoutId(CHECKOUT_ID)))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                        () ->
+                                service.place(
+                                        command(
+                                                review(
+                                                        99L,
+                                                        "ELEC-001",
+                                                        "19.99",
+                                                        2,
+                                                        PLACED_AT.plusSeconds(900)))))
+                .isInstanceOf(CheckoutReviewChangedException.class);
+
+        verifyNoInteractions(carts, catalog, addresses, numbers, outbox);
+    }
+
+    @Test
+    void rejectsReviewAtItsExpiryBoundary() {
+        when(orders.findByCheckout(new CustomerId(42L), new CheckoutId(CHECKOUT_ID)))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                        () ->
+                                service.place(
+                                        command(review(42L, "ELEC-001", "19.99", 2, PLACED_AT))))
+                .isInstanceOf(CheckoutReviewChangedException.class);
+
+        verifyNoInteractions(carts, catalog, addresses, numbers, outbox);
+    }
+
+    @Test
+    void rejectsChangedPurchasedFactsBeforeCreatingDurableEffects() {
+        when(orders.findByCheckout(new CustomerId(42L), new CheckoutId(CHECKOUT_ID)))
+                .thenReturn(Optional.empty());
+        when(carts.load(new CustomerId(42L))).thenReturn(cartWith(7L, 2));
+        when(addresses.shipping(new CustomerId(42L), 11L)).thenReturn(shippingAddress());
+        when(addresses.billing(new CustomerId(42L), 12L)).thenReturn(billingAddress());
+        when(catalog.purchase(List.of(new RequestedProduct(new ProductVariantId(701L), 2))))
+                .thenReturn(List.of(purchasedProduct(7L, 2, "20.00")));
+
+        assertReviewChanged(review(42L, "ELEC-001", "10.00", 2, PLACED_AT.plusSeconds(900)));
+        assertReviewChanged(review(42L, "OLD-SKU", "20.00", 2, PLACED_AT.plusSeconds(900)));
+        assertReviewChanged(review(42L, "ELEC-001", "20.00", 1, PLACED_AT.plusSeconds(900)));
+        verify(orders, never()).save(any(Order.class));
+        verify(outbox, never()).append(any(OrderPlacedIntegrationEvent.class));
+        verify(carts, never()).clear(new CustomerId(42L));
+        verifyNoInteractions(numbers);
+    }
+
+    private void assertReviewChanged(CheckoutReview review) {
+        assertThatThrownBy(() -> service.place(command(review)))
+                .isInstanceOf(CheckoutReviewChangedException.class);
+    }
+
+    private static PlaceOrderCommand command(CheckoutReview review) {
         return new PlaceOrderCommand(
-                new CustomerId(customer), new CheckoutReference(checkout), shipping, billing);
+                new CustomerId(42L), new CheckoutReference(CHECKOUT_ID), 11L, 12L, review);
+    }
+
+    private static CheckoutReview review(
+            long customer, String sku, String price, int quantity, Instant expiresAt) {
+        return new CheckoutReview(
+                new CustomerId(customer),
+                List.of(
+                        new CheckoutItem(
+                                new ProductVariantId(701L),
+                                new ProductId(7L),
+                                sku,
+                                "Headphones",
+                                new Money(new BigDecimal(price)),
+                                quantity)),
+                expiresAt);
     }
 
     private static CheckoutCart cartWith(long productId, int quantity) {
-        return new CheckoutCart(List.of(new RequestedProduct(new ProductId(productId), quantity)));
+        return new CheckoutCart(
+                List.of(new RequestedProduct(new ProductVariantId(productId * 100 + 1), quantity)));
     }
 
     private static OrderAddress shippingAddress() {
@@ -146,6 +237,7 @@ class CheckoutServiceTest {
 
     private static PurchasedProduct purchasedProduct(long productId, int quantity, String price) {
         return new PurchasedProduct(
+                new ProductVariantId(productId * 100 + 1),
                 new ProductId(productId),
                 "ELEC-001",
                 "Headphones",
@@ -161,6 +253,7 @@ class CheckoutServiceTest {
                 new CustomerId(42L),
                 List.of(
                         new OrderItem(
+                                new ProductVariantId(701L),
                                 new ProductId(7L),
                                 "ELEC-001",
                                 "Headphones",

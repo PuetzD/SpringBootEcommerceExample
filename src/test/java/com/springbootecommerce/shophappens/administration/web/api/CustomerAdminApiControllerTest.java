@@ -102,7 +102,7 @@ class CustomerAdminApiControllerTest {
                 .andExpect(jsonPath("$.addresses[0].id").value(31))
                 .andExpect(jsonPath("$.orders[0].orderNumber").value("ORD-1001"))
                 .andExpect(jsonPath("$.orders[0].orderId").value(orderId.toString()))
-                .andExpect(jsonPath("$.orders[0].orderUrl").value("/admin/orders/ORD-1001"));
+                .andExpect(jsonPath("$.orders[0].orderUrl").doesNotExist());
     }
 
     @Test

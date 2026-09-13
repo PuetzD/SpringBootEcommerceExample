@@ -1,16 +1,22 @@
 package com.springbootecommerce.shophappens.customer.adapter.out.persistence;
 
+import jakarta.persistence.LockModeType;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 interface SpringDataCustomerRepository extends JpaRepository<CustomerJpaEntity, Long> {
     @EntityGraph(attributePaths = "addresses")
     Optional<CustomerJpaEntity> findDetailedById(Long id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select c from CustomerJpaEntity c where c.id = :id")
+    Optional<CustomerJpaEntity> findRootForUpdate(@Param("id") Long id);
 
     @EntityGraph(attributePaths = "addresses")
     Optional<CustomerJpaEntity> findByAccountId(Long accountId);

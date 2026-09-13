@@ -5,7 +5,7 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: './',
+  base: '/admin/',
   server: {
     proxy: {
       '/api': 'http://localhost:8080',

@@ -42,9 +42,7 @@ class JpaIntegrationEventOutbox implements IntegrationEventOutbox {
         if (batchSize < 1) {
             throw new IllegalArgumentException("batchSize must be positive");
         }
-        return repository
-                .findByPublishedAtIsNullOrderByCreatedAtAsc(PageRequest.of(0, batchSize))
-                .stream()
+        return repository.findEligible(Instant.now(clock), PageRequest.of(0, batchSize)).stream()
                 .map(
                         event ->
                                 new PendingIntegrationEvent(
@@ -75,8 +73,22 @@ class JpaIntegrationEventOutbox implements IntegrationEventOutbox {
                 .findById(eventId)
                 .ifPresent(
                         event -> {
-                            event.setAttemptCount(event.getAttemptCount() + 1);
-                            event.setLastError(error);
+                            if (event.getPublishedAt() != null
+                                    || event.getQuarantinedAt() != null) {
+                                return;
+                            }
+                            Instant now = Instant.now(clock);
+                            int attempts = event.getAttemptCount() + 1;
+                            event.setAttemptCount(attempts);
+                            String diagnostic = error == null ? "Delivery failed" : error;
+                            event.setLastError(
+                                    diagnostic.substring(0, Math.min(200, diagnostic.length())));
+                            if (attempts >= 5) {
+                                event.setQuarantinedAt(now);
+                            } else {
+                                long delaySeconds = 1L << (attempts - 1);
+                                event.setNextAttemptAt(now.plusSeconds(delaySeconds));
+                            }
                             repository.save(event);
                         });
     }
