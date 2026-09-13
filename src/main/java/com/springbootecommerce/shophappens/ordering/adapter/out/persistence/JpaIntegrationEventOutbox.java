@@ -81,7 +81,8 @@ class JpaIntegrationEventOutbox implements IntegrationEventOutbox {
                             int attempts = event.getAttemptCount() + 1;
                             event.setAttemptCount(attempts);
                             String diagnostic = error == null ? "Delivery failed" : error;
-                            event.setLastError(diagnostic);
+                            event.setLastError(
+                                    diagnostic.substring(0, Math.min(200, diagnostic.length())));
                             if (attempts >= 5) {
                                 event.setQuarantinedAt(now);
                             } else {
