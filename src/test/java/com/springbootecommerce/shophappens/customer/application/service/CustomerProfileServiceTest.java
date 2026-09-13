@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.springbootecommerce.shophappens.customer.application.port.in.AddressReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.AddressSnapshot;
+import com.springbootecommerce.shophappens.customer.application.port.in.CustomerContactQuery.CustomerContact;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.ExternalAccountId;
 import com.springbootecommerce.shophappens.customer.application.port.in.ManageCustomerAddressesUseCase.SaveAddressCommand;
@@ -50,6 +51,15 @@ class CustomerProfileServiceTest {
 
         assertThat(service.create(new ExternalAccountId(42L), "Ada", "Lovelace", "ada@example.com"))
                 .isEqualTo(new CustomerReference(7L));
+    }
+
+    @Test
+    void returnsTheCustomerContactForAnExistingProfile() {
+        when(customers.findById(new CustomerId(7L)))
+                .thenReturn(Optional.of(restoredCustomerWithAddress(7L, 11L)));
+
+        assertThat(service.findContact(new CustomerReference(7L)))
+                .contains(new CustomerContact("Ada", "ada@example.com"));
     }
 
     @Test

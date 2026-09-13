@@ -90,10 +90,11 @@ It contains presentation concepts such as canonical URLs and SEO metadata, never
 
 ## External event delivery
 
-Ordering appends `ordering.order-placed.v2` to its PostgreSQL outbox in the checkout transaction.
+Ordering appends `ordering.order-placed.v1` to its PostgreSQL outbox in the checkout transaction.
 The optional publisher sends committed rows to Kafka later; Kafka is not part of checkout's success
-boundary. Previously stored `ordering.order-placed.v1` rows remain replayable, but new checkouts emit
-only v2. Delivery behavior and operator recovery are documented in the
+boundary. The order-confirmation consumer uses the event to send an asynchronous customer email
+through the shared mail adapter; email delivery is not part of checkout's success boundary.
+Delivery behavior and operator recovery are documented in the
 [outbox runbook](./docs/operations/outbox.md).
 
 ## Current and planned boundaries

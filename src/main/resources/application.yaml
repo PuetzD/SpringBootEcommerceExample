@@ -29,6 +29,9 @@ spring:
       properties:
         enable.idempotence: ${SPRING_KAFKA_PRODUCER_ENABLE_IDEMPOTENCE:true}
         acks: all
+  mail:
+    host: ${SPRING_MAIL_HOST:mailpit}
+    port: ${SPRING_MAIL_PORT:1025}
 server:
   port: 8080
 management:
@@ -48,3 +51,9 @@ ordering:
     kafka:
       enabled: ${ORDERING_EVENTS_KAFKA_ENABLED:false}
       poll-delay: ${ORDERING_EVENTS_KAFKA_POLL_DELAY:1000}
+notifications:
+  email:
+    enabled: ${NOTIFICATIONS_EMAIL_ENABLED:false}
+    from: ${NOTIFICATIONS_EMAIL_FROM:shop@example.com}
+    kafka:
+      group: ${NOTIFICATIONS_EMAIL_KAFKA_GROUP:order-confirmation-email}

@@ -48,6 +48,10 @@ _Avoid_: Price Breakdown, current catalog total, recomputed historical total
 An Order accepted after every Product Variant and Address passes Checkout and the purchase is recorded completely.
 _Avoid_: Confirmed Order, paid Order
 
+**Order Confirmation Recipient**:
+The Customer's name and Contact Email captured when an Order is placed, identifying where the order confirmation is intended to be sent. Later Customer Profile changes do not alter this recipient snapshot.
+_Avoid_: current Customer Email, Account Email
+
 **Money**:
 A non-negative EUR monetary amount with two-decimal precision. Ordering snapshots merchandise prices and totals and never recalculates a historical Order.
 _Avoid_: Decimal, implicit currency, recomputed total

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<body>
+<p>Hello <span th:text="${givenName}">customer</span>,</p>
+<p>Your order <strong th:text="${orderNumber}">ORD-1</strong> was placed on <span th:text="${placedAt}">2026-09-13T10:00:00Z</span>.</p>
+<table>
+    <thead>
+    <tr><th>Item</th><th>SKU</th><th>Quantity</th><th>Unit price</th><th>Line total</th></tr>
+    </thead>
+    <tbody>
+    <tr th:each="item : ${items}">
+        <td th:text="${item.productName}">Product</td>
+        <td th:text="${item.sku}">SKU</td>
+        <td th:text="${item.quantity}">1</td>
+        <td th:text="${item.unitPrice}">EUR 0.00</td>
+        <td th:text="${item.lineTotal}">EUR 0.00</td>
+    </tr>
+    </tbody>
+</table>
+<p>Total: <strong th:text="${total}">EUR 0.00</strong></p>
+<p>Shipping address:<br><span th:each="line, stat : ${shippingAddress}"><span th:text="${line}">Address</span><br th:if="${!stat.last}"></span></p>
+<p>Billing address:<br><span th:each="line, stat : ${billingAddress}"><span th:text="${line}">Address</span><br th:if="${!stat.last}"></span></p>
+<p>This email confirms that your order was placed.</p>
+</body>
+</html>

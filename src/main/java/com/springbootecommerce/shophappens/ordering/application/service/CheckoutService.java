@@ -13,6 +13,7 @@ import com.springbootecommerce.shophappens.ordering.application.port.out.Checkou
 import com.springbootecommerce.shophappens.ordering.application.port.out.CheckoutLock;
 import com.springbootecommerce.shophappens.ordering.application.port.out.CustomerAddressGateway;
 import com.springbootecommerce.shophappens.ordering.application.port.out.CustomerCartGateway;
+import com.springbootecommerce.shophappens.ordering.application.port.out.CustomerContactGateway;
 import com.springbootecommerce.shophappens.ordering.application.port.out.IntegrationEventOutbox;
 import com.springbootecommerce.shophappens.ordering.application.port.out.OrderNumberGenerator;
 import com.springbootecommerce.shophappens.ordering.application.port.out.OrderRepository;
@@ -40,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CheckoutService implements PlaceOrderUseCase {
     private final OrderRepository orders;
     private final CustomerAddressGateway addresses;
+    private final CustomerContactGateway contacts;
     private final CustomerCartGateway carts;
     private final CatalogPurchaseGateway catalog;
     private final OrderNumberGenerator numbers;
@@ -121,7 +123,10 @@ public class CheckoutService implements PlaceOrderUseCase {
                 Order.place(
                         OrderId.random(), number, ckid, cid, items, shipping, billing, placedAt);
         Order saved = orders.save(order);
-        outbox.append(OrderPlacedIntegrationEvent.from(saved));
+        var contact = contacts.contact(cid);
+        outbox.append(
+                OrderPlacedIntegrationEvent.from(
+                        saved, contact.givenName(), contact.contactEmail()));
         carts.clear(cid);
 
         return toPlacedOrder(saved);

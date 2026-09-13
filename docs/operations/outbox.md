@@ -9,6 +9,29 @@ matching version is sent in headers. A process-local
 in-flight guard prevents an asynchronous send from being selected again before its callback updates
 the outbox row.
 
+## Order confirmation email
+
+When Kafka publishing is enabled, the order-confirmation consumer reads
+`ordering.order-placed.v1` and sends the customer email through Spring Mail. The
+event contains the customer recipient snapshot and immutable order contents; the
+consumer does not query mutable Catalog or Customer Profile state.
+
+The `order_confirmation_delivery` table uses the event ID as its durable key.
+Transient mail failures are retried, and five failed attempts quarantine the
+delivery. Inspect delivery state without exposing message payloads:
+
+```sql
+SELECT event_id, order_number, status, attempt_count, last_error,
+       next_attempt_at, sent_at
+FROM order_confirmation_delivery
+WHERE status <> 'SENT'
+ORDER BY next_attempt_at, created_at;
+```
+
+Plain SMTP has a small crash window after the provider accepts a message but
+before the sent marker is committed; this workflow is at-least-once, not a
+distributed exactly-once guarantee.
+
 ## Inspect delivery state
 
 The non-quarantined count includes both due work and retries scheduled for the future:
