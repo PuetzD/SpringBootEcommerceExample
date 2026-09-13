@@ -29,6 +29,9 @@ spring:
       properties:
         enable.idempotence: ${SPRING_KAFKA_PRODUCER_ENABLE_IDEMPOTENCE:true}
         acks: all
+  mail:
+    host: ${SPRING_MAIL_HOST:mailpit}
+    port: ${SPRING_MAIL_PORT:1025}
 server:
   port: 8080
 management:

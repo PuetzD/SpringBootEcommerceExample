@@ -111,7 +111,10 @@ build composes the frontend and backend stages into the deployment image.
 
 The common local commands are also available through `make`. Run `make help` to
 see the targets. `make seed-demo` is destructive and replaces the local Compose
-database with the themed sample catalog.
+database with the themed sample catalog. When running Spring Boot on the host,
+the application must already be running when you execute `make seed-demo`, so
+Flyway has created the schema first. The `make up` target starts infrastructure
+services only; it does not start the application container.
 
 The simplest local setup on Windows, WSL, macOS, or Linux is:
 

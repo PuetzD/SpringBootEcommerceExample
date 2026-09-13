@@ -19,7 +19,7 @@ help:
 		'  admin-test  Run admin frontend tests'
 
 up:
-	docker compose up -d postgres redis kafka
+	docker compose up -d postgres redis kafka mailpit
 
 down:
 	docker compose down
