@@ -6,7 +6,6 @@ import com.springbootecommerce.shophappens.customer.application.port.in.AddressR
 import com.springbootecommerce.shophappens.customer.application.port.in.AddressSnapshot;
 import com.springbootecommerce.shophappens.customer.application.port.in.CreateCustomerProfileUseCase;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerContactQuery;
-import com.springbootecommerce.shophappens.customer.application.port.in.CustomerContactQuery.CustomerContact;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReferenceQuery;
 import com.springbootecommerce.shophappens.customer.application.port.in.ExternalAccountId;
