@@ -6,6 +6,7 @@ import com.springbootecommerce.shophappens.ordering.application.event.OrderPlace
 import com.springbootecommerce.shophappens.shared.email.EmailAddress;
 import com.springbootecommerce.shophappens.shared.email.EmailMessage;
 import com.springbootecommerce.shophappens.shared.email.EmailSender;
+import com.springbootecommerce.shophappens.shared.email.EmailTemplateRenderer;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
@@ -13,17 +14,15 @@ import java.util.Locale;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.context.Context;
-import org.thymeleaf.spring6.SpringTemplateEngine;
 
 @Service
 public class OrderConfirmationEmailService {
-    private final SpringTemplateEngine templates;
+    private final EmailTemplateRenderer templates;
     private final EmailSender sender;
     private final String from;
 
     public OrderConfirmationEmailService(
-            SpringTemplateEngine templates,
+            EmailTemplateRenderer templates,
             EmailSender sender,
             @Value("${notifications.email.from:shop@example.com}") String from) {
         this.templates = templates;
@@ -32,9 +31,9 @@ public class OrderConfirmationEmailService {
     }
 
     public void send(OrderPlacedIntegrationEvent event) {
-        var context = new Context(Locale.ROOT, variables(event));
-        String html = templates.process("email/order-confirmation-html", context);
-        String text = templates.process("email/order-confirmation-text", context);
+        var variables = variables(event);
+        String html = templates.render("email/order-confirmation-html", Locale.ROOT, variables);
+        String text = templates.render("email/order-confirmation-text", Locale.ROOT, variables);
         sender.send(
                 new EmailMessage(
                         from,

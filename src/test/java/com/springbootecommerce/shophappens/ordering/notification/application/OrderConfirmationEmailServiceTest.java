@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import com.springbootecommerce.shophappens.ordering.application.event.OrderPlacedIntegrationEvent;
 import com.springbootecommerce.shophappens.shared.email.EmailMessage;
 import com.springbootecommerce.shophappens.shared.email.EmailSender;
+import com.springbootecommerce.shophappens.shared.email.EmailTemplateRenderer;
 import com.springbootecommerce.shophappens.sharedkernel.money.Currency;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
@@ -61,7 +63,7 @@ class OrderConfirmationEmailServiceTest {
                         "Ada", null, "1 Main Street", null, "Berlin", null, "10115", "DE", null));
     }
 
-    private static SpringTemplateEngine templateEngine() {
+    private static EmailTemplateRenderer templateEngine() {
         var html = new ClassLoaderTemplateResolver();
         html.setPrefix("templates/");
         html.setSuffix(".html");
@@ -80,6 +82,7 @@ class OrderConfirmationEmailServiceTest {
 
         var engine = new SpringTemplateEngine();
         engine.setTemplateResolvers(java.util.Set.of(html, text));
-        return engine;
+        return (template, locale, variables) ->
+                engine.process(template, new Context(locale, variables));
     }
 }
