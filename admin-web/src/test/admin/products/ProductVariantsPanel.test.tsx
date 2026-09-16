@@ -48,6 +48,58 @@ function setup() {
 const stock = () =>
   screen.getByRole('spinbutton', {name: 'Stock for BLUE'}) as HTMLInputElement
 
+it('gives editable variant fields stable form metadata', () => {
+  setup()
+
+  expect(screen.getByRole('textbox', {name: 'SKU for BLUE'})).toMatchObject({
+    id: 'variant-12-sku',
+    name: 'variants[12].sku',
+  })
+  expect(screen.getByRole('spinbutton', {name: 'Price for BLUE'})).toMatchObject({
+    id: 'variant-12-price',
+    name: 'variants[12].price',
+  })
+  expect(screen.getByRole('spinbutton', {name: 'Stock for BLUE'})).toMatchObject({
+    id: 'variant-12-stockQuantity',
+    name: 'variants[12].stockQuantity',
+  })
+  expect(screen.getByRole('textbox', {name: 'Image URL for BLUE'})).toMatchObject({
+    id: 'variant-12-imageUrl',
+    name: 'variants[12].imageUrl',
+  })
+  expect(screen.getByRole('checkbox', {name: 'Active for BLUE'})).toMatchObject({
+    id: 'variant-12-active',
+    name: 'variants[12].active',
+  })
+})
+
+it('gives new variant fields stable form metadata', async () => {
+  render(
+    <AdminContext dataProvider={{getList: vi.fn().mockResolvedValue({data: [], total: 0})}}>
+      <RecordContextProvider value={family}>
+        <ProductVariantsPanel />
+      </RecordContextProvider>
+    </AdminContext>,
+  )
+
+  expect(await screen.findByRole('textbox', {name: 'SKU'})).toMatchObject({
+    id: 'new-variant-sku',
+    name: 'newVariant.sku',
+  })
+  expect(screen.getByRole('spinbutton', {name: 'Price'})).toMatchObject({
+    id: 'new-variant-price',
+    name: 'newVariant.price',
+  })
+  expect(screen.getByRole('spinbutton', {name: 'Stock'})).toMatchObject({
+    id: 'new-variant-stockQuantity',
+    name: 'newVariant.stockQuantity',
+  })
+  expect(screen.getByRole('textbox', {name: 'Image URL'})).toMatchObject({
+    id: 'new-variant-imageUrl',
+    name: 'newVariant.imageUrl',
+  })
+})
+
 it('locks variant creation until a pending request settles', async () => {
   let settle!: (value: {data: ProductVariant}) => void
   const create = vi.fn().mockReturnValue(

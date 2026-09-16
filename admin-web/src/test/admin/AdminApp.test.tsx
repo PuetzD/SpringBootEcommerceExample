@@ -3,6 +3,17 @@ import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { CsrfProvider } from '../../auth/CsrfProvider'
 import { ADMIN_BASENAME, adminRoutes } from '../../app/router'
 
+vi.mock('../../pages/DashboardPage', async () => {
+  const {useTheme} = await import('@mui/material/styles')
+
+  return {
+    DashboardPage: () => {
+      const theme = useTheme()
+      return <div data-testid="admin-theme-mode">{theme.palette.mode}</div>
+    },
+  }
+})
+
 const emptyPage = JSON.stringify({content: [], page: 0, size: 20, totalElements: 0, totalPages: 0})
 
 function mockAdminApi() {
@@ -38,6 +49,26 @@ describe('AdminApp', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals()
+  })
+
+  it('keeps Material UI in light mode when the operating system prefers dark mode', async () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn((query: string) => ({
+        matches: query === '(prefers-color-scheme: dark)',
+        media: query,
+        onchange: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    )
+
+    renderRoute('/admin')
+
+    expect((await screen.findByTestId('admin-theme-mode')).textContent).toBe('light')
   })
 
   it('renders registered product and category navigation entries', async () => {

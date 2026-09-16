@@ -21,7 +21,14 @@ function AdminLayout({ children }: LayoutProps) {
 
 export function AdminApp() {
   return (
-    <Admin dashboard={DashboardPage} dataProvider={dataProvider} disableTelemetry layout={AdminLayout}>
+    <Admin
+      dashboard={DashboardPage}
+      darkTheme={null}
+      dataProvider={dataProvider}
+      defaultTheme="light"
+      disableTelemetry
+      layout={AdminLayout}
+    >
       <Resource name="products" list={ProductList} create={ProductCreate} edit={ProductEdit} />
       <Resource name="categories" list={CategoryList} create={CategoryCreate} edit={CategoryEdit} />
       <Resource name="orders" list={OrderList} show={OrderShow} />
