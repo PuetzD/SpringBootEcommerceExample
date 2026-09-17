@@ -8,6 +8,8 @@ TRUNCATE TABLE integration_outbox, customer_order, catalog_attribute_definition,
              address, customer, account, product_category, product, category
     RESTART IDENTITY CASCADE;
 
+ALTER SEQUENCE order_number_sequence RESTART WITH 100001;
+
 INSERT INTO account (id, email, password_hash, role)
 VALUES (1, 'customer@shop-happens.com', '{noop}123', 'CUSTOMER'),
        (2, 'admin@shop-happens.com', '{noop}123', 'ADMIN');
