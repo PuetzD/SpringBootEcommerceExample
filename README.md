@@ -162,9 +162,14 @@ To run the containerized application with verbose development diagnostics:
 SPRING_PROFILES_ACTIVE=dev docker compose up --build
 ```
 
-By default the application logs quietly and hides SQL bindings. To opt into
-verbose local diagnostics (Spring Security trace and Hibernate SQL/binding
-logging), activate the `dev` profile:
+Host runs write application logs to `logs/ecommerce.log` by default; override that
+path with `LOGGING_FILE_NAME`. Maven lifecycle output remains in the terminal because
+it does not pass through Spring's logging system. Tests disable file logging, and
+containers log to stdout/stderr; inspect container records with `make logs` or
+`docker compose logs -f app`.
+
+By default the application hides verbose SQL and security diagnostics. To include
+those diagnostics in the logfile, activate the `dev` profile:
 
 ```bash
 SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run

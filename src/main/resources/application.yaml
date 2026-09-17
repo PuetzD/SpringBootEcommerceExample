@@ -34,7 +34,7 @@ spring:
     port: ${SPRING_MAIL_PORT:1025}
 logging:
   file:
-    name: logs/ecommerce.log
+    name: ${LOGGING_FILE_NAME:logs/ecommerce.log}
   logback:
     rollingpolicy:
       max-file-size: 10MB

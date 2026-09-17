@@ -86,10 +86,14 @@ services:
       SPRING_MAIL_HOST: mailpit
       SPRING_MAIL_PORT: 1025
       NOTIFICATIONS_EMAIL_ENABLED: "true"
+      LOGGING_FILE_NAME: ""
     ports:
       - "8080:8080"
-    volumes:
-      - ./logs:/app/logs
+    logging:
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   postgres_data:
