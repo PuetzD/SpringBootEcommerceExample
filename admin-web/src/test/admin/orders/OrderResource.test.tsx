@@ -13,9 +13,9 @@ describe('Order resource', () => {
           getList: vi.fn().mockResolvedValue({
             data: [
               {
-                id: 'ORD-20260905-ORDERADMIN1',
+                id: 'ORD-2026-100001',
                 orderId: '00000000-0000-0000-0000-000000000009',
-                orderNumber: 'ORD-20260905-ORDERADMIN1',
+                orderNumber: 'ORD-2026-100001',
                 customerId: 7,
                 total: 19.99,
                 placedAt: '2026-09-05T09:00:00Z',
@@ -33,7 +33,7 @@ describe('Order resource', () => {
       </AdminContext>,
     )
 
-    expect(await screen.findByText('ORD-20260905-ORDERADMIN1')).toBeTruthy()
+    expect(await screen.findByText('ORD-2026-100001')).toBeTruthy()
     expect(within(screen.getByRole('table')).queryByRole('button', {name: 'ra.sort.sort_by'})).toBeNull()
     expect(screen.getByText(/19\.99/)).toBeTruthy()
     expect(screen.queryByRole('button', {name: /edit|delete|create/i})).toBeNull()

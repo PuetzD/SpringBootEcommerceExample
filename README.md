@@ -231,12 +231,20 @@ Format Java sources with:
 The database schema is managed by Flyway migrations in `db/migration` and
 checked against the JPA entities at startup via `ddl-auto: validate`:
 
-- `V1__create_account_schema.sql` — accounts
+- `V1__create_account_schema.sql` — accounts and Customer Profile creation time
 - `V2__create_catalog_schema.sql` — categories, product families, and sellable variants
 - `V3__create_cart_schema.sql` — customer carts
-- `V4__create_ordering_schema.sql` — orders, checkout idempotency, and order query indexes
+- `V4__create_ordering_schema.sql` — orders, checkout idempotency, the global Order Number sequence,
+  and order query indexes
 - `V5__create_integration_outbox.sql` — transactional integration events
 - `V6__create_catalog_attribute_schema.sql` — attribute definitions, values, and assignments
+- `V7__create_order_confirmation_delivery.sql` — idempotent order-confirmation delivery records
+
+The V1 and V4 baselines are pre-release and intentionally edited. Recreate local databases that
+already ran either migration before running this version; do not apply edited baselines in a shared
+environment. Order Numbers use the readable `ORD-YYYY-NNNNNN` form backed by the global sequence.
+Sequence gaps are normal, including after rolled-back transactions, and do not indicate missing
+Orders.
 
 The optional seed is maintained in `scripts/demo-data.sql`, outside Flyway's
 migration locations. Use the Compose import command above instead of copying it

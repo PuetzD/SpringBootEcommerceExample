@@ -21,7 +21,7 @@ The immutable record of a purchase accepted at Checkout. It belongs to one Custo
 _Avoid_: Cart, transaction, invoice
 
 **Order Number**:
-The stable, customer-visible business identifier for an Order.
+The stable, customer-visible, readable, sequence-backed business identifier for an Order.
 _Avoid_: Database ID, checkout token
 
 **Order Item**:

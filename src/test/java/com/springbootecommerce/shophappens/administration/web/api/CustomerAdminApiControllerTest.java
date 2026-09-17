@@ -128,7 +128,7 @@ class CustomerAdminApiControllerTest {
                         List.of(
                                 new OrderAdminSummary(
                                         new OrderReference(orderId),
-                                        "ORD-1001",
+                                        "ORD-2026-100001",
                                         new CustomerId(customerId),
                                         new Money(new BigDecimal("19.99")),
                                         Instant.parse("2026-09-05T09:00:00Z"))));
@@ -141,7 +141,7 @@ class CustomerAdminApiControllerTest {
                 .andExpect(jsonPath("$.accountId").value(11))
                 .andExpect(jsonPath("$.createdAt").value("2026-09-17T12:00:00Z"))
                 .andExpect(jsonPath("$.addresses[0].id").value(31))
-                .andExpect(jsonPath("$.orders[0].orderNumber").value("ORD-1001"))
+                .andExpect(jsonPath("$.orders[0].orderNumber").value("ORD-2026-100001"))
                 .andExpect(jsonPath("$.orders[0].orderId").value(orderId.toString()))
                 .andExpect(jsonPath("$.orders[0].orderUrl").doesNotExist());
     }

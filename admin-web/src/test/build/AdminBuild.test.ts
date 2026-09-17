@@ -29,7 +29,7 @@ describe('admin production build', () => {
   it.each([
     '/admin',
     '/admin/products/42',
-    '/admin/orders/ORD-20260905-ORDERADMIN1/show',
+    '/admin/orders/ORD-2026-100001/show',
   ])('resolves built assets under /admin/assets/ from %s', (documentPath) => {
     expect(assetReferences.length).toBeGreaterThan(0)
 

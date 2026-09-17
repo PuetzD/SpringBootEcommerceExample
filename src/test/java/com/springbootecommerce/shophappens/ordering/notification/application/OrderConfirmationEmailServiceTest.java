@@ -36,9 +36,9 @@ class OrderConfirmationEmailServiceTest {
         ArgumentCaptor<EmailMessage> message = ArgumentCaptor.forClass(EmailMessage.class);
         verify(sender).send(message.capture());
         assertThat(message.getValue().to().value()).isEqualTo("ada@example.com");
-        assertThat(message.getValue().subject()).isEqualTo("Order ORD-1 placed");
+        assertThat(message.getValue().subject()).isEqualTo("Order ORD-2026-100001 placed");
         assertThat(message.getValue().textBody())
-                .contains("Hello Ada", "ORD-1", "SHIRT-L", "EUR 39.98", "1 Main Street")
+                .contains("Hello Ada", "ORD-2026-100001", "SHIRT-L", "EUR 39.98", "1 Main Street")
                 .doesNotContain("paid", "shipped", "payment confirmed");
         assertThat(message.getValue().htmlBody()).contains("Headphones", "EUR 39.98");
     }
@@ -47,7 +47,7 @@ class OrderConfirmationEmailServiceTest {
         return new OrderPlacedIntegrationEvent(
                 UUID.randomUUID(),
                 UUID.randomUUID(),
-                "ORD-1",
+                "ORD-2026-100001",
                 42L,
                 "Ada",
                 "ada@example.com",

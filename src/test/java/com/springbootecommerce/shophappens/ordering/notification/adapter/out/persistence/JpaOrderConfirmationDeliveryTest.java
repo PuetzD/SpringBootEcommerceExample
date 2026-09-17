@@ -26,18 +26,18 @@ class JpaOrderConfirmationDeliveryTest {
     void claimsAnEventOnlyOnce() {
         var delivery =
                 new JpaOrderConfirmationDelivery(repository, Clock.fixed(NOW, ZoneOffset.UTC));
-        var entity = OrderConfirmationDeliveryJpaEntity.create(EVENT_ID, "ORD-1", NOW);
+        var entity = OrderConfirmationDeliveryJpaEntity.create(EVENT_ID, "ORD-2026-100001", NOW);
         when(repository.findById(EVENT_ID)).thenReturn(Optional.empty(), Optional.of(entity));
 
-        assertThat(delivery.claim(EVENT_ID, "ORD-1")).isTrue();
-        assertThat(delivery.claim(EVENT_ID, "ORD-1")).isFalse();
+        assertThat(delivery.claim(EVENT_ID, "ORD-2026-100001")).isTrue();
+        assertThat(delivery.claim(EVENT_ID, "ORD-2026-100001")).isFalse();
 
         verify(repository).save(any(OrderConfirmationDeliveryJpaEntity.class));
     }
 
     @Test
     void recordsSentStateAndBoundedFailureDiagnostics() {
-        var entity = OrderConfirmationDeliveryJpaEntity.create(EVENT_ID, "ORD-1", NOW);
+        var entity = OrderConfirmationDeliveryJpaEntity.create(EVENT_ID, "ORD-2026-100001", NOW);
         when(repository.findById(EVENT_ID)).thenReturn(Optional.of(entity));
         var delivery =
                 new JpaOrderConfirmationDelivery(repository, Clock.fixed(NOW, ZoneOffset.UTC));
@@ -55,12 +55,12 @@ class JpaOrderConfirmationDeliveryTest {
 
     @Test
     void doesNotReclaimQuarantinedEvent() {
-        var entity = OrderConfirmationDeliveryJpaEntity.create(EVENT_ID, "ORD-1", NOW);
+        var entity = OrderConfirmationDeliveryJpaEntity.create(EVENT_ID, "ORD-2026-100001", NOW);
         entity.setStatus("QUARANTINED");
         when(repository.findById(EVENT_ID)).thenReturn(Optional.of(entity));
         var delivery =
                 new JpaOrderConfirmationDelivery(repository, Clock.fixed(NOW, ZoneOffset.UTC));
 
-        assertThat(delivery.claim(EVENT_ID, "ORD-1")).isFalse();
+        assertThat(delivery.claim(EVENT_ID, "ORD-2026-100001")).isFalse();
     }
 }

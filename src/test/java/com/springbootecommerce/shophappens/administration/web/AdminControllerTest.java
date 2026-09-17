@@ -37,7 +37,7 @@ class AdminControllerTest {
                 "/admin/categories/create",
                 "/admin/categories/7",
                 "/admin/orders",
-                "/admin/orders/ORD-20260905-ORDERADMIN1/show",
+                "/admin/orders/ORD-2026-100001/show",
                 "/admin/customers",
                 "/admin/customers/12/show",
                 "/admin/storefront"

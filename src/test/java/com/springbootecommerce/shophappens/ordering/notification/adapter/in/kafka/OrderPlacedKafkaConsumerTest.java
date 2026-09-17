@@ -99,7 +99,7 @@ class OrderPlacedKafkaConsumerTest {
         return new OrderPlacedIntegrationEvent(
                 UUID.fromString("11111111-1111-1111-1111-111111111111"),
                 UUID.randomUUID(),
-                "ORD-1",
+                "ORD-2026-100001",
                 42L,
                 "Ada",
                 "ada@example.com",

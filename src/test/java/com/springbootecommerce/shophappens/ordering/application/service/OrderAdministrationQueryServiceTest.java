@@ -34,7 +34,7 @@ class OrderAdministrationQueryServiceTest {
         var summary =
                 new OrderAdminSummary(
                         new OrderReference(java.util.UUID.randomUUID()),
-                        "ORD-2026-ABC",
+                        "ORD-2026-100001",
                         new CustomerId(7),
                         new Money(new BigDecimal("19.99")),
                         Instant.parse("2026-09-05T09:00:00Z"));
@@ -56,7 +56,7 @@ class OrderAdministrationQueryServiceTest {
 
     @Test
     void findOrderReturnsTheRepositoryDetail() {
-        var orderNumber = "ORD-2026-ABC";
+        var orderNumber = "ORD-2026-100001";
         var expectedDetail =
                 new OrderAdminDetail(
                         new OrderReference(java.util.UUID.randomUUID()),
@@ -82,7 +82,7 @@ class OrderAdministrationQueryServiceTest {
                 List.of(
                         new OrderAdminSummary(
                                 new OrderReference(java.util.UUID.randomUUID()),
-                                "ORD-2026-CUSTOMER1",
+                                "ORD-2026-100002",
                                 customer,
                                 new Money(new BigDecimal("68.48")),
                                 Instant.parse("2026-09-05T09:00:00Z")));

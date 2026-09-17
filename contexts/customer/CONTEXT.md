@@ -8,6 +8,11 @@ Customer Profile holds the shopping identity and reusable contact destinations b
 The shopping identity associated with one Customer-role Account. A Customer owns its given name, family name, contact Email, and saved Addresses but does not contain authentication credentials.
 _Avoid_: Account, buyer, shopper, user
 
+**Customer Created At**:
+The immutable instant at which the Customer Profile was created. Administration uses it to count
+new Customers within a reporting period.
+_Avoid_: Account registration date, first Order date
+
 **Given Name**:
 The Customer's personal first name used for identification and customer-facing communication.
 _Avoid_: First name field on Account

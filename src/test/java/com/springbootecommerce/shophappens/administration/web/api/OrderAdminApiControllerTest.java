@@ -40,8 +40,8 @@ class OrderAdminApiControllerTest {
 
     @Test
     void adminCanListOrdersByOrderNumber() throws Exception {
-        var summary = summary("ORD-20260905-ORDERADMIN1");
-        when(orderAdministrationQuery.searchOrders(new OrderAdminSearch(0, 20, "ORDERADMIN")))
+        var summary = summary("ORD-2026-100001");
+        when(orderAdministrationQuery.searchOrders(new OrderAdminSearch(0, 20, "100001")))
                 .thenReturn(
                         new OrderAdminPage(
                                 List.of(summary),
@@ -53,7 +53,7 @@ class OrderAdminApiControllerTest {
 
         mockMvc.perform(
                         get("/api/admin/orders")
-                                .param("q", "ORDERADMIN")
+                                .param("q", "100001")
                                 .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").value(summary.orderNumber()))
@@ -108,7 +108,7 @@ class OrderAdminApiControllerTest {
 
     @Test
     void adminCanViewOrderDetails() throws Exception {
-        var orderNumber = "ORD-20260905-ORDERDETAIL";
+        var orderNumber = "ORD-2026-100002";
         when(orderAdministrationQuery.findOrder(orderNumber))
                 .thenReturn(Optional.of(detail(orderNumber)));
 
@@ -143,12 +143,9 @@ class OrderAdminApiControllerTest {
 
     @Test
     void missingOrderReturnsOrderingNotFoundError() throws Exception {
-        when(orderAdministrationQuery.findOrder("ORD-20260905-MISSING1"))
-                .thenReturn(Optional.empty());
+        when(orderAdministrationQuery.findOrder("ORD-2026-100003")).thenReturn(Optional.empty());
 
-        mockMvc.perform(
-                        get("/api/admin/orders/ORD-20260905-MISSING1")
-                                .with(user("admin").roles("ADMIN")))
+        mockMvc.perform(get("/api/admin/orders/ORD-2026-100003").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("ordering.order.not-found"));
     }
