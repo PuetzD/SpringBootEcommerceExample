@@ -1,6 +1,15 @@
 import {HttpError} from 'react-admin'
 import {ApiError} from '../../api/client'
-import type {Category, CategoryOption, Customer, Order, PageResponse, Product, ProductVariant} from '../../api/types'
+import type {
+  Category,
+  CategoryOption,
+  Customer,
+  Order,
+  OrderListMeta,
+  PageResponse,
+  Product,
+  ProductVariant,
+} from '../../api/types'
 
 const {get, post, put, patch, remove} = vi.hoisted(() => ({
   get: vi.fn(),
@@ -54,9 +63,9 @@ const normalizedProduct = {
 }
 
 const order: Order = {
-  id: 'ORD-20260905-ORDERADMIN1',
+  id: 'ORD-2026-100001',
   orderId: '00000000-0000-0000-0000-000000000009',
-  orderNumber: 'ORD-20260905-ORDERADMIN1',
+  orderNumber: 'ORD-2026-100001',
   customerId: 7,
   total: 19.99,
   placedAt: '2026-09-05T09:00:00Z',
@@ -70,6 +79,7 @@ const customer: Customer = {
   familyName: 'Example',
   contactEmail: 'alice@example.com',
   accountId: null,
+  createdAt: '2026-09-10T09:00:00Z',
   addresses: [],
   orders: [],
 }
@@ -122,19 +132,41 @@ describe('dataProvider', () => {
     })
   })
 
-  it('loads paged orders by order number', async () => {
-    get.mockResolvedValue({content: [order], totalElements: 1})
+  it('preserves order page metadata and forwards normalized reporting bounds', async () => {
+    const response: PageResponse<Order, OrderListMeta> = {
+      content: [order],
+      page: 0,
+      size: 5,
+      totalElements: 3,
+      totalPages: 1,
+      meta: {revenue: 159.97, currency: 'EUR'},
+    }
+    get.mockResolvedValue(response)
 
     await expect(
       dataProvider.getList('orders', {
-        pagination: {page: 2, perPage: 10},
+        pagination: {page: 2, perPage: 5},
         sort: {field: 'placedAt', order: 'DESC'},
-        filter: {q: ' ORD-2026 '},
+        filter: {
+          q: ' ORD-2026 ',
+          from: ' 2026-08-18T12:00:00Z ',
+          to: ' 2026-09-17T12:00:00Z ',
+        },
       }),
-    ).resolves.toEqual({data: [order], total: 1})
+    ).resolves.toEqual({
+      data: [order],
+      total: 3,
+      meta: {revenue: 159.97, currency: 'EUR'},
+    })
 
     expect(get).toHaveBeenCalledWith('/api/admin/orders', {
-      params: {page: 1, size: 10, q: 'ORD-2026'},
+      params: {
+        page: 1,
+        size: 5,
+        q: 'ORD-2026',
+        from: '2026-08-18T12:00:00Z',
+        to: '2026-09-17T12:00:00Z',
+      },
     })
   })
 
@@ -148,19 +180,29 @@ describe('dataProvider', () => {
     expect(get).toHaveBeenCalledWith(`/api/admin/orders/${order.orderNumber}`)
   })
 
-  it('loads paged customers with a one-based page and trimmed search query', async () => {
+  it('forwards normalized reporting bounds when loading customers', async () => {
     get.mockResolvedValue({content: [customer], totalElements: 1})
 
     await expect(
       dataProvider.getList('customers', {
         pagination: {page: 2, perPage: 10},
         sort: {field: 'familyName', order: 'ASC'},
-        filter: {q: ' Alice '},
+        filter: {
+          q: ' Alice ',
+          from: ' 2026-08-18T12:00:00Z ',
+          to: ' 2026-09-17T12:00:00Z ',
+        },
       }),
     ).resolves.toEqual({data: [customer], total: 1})
 
     expect(get).toHaveBeenCalledWith('/api/admin/customers', {
-      params: {page: 1, size: 10, q: 'Alice'},
+      params: {
+        page: 1,
+        size: 10,
+        q: 'Alice',
+        from: '2026-08-18T12:00:00Z',
+        to: '2026-09-17T12:00:00Z',
+      },
     })
   })
 
