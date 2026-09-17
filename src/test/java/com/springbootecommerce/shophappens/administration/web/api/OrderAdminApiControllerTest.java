@@ -64,6 +64,49 @@ class OrderAdminApiControllerTest {
     }
 
     @Test
+    void adminCanListOrdersInAnInclusiveExclusivePeriodWithRevenueMetadata() throws Exception {
+        Instant from = Instant.parse("2026-08-18T12:00:00Z");
+        Instant to = Instant.parse("2026-09-17T12:00:00Z");
+        var summary = summary("ORD-2026-100001");
+        when(orderAdministrationQuery.searchOrders(new OrderAdminSearch(0, 20, null, from, to)))
+                .thenReturn(
+                        new OrderAdminPage(
+                                List.of(summary),
+                                0,
+                                20,
+                                2,
+                                1,
+                                new OrderAdminMetrics(new Money(new BigDecimal("136.96")))));
+
+        mockMvc.perform(
+                        get("/api/admin/orders")
+                                .param("from", from.toString())
+                                .param("to", to.toString())
+                                .with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(summary.orderNumber()))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(20))
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.meta.revenue").value(136.96))
+                .andExpect(jsonPath("$.meta.currency").value("EUR"));
+    }
+
+    @Test
+    void rejectsAnEmptyOrderPeriodBeforeQueryingOrders() throws Exception {
+        Instant boundary = Instant.parse("2026-09-17T12:00:00Z");
+
+        mockMvc.perform(
+                        get("/api/admin/orders")
+                                .param("from", boundary.toString())
+                                .param("to", boundary.toString())
+                                .with(user("admin").roles("ADMIN")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("catalog.invalid"));
+    }
+
+    @Test
     void adminCanViewOrderDetails() throws Exception {
         var orderNumber = "ORD-20260905-ORDERDETAIL";
         when(orderAdministrationQuery.findOrder(orderNumber))

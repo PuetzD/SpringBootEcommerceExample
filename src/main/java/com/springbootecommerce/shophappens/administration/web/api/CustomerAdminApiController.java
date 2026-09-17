@@ -13,8 +13,10 @@ import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
+import java.time.Instant;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,9 +34,14 @@ public class CustomerAdminApiController {
     public PageResponse<CustomerResponse> list(
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
-            @RequestParam(required = false) String q) {
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Instant from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Instant to) {
         var result =
-                customerAdministrationQuery.searchCustomers(new CustomerAdminSearch(page, size, q));
+                customerAdministrationQuery.searchCustomers(
+                        new CustomerAdminSearch(page, size, q, from, to));
         return new PageResponse<>(
                 result.content().stream().map(this::toListResponse).toList(),
                 result.page(),
@@ -63,6 +70,7 @@ public class CustomerAdminApiController {
                 customer.givenName(),
                 customer.familyName(),
                 customer.contactEmail(),
+                customer.createdAt(),
                 null,
                 List.of(),
                 List.of());
@@ -75,6 +83,7 @@ public class CustomerAdminApiController {
                 customer.givenName(),
                 customer.familyName(),
                 customer.contactEmail(),
+                customer.createdAt(),
                 customer.accountId().value(),
                 customer.addresses().stream().map(this::toAddressResponse).toList(),
                 orders.stream().map(this::toOrderResponse).toList());
