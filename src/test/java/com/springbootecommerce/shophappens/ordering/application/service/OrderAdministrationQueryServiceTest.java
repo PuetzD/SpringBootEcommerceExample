@@ -5,6 +5,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminDetail;
+import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminMetrics;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminPage;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminSearch;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminSummary;
@@ -37,7 +38,14 @@ class OrderAdministrationQueryServiceTest {
                         new CustomerId(7),
                         new Money(new BigDecimal("19.99")),
                         Instant.parse("2026-09-05T09:00:00Z"));
-        var expected = new OrderAdminPage(java.util.List.of(summary), 0, 20, 1, 1);
+        var expected =
+                new OrderAdminPage(
+                        java.util.List.of(summary),
+                        0,
+                        20,
+                        1,
+                        1,
+                        new OrderAdminMetrics(Money.zero()));
         when(orderRepository.searchForAdministration(search)).thenReturn(expected);
 
         var service = new OrderAdministrationQueryService(orderRepository);

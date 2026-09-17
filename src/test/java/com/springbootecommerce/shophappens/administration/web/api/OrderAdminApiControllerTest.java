@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminDetail;
+import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminMetrics;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminPage;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminSearch;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminSummary;
@@ -41,7 +42,14 @@ class OrderAdminApiControllerTest {
     void adminCanListOrdersByOrderNumber() throws Exception {
         var summary = summary("ORD-20260905-ORDERADMIN1");
         when(orderAdministrationQuery.searchOrders(new OrderAdminSearch(0, 20, "ORDERADMIN")))
-                .thenReturn(new OrderAdminPage(List.of(summary), 0, 20, 1, 1));
+                .thenReturn(
+                        new OrderAdminPage(
+                                List.of(summary),
+                                0,
+                                20,
+                                1,
+                                1,
+                                new OrderAdminMetrics(Money.zero())));
 
         mockMvc.perform(
                         get("/api/admin/orders")

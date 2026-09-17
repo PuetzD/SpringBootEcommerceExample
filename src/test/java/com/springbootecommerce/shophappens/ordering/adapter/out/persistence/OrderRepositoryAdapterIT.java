@@ -111,6 +111,32 @@ class OrderRepositoryAdapterIT extends AbstractIntegrationTest {
     }
 
     @Test
+    void searchesAdministrationOrdersWithinThePlacedRangeAndAggregatesAllMatchingRevenue() {
+        Instant from = Instant.parse("2026-09-01T00:00:00Z");
+        Instant before = Instant.parse("2026-10-01T00:00:00Z");
+        Order atFrom =
+                sampleOrder("ORD-2026-100010", CUSTOMER, new CheckoutId(UUID.randomUUID()), from);
+        Order inside =
+                sampleOrder(
+                        "ORD-2026-100011",
+                        CUSTOMER,
+                        new CheckoutId(UUID.randomUUID()),
+                        Instant.parse("2026-09-30T23:59:59Z"));
+        Order atExclusiveUpperBoundary =
+                sampleOrder("ORD-2026-100012", CUSTOMER, new CheckoutId(UUID.randomUUID()), before);
+        repository.save(atFrom);
+        repository.save(inside);
+        repository.save(atExclusiveUpperBoundary);
+
+        var result =
+                repository.searchForAdministration(new OrderAdminSearch(0, 1, null, from, before));
+
+        assertThat(result.totalElements()).isEqualTo(2);
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.metrics().revenue()).isEqualTo(new Money(new BigDecimal("136.96")));
+    }
+
+    @Test
     void findsAdministrationOrderByOrderNumberWithDetails() {
         Order original =
                 sampleOrder(

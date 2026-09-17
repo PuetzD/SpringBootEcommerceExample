@@ -1,5 +1,6 @@
 package com.springbootecommerce.shophappens.ordering.adapter.out.persistence;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,9 +23,28 @@ interface SpringDataOrderRepository extends JpaRepository<OrderJpaEntity, UUID> 
             select o from OrderJpaEntity o
             where (:query is null or :query = ''
                    or lower(o.orderNumber) like lower(concat('%', :query, '%')))
+              and (cast(:placedFrom as timestamp) is null or o.placedAt >= :placedFrom)
+              and (cast(:placedBefore as timestamp) is null or o.placedAt < :placedBefore)
             order by o.placedAt desc, o.id desc
             """)
-    Page<OrderJpaEntity> searchForAdministration(@Param("query") String query, Pageable pageable);
+    Page<OrderJpaEntity> searchForAdministration(
+            @Param("query") String query,
+            @Param("placedFrom") Instant placedFrom,
+            @Param("placedBefore") Instant placedBefore,
+            Pageable pageable);
+
+    @Query(
+            """
+            select coalesce(sum(o.total), 0) as revenue from OrderJpaEntity o
+            where (:query is null or :query = ''
+                   or lower(o.orderNumber) like lower(concat('%', :query, '%')))
+              and (cast(:placedFrom as timestamp) is null or o.placedAt >= :placedFrom)
+              and (cast(:placedBefore as timestamp) is null or o.placedAt < :placedBefore)
+            """)
+    OrderMetricsProjection summarizeForAdministration(
+            @Param("query") String query,
+            @Param("placedFrom") Instant placedFrom,
+            @Param("placedBefore") Instant placedBefore);
 
     Optional<OrderJpaEntity> findByOrderNumber(String orderNumber);
 }

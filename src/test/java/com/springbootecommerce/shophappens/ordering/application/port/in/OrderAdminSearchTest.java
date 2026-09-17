@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 
 public class OrderAdminSearchTest {
@@ -62,5 +63,24 @@ public class OrderAdminSearchTest {
         assertEquals(1, search.page());
         assertEquals(20, search.size());
         assertEquals("valid query", search.query());
+    }
+
+    @Test
+    void rejectsAnEmptyOrReversedPlacedRange() {
+        Instant boundary = Instant.parse("2026-09-17T12:00:00Z");
+
+        var emptyRange =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> new OrderAdminSearch(0, 20, null, boundary, boundary));
+        var reversedRange =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () ->
+                                new OrderAdminSearch(
+                                        0, 20, null, boundary, boundary.minusSeconds(1)));
+
+        assertEquals("Placed range start must be before end", emptyRange.getMessage());
+        assertEquals("Placed range start must be before end", reversedRange.getMessage());
     }
 }

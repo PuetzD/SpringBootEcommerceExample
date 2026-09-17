@@ -56,3 +56,6 @@ CREATE INDEX ix_customer_order_customer_number
 
 CREATE INDEX ix_customer_order_history
     ON customer_order (customer_id, placed_at DESC, id DESC);
+
+CREATE INDEX ix_customer_order_placed_at
+    ON customer_order (placed_at DESC, id DESC);
