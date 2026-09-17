@@ -47,7 +47,12 @@ class CustomerAdminApiControllerTest {
     @Test
     void adminCanSearchCustomersAndUsesCustomerIdAsResponseId() throws Exception {
         var summary =
-                new CustomerAdminSummary(new CustomerId(7), "Alice", "Admin", "alice@example.com");
+                new CustomerAdminSummary(
+                        new CustomerId(7),
+                        "Alice",
+                        "Admin",
+                        "alice@example.com",
+                        Instant.parse("2026-09-17T12:00:00Z"));
         when(customerAdministrationQuery.searchCustomers(new CustomerAdminSearch(0, 20, "alice")))
                 .thenReturn(new CustomerAdminPage(List.of(summary), 0, 20, 1, 1));
 
@@ -170,6 +175,7 @@ class CustomerAdminApiControllerTest {
                 "Alice",
                 "Admin",
                 "alice@example.com",
+                Instant.parse("2026-09-17T12:00:00Z"),
                 List.of(
                         new CustomerAdminAddressView(
                                 new AddressReference(31),

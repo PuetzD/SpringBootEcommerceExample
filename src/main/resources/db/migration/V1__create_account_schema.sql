@@ -23,6 +23,7 @@ CREATE TABLE customer
     given_name VARCHAR(100) NOT NULL,
     family_name VARCHAR(100) NOT NULL,
     contact_email VARCHAR(254) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     version    BIGINT NOT NULL DEFAULT 0,
 
     CONSTRAINT pk_customer PRIMARY KEY (id),
@@ -30,6 +31,8 @@ CREATE TABLE customer
     CONSTRAINT fk_customer_account
         FOREIGN KEY (account_id) REFERENCES account (id) ON DELETE CASCADE
 );
+
+CREATE INDEX ix_customer_created_at ON customer (created_at DESC, id DESC);
 
 CREATE TABLE address
 (
