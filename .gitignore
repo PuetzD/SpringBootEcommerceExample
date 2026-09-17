@@ -1,5 +1,6 @@
 ### Maven ###
 /target/
+/logs/
 .mvn/wrapper/maven-wrapper.jar
 ### Gradle ###
 .gradle/

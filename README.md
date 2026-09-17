@@ -69,8 +69,9 @@ sequenceDiagram
 Successful checkouts produce the immutable, versioned
 `ordering.order-placed.v1` event. It contains both product-family and sellable
 variant identity plus immutable purchase snapshots, not JPA entities or mutable
-cart objects. Kafka publication is asynchronous and opt-in; the default profile
-only persists the event in PostgreSQL.
+cart objects. Kafka publication is asynchronous and enabled by default. Set
+`ORDERING_EVENTS_KAFKA_ENABLED=false` to persist the event in PostgreSQL without
+publishing it.
 
 The Kafka publisher currently provides bounded polling, broker-acknowledged
 publication, event metadata headers, bounded retries, and quarantine after five
@@ -148,6 +149,10 @@ npm ci
 npm run build:frontend
 ./mvnw spring-boot:run
 ```
+
+Host-run Kafka clients use `localhost:29092`. Services on the Compose network use
+`kafka:9092`. Kafka returns advertised listener addresses after the initial bootstrap
+connection, so each runtime must use the listener intended for its network.
 
 Open <http://localhost:8080> after the application starts.
 
@@ -237,12 +242,13 @@ migration instead.
 
 ## Kafka Publishing
 
-Kafka publishing is opt-in. The default Compose stack enables it explicitly and
-provides a single-node Kafka broker. When running the app directly on the host,
-use the same local broker or enable publishing explicitly:
+Kafka publishing is enabled by default, and the default Compose stack provides a
+single-node Kafka broker. When running the app directly on the host, use the
+broker's external listener at `localhost:29092`; the Compose application uses the
+internal `kafka:9092` listener. To disable publishing and persist events only:
 
 ```bash
-ORDERING_EVENTS_KAFKA_ENABLED=true \
+ORDERING_EVENTS_KAFKA_ENABLED=false \
 ./mvnw generate-resources spring-boot:run
 ```
 
@@ -257,12 +263,14 @@ a single-node Kafka broker.
 
 ### Customer order confirmation email
 
-Compose enables the order-confirmation consumer and sends through the existing
-Spring Mail configuration. Configure `NOTIFICATIONS_EMAIL_FROM` for the sender
-address. The event contains the placement-time customer recipient snapshot, so
-the email does not depend on later Customer Profile changes. Delivery state is
-stored in `order_confirmation_delivery`; transient failures retry and repeated
-failures are quarantined after five attempts.
+The order-confirmation consumer and email notifications are enabled by default.
+Compose sends through the existing Spring Mail configuration and routes local
+mail to Mailpit. Set `NOTIFICATIONS_EMAIL_ENABLED=false` to disable email
+notifications. Configure `NOTIFICATIONS_EMAIL_FROM` for the sender address. The
+event contains the placement-time customer recipient snapshot, so the email does
+not depend on later Customer Profile changes. Delivery state is stored in
+`order_confirmation_delivery`; transient failures retry and repeated failures
+are quarantined after five attempts.
 
 ### Outbox inspection and recovery
 
