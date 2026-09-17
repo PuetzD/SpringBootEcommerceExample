@@ -4,6 +4,7 @@ import com.springbootecommerce.shophappens.ordering.application.port.out.OrderNu
 import com.springbootecommerce.shophappens.ordering.domain.model.OrderNumber;
 import java.time.Clock;
 import java.time.Year;
+import java.util.Locale;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,7 @@ class SequenceOrderNumberGenerator implements OrderNumberGenerator {
         if (sequence == null) {
             throw new IllegalStateException("Order number sequence returned no value");
         }
-        return new OrderNumber("ORD-%d-%06d".formatted(Year.now(clock).getValue(), sequence));
+        return new OrderNumber(
+                String.format(Locale.ROOT, "ORD-%d-%06d", Year.now(clock).getValue(), sequence));
     }
 }
