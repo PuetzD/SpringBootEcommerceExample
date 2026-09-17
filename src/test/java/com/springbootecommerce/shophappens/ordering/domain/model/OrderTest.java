@@ -23,7 +23,7 @@ class OrderTest {
         Order order =
                 Order.place(
                         OrderId.random(),
-                        new OrderNumber("ORD-20260828-ABC123DEF456"),
+                        new OrderNumber("ORD-2026-100001"),
                         new CheckoutId(UUID.randomUUID()),
                         new CustomerId(42L),
                         List.of(
@@ -57,7 +57,7 @@ class OrderTest {
                         () ->
                                 Order.restore(
                                         OrderId.random(),
-                                        new OrderNumber("ORD-20260828-ABC123DEF456"),
+                                        new OrderNumber("ORD-2026-100001"),
                                         new CheckoutId(UUID.randomUUID()),
                                         new CustomerId(42L),
                                         List.of(
@@ -81,7 +81,7 @@ class OrderTest {
         Order order =
                 Order.restore(
                         OrderId.random(),
-                        new OrderNumber("ORD-20260828-ABC123DEF456"),
+                        new OrderNumber("ORD-2026-100001"),
                         new CheckoutId(UUID.randomUUID()),
                         new CustomerId(42L),
                         List.of(),
@@ -100,7 +100,7 @@ class OrderTest {
         Order order =
                 Order.restore(
                         OrderId.random(),
-                        new OrderNumber("ORD-20260828-ABC123DEF456"),
+                        new OrderNumber("ORD-2026-100001"),
                         new CheckoutId(UUID.randomUUID()),
                         new CustomerId(42L),
                         List.of(
@@ -134,7 +134,7 @@ class OrderTest {
         Order order =
                 Order.place(
                         OrderId.random(),
-                        new OrderNumber("ORD-20260828-ABC123DEF456"),
+                        new OrderNumber("ORD-2026-100001"),
                         new CheckoutId(UUID.randomUUID()),
                         new CustomerId(42L),
                         source,
@@ -153,7 +153,7 @@ class OrderTest {
     private Order placeWithItems(List<OrderItem> items) {
         return Order.place(
                 OrderId.random(),
-                new OrderNumber("ORD-20260828-ABC123DEF456"),
+                new OrderNumber("ORD-2026-100001"),
                 new CheckoutId(UUID.randomUUID()),
                 new CustomerId(42L),
                 items,
@@ -165,7 +165,7 @@ class OrderTest {
     private Order placeWithAddresses(OrderAddress shipping, OrderAddress billing) {
         return Order.place(
                 OrderId.random(),
-                new OrderNumber("ORD-20260828-ABC123DEF456"),
+                new OrderNumber("ORD-2026-100001"),
                 new CheckoutId(UUID.randomUUID()),
                 new CustomerId(42L),
                 List.of(
