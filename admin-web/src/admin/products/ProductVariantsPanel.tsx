@@ -57,10 +57,10 @@ export function ProductVariantsPanel() {
       <form className="mt-4" onSubmit={submit}>
         <fieldset className="grid gap-3 md:grid-cols-5" disabled={creating} aria-busy={creating}>
           <legend className="sr-only">Add a variant</legend>
-          <label className="form-control"><span className="label-text">SKU</span><input className="input input-bordered" disabled={creating} value={form.sku} onChange={(event) => setForm({...form, sku: event.target.value})} required /></label>
-          <label className="form-control"><span className="label-text">Price</span><input className="input input-bordered" disabled={creating} type="number" min="0.01" step="0.01" value={form.price} onChange={(event) => setForm({...form, price: Number(event.target.value)})} required /></label>
-          <label className="form-control"><span className="label-text">Stock</span><input className="input input-bordered" disabled={creating} type="number" min="0" value={form.stockQuantity} onChange={(event) => setForm({...form, stockQuantity: Number(event.target.value)})} required /></label>
-          <label className="form-control"><span className="label-text">Image URL</span><input className="input input-bordered" disabled={creating} value={form.imageUrl ?? ''} onChange={(event) => setForm({...form, imageUrl: event.target.value || null})} /></label>
+          <label className="form-control" htmlFor="new-variant-sku"><span className="label-text">SKU</span><input id="new-variant-sku" name="newVariant.sku" className="input input-bordered" disabled={creating} value={form.sku} onChange={(event) => setForm({...form, sku: event.target.value})} required /></label>
+          <label className="form-control" htmlFor="new-variant-price"><span className="label-text">Price</span><input id="new-variant-price" name="newVariant.price" className="input input-bordered" disabled={creating} type="number" min="0.01" step="0.01" value={form.price} onChange={(event) => setForm({...form, price: Number(event.target.value)})} required /></label>
+          <label className="form-control" htmlFor="new-variant-stockQuantity"><span className="label-text">Stock</span><input id="new-variant-stockQuantity" name="newVariant.stockQuantity" className="input input-bordered" disabled={creating} type="number" min="0" value={form.stockQuantity} onChange={(event) => setForm({...form, stockQuantity: Number(event.target.value)})} required /></label>
+          <label className="form-control" htmlFor="new-variant-imageUrl"><span className="label-text">Image URL</span><input id="new-variant-imageUrl" name="newVariant.imageUrl" className="input input-bordered" disabled={creating} value={form.imageUrl ?? ''} onChange={(event) => setForm({...form, imageUrl: event.target.value || null})} /></label>
           <button className="btn btn-primary self-end" disabled={creating} type="submit">Add variant</button>
         </fieldset>
       </form>
@@ -78,6 +78,8 @@ export function VariantRow({variant}: {variant: ProductVariant}) {
   const form = draft ?? variant
   const changed = draft !== null && draft.productRevision !== variant.productRevision
   const busy = updating || removing
+  const fieldId = (field: string) => `variant-${variant.id}-${field}`
+  const fieldName = (field: string) => `variants[${variant.id}].${field}`
 
   function save() {
     if (busy || changed || failure !== null) return
@@ -121,11 +123,11 @@ export function VariantRow({variant}: {variant: ProductVariant}) {
   }
 
   return <tr>
-    <td><input className="input input-sm input-bordered" disabled={busy} value={form.sku} onChange={(event) => setDraft({...form, sku: event.target.value})} aria-label={`SKU for ${variant.sku}`} /></td>
-    <td><input className="input input-sm input-bordered w-28" disabled={busy} type="number" min="0.01" step="0.01" value={form.price} onChange={(event) => setDraft({...form, price: Number(event.target.value)})} aria-label={`Price for ${variant.sku}`} /></td>
-    <td><input className="input input-sm input-bordered w-24" disabled={busy} type="number" min="0" value={form.stockQuantity} onChange={(event) => setDraft({...form, stockQuantity: Number(event.target.value)})} aria-label={`Stock for ${variant.sku}`} /></td>
-    <td><input className="input input-sm input-bordered" disabled={busy} value={form.imageUrl ?? ''} onChange={(event) => setDraft({...form, imageUrl: event.target.value || null})} aria-label={`Image URL for ${variant.sku}`} /></td>
-    <td><label className="label cursor-pointer gap-2"><span>{form.active ? 'Active' : 'Inactive'}</span><input className="toggle toggle-primary" disabled={busy} type="checkbox" checked={form.active} onChange={(event) => setDraft({...form, active: event.target.checked})} aria-label={`Active for ${variant.sku}`} /></label></td>
+    <td><input id={fieldId('sku')} name={fieldName('sku')} className="input input-sm input-bordered" disabled={busy} value={form.sku} onChange={(event) => setDraft({...form, sku: event.target.value})} aria-label={`SKU for ${variant.sku}`} /></td>
+    <td><input id={fieldId('price')} name={fieldName('price')} className="input input-sm input-bordered w-28" disabled={busy} type="number" min="0.01" step="0.01" value={form.price} onChange={(event) => setDraft({...form, price: Number(event.target.value)})} aria-label={`Price for ${variant.sku}`} /></td>
+    <td><input id={fieldId('stockQuantity')} name={fieldName('stockQuantity')} className="input input-sm input-bordered w-24" disabled={busy} type="number" min="0" value={form.stockQuantity} onChange={(event) => setDraft({...form, stockQuantity: Number(event.target.value)})} aria-label={`Stock for ${variant.sku}`} /></td>
+    <td><input id={fieldId('imageUrl')} name={fieldName('imageUrl')} className="input input-sm input-bordered" disabled={busy} value={form.imageUrl ?? ''} onChange={(event) => setDraft({...form, imageUrl: event.target.value || null})} aria-label={`Image URL for ${variant.sku}`} /></td>
+    <td><label className="label cursor-pointer gap-2" htmlFor={fieldId('active')}><span>{form.active ? 'Active' : 'Inactive'}</span><input id={fieldId('active')} name={fieldName('active')} className="toggle toggle-primary" disabled={busy} type="checkbox" checked={form.active} onChange={(event) => setDraft({...form, active: event.target.checked})} aria-label={`Active for ${variant.sku}`} /></label></td>
     <td>
       <div className="flex flex-wrap gap-2">
         <button className="btn btn-sm btn-primary" type="button" disabled={busy || changed || failure !== null} onClick={save}>Save</button>

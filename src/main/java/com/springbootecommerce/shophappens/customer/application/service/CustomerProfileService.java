@@ -5,6 +5,7 @@ import com.springbootecommerce.shophappens.customer.application.CustomerProfileA
 import com.springbootecommerce.shophappens.customer.application.port.in.AddressReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.AddressSnapshot;
 import com.springbootecommerce.shophappens.customer.application.port.in.CreateCustomerProfileUseCase;
+import com.springbootecommerce.shophappens.customer.application.port.in.CustomerContactQuery;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReferenceQuery;
 import com.springbootecommerce.shophappens.customer.application.port.in.ExternalAccountId;
@@ -33,7 +34,8 @@ public class CustomerProfileService
         implements CreateCustomerProfileUseCase,
                 ManageCustomerAddressesUseCase,
                 OwnedAddressQuery,
-                CustomerReferenceQuery {
+                CustomerReferenceQuery,
+                CustomerContactQuery {
 
     private final CustomerRepository customers;
 
@@ -152,6 +154,17 @@ public class CustomerProfileService
         return customers
                 .findByAccountId(new AccountId(accountId.value()))
                 .flatMap(customer -> customer.id().map(id -> new CustomerReference(id.value())));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<CustomerContact> findContact(CustomerReference customer) {
+        return customers
+                .findById(new CustomerId(customer.value()))
+                .map(
+                        profile ->
+                                new CustomerContact(
+                                        profile.givenName(), profile.contactEmail().value()));
     }
 
     private Customer requireCustomer(CustomerReference customer) {

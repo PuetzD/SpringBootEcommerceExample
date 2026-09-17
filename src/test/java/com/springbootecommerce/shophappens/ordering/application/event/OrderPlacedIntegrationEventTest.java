@@ -7,9 +7,51 @@ import com.springbootecommerce.shophappens.sharedkernel.identity.ProductId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.ProductVariantId;
 import com.springbootecommerce.shophappens.sharedkernel.money.Money;
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class OrderPlacedIntegrationEventTest {
+    @Test
+    void carriesTheOrderConfirmationRecipientSnapshot() {
+        var event =
+                new OrderPlacedIntegrationEvent(
+                        UUID.randomUUID(),
+                        UUID.randomUUID(),
+                        "ORD-20260828-ABC123DEF456",
+                        42L,
+                        "Ada",
+                        "ada@example.com",
+                        Instant.parse("2026-08-31T10:15:30Z"),
+                        new BigDecimal("39.98"),
+                        com.springbootecommerce.shophappens.sharedkernel.money.Currency.EUR,
+                        List.of(),
+                        new OrderPlacedIntegrationEvent.Address(
+                                "Ada",
+                                null,
+                                "1 Main Street",
+                                null,
+                                "Berlin",
+                                null,
+                                "10115",
+                                "DE",
+                                null),
+                        new OrderPlacedIntegrationEvent.Address(
+                                "Ada",
+                                null,
+                                "1 Main Street",
+                                null,
+                                "Berlin",
+                                null,
+                                "10115",
+                                "DE",
+                                null));
+
+        assertThat(event.customerGivenName()).isEqualTo("Ada");
+        assertThat(event.customerContactEmail()).isEqualTo("ada@example.com");
+    }
+
     @Test
     void snapshotsTheSelectedSellableAndCurrency() {
         var item =

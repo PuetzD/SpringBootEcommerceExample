@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help up down logs run seed-demo test verify format frontend css admin-test
+.PHONY: help up down logs run seed-demo test pmd verify format frontend css admin-test
 
 help:
 	@printf '%s\n' \
@@ -12,6 +12,7 @@ help:
 		'  run         Run Spring Boot on the host' \
 		'  seed-demo   Replace the local database with themed demo data' \
 		'  test        Run backend tests' \
+		'  pmd         Run PMD static analysis' \
 		'  verify      Run backend verification and integration tests' \
 		'  format      Format Java sources' \
 		'  frontend    Build CSS and the admin frontend' \
@@ -19,7 +20,7 @@ help:
 		'  admin-test  Run admin frontend tests'
 
 up:
-	docker compose up -d postgres redis kafka
+	docker compose up -d postgres redis kafka mailpit
 
 down:
 	docker compose down
@@ -35,6 +36,9 @@ seed-demo:
 
 test:
 	./mvnw test
+
+pmd:
+	./mvnw pmd:check
 
 verify:
 	./mvnw verify

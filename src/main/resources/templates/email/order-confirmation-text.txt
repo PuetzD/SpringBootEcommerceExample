@@ -1,0 +1,16 @@
+Hello [[${givenName}]],
+
+Your order [[${orderNumber}]] was placed on [[${placedAt}]].
+
+Items:
+[# th:each="item : ${items}"]- [[${item.productName}]] ([[${item.sku}]]) x[[${item.quantity}]] — [[${item.lineTotal}]]
+[/]
+Total: [[${total}]]
+
+Shipping address:
+[# th:each="line : ${shippingAddress}"][[${line}]]
+[/]
+Billing address:
+[# th:each="line : ${billingAddress}"][[${line}]]
+[/]
+This email confirms that your order was placed.

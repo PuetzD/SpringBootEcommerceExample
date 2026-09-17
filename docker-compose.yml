@@ -53,6 +53,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - 1025:1025
+      - 8025:8025
 
   app:
     build:
@@ -66,6 +71,8 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-demo}
@@ -75,6 +82,9 @@ services:
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       ORDERING_EVENTS_KAFKA_ENABLED: "true"
+      SPRING_MAIL_HOST: mailpit
+      SPRING_MAIL_PORT: 1025
+      NOTIFICATIONS_EMAIL_ENABLED: "true"
     ports:
       - "8080:8080"
 
