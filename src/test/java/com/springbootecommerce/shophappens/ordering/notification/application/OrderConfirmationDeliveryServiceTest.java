@@ -1,6 +1,8 @@
 package com.springbootecommerce.shophappens.ordering.notification.application;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.contains;
@@ -102,6 +104,39 @@ class OrderConfirmationDeliveryServiceTest {
 
         verify(deliveries)
                 .markFailed(eq(EVENT_ID), contains("smtp unavailable"), eq(NOW), eq(true));
+    }
+
+    @Test
+    void preservesTheOriginalFailureWhenRecordingTheFailureAlsoFails() {
+        var event = event();
+        var deliveryFailure = new IllegalStateException("smtp unavailable");
+        var statusFailure = new IllegalStateException("database unavailable");
+        when(deliveries.claim(any(), any(), any(), any()))
+                .thenReturn(Optional.of(new OrderConfirmationClaim(0)));
+        when(renderer.render(event)).thenReturn(RENDERED);
+        doThrow(deliveryFailure).when(sender).send(RENDERED);
+        doThrow(statusFailure).when(deliveries).markFailed(any(), any(), any(), anyBoolean());
+
+        Throwable thrown = catchThrowable(() -> service.send(event));
+
+        assertThat(thrown).isSameAs(deliveryFailure);
+        assertThat(thrown.getSuppressed()).containsExactly(statusFailure);
+    }
+
+    @Test
+    void doesNotAttemptToSuppressTheOriginalFailureIntoItself() {
+        var event = event();
+        var failure = new IllegalStateException("smtp and database unavailable");
+        when(deliveries.claim(any(), any(), any(), any()))
+                .thenReturn(Optional.of(new OrderConfirmationClaim(0)));
+        when(renderer.render(event)).thenReturn(RENDERED);
+        doThrow(failure).when(sender).send(RENDERED);
+        doThrow(failure).when(deliveries).markFailed(any(), any(), any(), anyBoolean());
+
+        Throwable thrown = catchThrowable(() -> service.send(event));
+
+        assertThat(thrown).isSameAs(failure);
+        assertThat(thrown.getSuppressed()).isEmpty();
     }
 
     @Test

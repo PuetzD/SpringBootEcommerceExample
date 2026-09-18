@@ -38,7 +38,13 @@ public class OrderConfirmationDeliveryService implements SendOrderConfirmationUs
             boolean quarantine = attempt >= 5;
             Instant retryAt =
                     quarantine ? clock.instant() : clock.instant().plusSeconds(1L << (attempt - 1));
-            deliveries.markFailed(event.eventId(), diagnostic(exception), retryAt, quarantine);
+            try {
+                deliveries.markFailed(event.eventId(), diagnostic(exception), retryAt, quarantine);
+            } catch (RuntimeException markFailedException) {
+                if (markFailedException != exception) {
+                    exception.addSuppressed(markFailedException);
+                }
+            }
             throw exception;
         }
     }
