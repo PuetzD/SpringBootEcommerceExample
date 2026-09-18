@@ -19,12 +19,18 @@ export interface ApiRequestOptions {
     revision?: number
 }
 
-export interface PageResponse<T> {
+export interface PageResponse<T, Meta = undefined> {
     content: T[]
     page: number
     size: number
     totalElements: number
     totalPages: number
+    meta?: Meta
+}
+
+export interface OrderListMeta {
+    revenue: number
+    currency: 'EUR'
 }
 
 export interface CategorySummary {
@@ -135,6 +141,7 @@ export interface Customer {
     familyName: string
     contactEmail: string
     accountId: number | null
+    createdAt: string
     addresses: CustomerAddress[]
     orders: CustomerOrder[]
 }

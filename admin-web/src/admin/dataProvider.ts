@@ -7,6 +7,7 @@ import type {
   Customer,
   CreateCategoryInput,
   CreateProductInput,
+  OrderListMeta,
   PageResponse,
   Product,
   Order,
@@ -64,13 +65,14 @@ function normalizeProductRecord(record: Product): ProductRecord {
   }
 }
 
-function normalizeList<RecordType extends {id: number | string}>(
-  response: PageResponse<RecordType>,
+function normalizeList<RecordType extends {id: number | string}, Meta>(
+  response: PageResponse<RecordType, Meta>,
 ) {
-  return {
+  const result = {
     data: response.content.map(normalizeRecord),
     total: response.totalElements,
   }
+  return response.meta === undefined ? result : {...result, meta: response.meta}
 }
 
 function normalizeStringFilter(value: unknown): string | undefined {
@@ -120,6 +122,8 @@ function normalizeOrderListParams(params: GetListParams) {
     page: Math.max(0, page - 1),
     size: perPage,
     q: normalizeStringFilter(params.filter?.q),
+    from: normalizeStringFilter(params.filter?.from),
+    to: normalizeStringFilter(params.filter?.to),
   }
 }
 
@@ -131,6 +135,8 @@ function normalizeCustomerListParams(params: GetListParams) {
     page: Math.max(0, page - 1),
     size: perPage,
     q: normalizeStringFilter(params.filter?.q),
+    from: normalizeStringFilter(params.filter?.from),
+    to: normalizeStringFilter(params.filter?.to),
   }
 }
 
@@ -251,7 +257,9 @@ export const dataProvider = {
 
     if (resource === 'orders') {
       const response = await runWithReactAdminError(() =>
-        ApiClient.get<PageResponse<Order>>(path, {params: normalizeOrderListParams(params)}),
+        ApiClient.get<PageResponse<Order, OrderListMeta>>(path, {
+          params: normalizeOrderListParams(params),
+        }),
       )
       return normalizeList(response)
     }

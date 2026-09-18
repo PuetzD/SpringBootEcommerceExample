@@ -13,6 +13,7 @@ import com.springbootecommerce.shophappens.customer.application.port.in.Customer
 import com.springbootecommerce.shophappens.customer.application.port.out.CustomerRepository;
 import com.springbootecommerce.shophappens.sharedkernel.identity.AccountId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -29,7 +30,12 @@ class CustomerAdministrationQueryServiceTest {
     void searchCustomersReturnsTheRepositoryPage() {
         var search = new CustomerAdminSearch(0, 20, "Ada");
         var summary =
-                new CustomerAdminSummary(new CustomerId(7), "Ada", "Lovelace", "ada@example.com");
+                new CustomerAdminSummary(
+                        new CustomerId(7),
+                        "Ada",
+                        "Lovelace",
+                        "ada@example.com",
+                        Instant.parse("2026-09-17T12:00:00Z"));
         var expected = new CustomerAdminPage(List.of(summary), 0, 20, 1, 1);
         when(customerRepository.searchForAdministration(search)).thenReturn(expected);
 
@@ -63,6 +69,7 @@ class CustomerAdministrationQueryServiceTest {
                         "Ada",
                         "Lovelace",
                         "ada@example.com",
+                        Instant.parse("2026-09-17T12:00:00Z"),
                         List.of(address));
         when(customerRepository.findForAdministration(customerId)).thenReturn(Optional.of(detail));
 
@@ -82,6 +89,7 @@ class CustomerAdministrationQueryServiceTest {
                         "Ada",
                         "Lovelace",
                         "ada@example.com",
+                        Instant.parse("2026-09-17T12:00:00Z"),
                         addresses);
 
         addresses.add(

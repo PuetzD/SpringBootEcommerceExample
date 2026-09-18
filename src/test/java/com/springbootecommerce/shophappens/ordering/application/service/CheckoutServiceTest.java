@@ -91,7 +91,7 @@ class CheckoutServiceTest {
         when(addresses.billing(new CustomerId(42L), 12L)).thenReturn(billingAddress());
         when(catalog.purchase(List.of(new RequestedProduct(new ProductVariantId(701L), 2))))
                 .thenReturn(List.of(purchasedProduct(7L, 2, "19.99")));
-        when(numbers.next()).thenReturn(new OrderNumber("ORD-20260828-ABC123DEF456"));
+        when(numbers.next()).thenReturn(new OrderNumber("ORD-2026-100001"));
         when(orders.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(contacts.contact(new CustomerId(42L)))
                 .thenReturn(new CustomerContactGateway.CustomerContact("Ada", "ada@example.com"));
@@ -116,7 +116,7 @@ class CheckoutServiceTest {
 
         PlacedOrder result = service.place(command(null));
 
-        assertThat(result.orderNumber()).isEqualTo("ORD-20260828-EXISTING0101");
+        assertThat(result.orderNumber()).isEqualTo("ORD-2026-100002");
         verifyNoInteractions(carts, catalog, addresses, numbers);
     }
 
@@ -255,7 +255,7 @@ class CheckoutServiceTest {
     private static Order existingOrder() {
         return Order.restore(
                 OrderId.random(),
-                new OrderNumber("ORD-20260828-EXISTING0101"),
+                new OrderNumber("ORD-2026-100002"),
                 new CheckoutId(CHECKOUT_ID),
                 new CustomerId(42L),
                 List.of(

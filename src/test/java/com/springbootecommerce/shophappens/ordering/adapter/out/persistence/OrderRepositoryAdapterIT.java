@@ -26,7 +26,9 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
+@Transactional
 class OrderRepositoryAdapterIT extends AbstractIntegrationTest {
     @Autowired OrderRepository repository;
     @Autowired JdbcTemplate jdbc;
@@ -36,7 +38,7 @@ class OrderRepositoryAdapterIT extends AbstractIntegrationTest {
     @Test
     void savesAnOrderAndRestoresEveryField() {
         CheckoutId checkout = new CheckoutId(UUID.randomUUID());
-        Order original = sampleOrder("ORD-20260828-ABC111DEF111", CUSTOMER, checkout);
+        Order original = sampleOrder("ORD-2026-100001", CUSTOMER, checkout);
 
         Order saved = repository.save(original);
 
@@ -64,8 +66,7 @@ class OrderRepositoryAdapterIT extends AbstractIntegrationTest {
     void findAllByCustomerRestoresEveryStoredOrder() {
         CustomerId customer = new CustomerId(4242L);
         Order original =
-                sampleOrder(
-                        "ORD-20260828-ABC222DEF222", customer, new CheckoutId(UUID.randomUUID()));
+                sampleOrder("ORD-2026-100001", customer, new CheckoutId(UUID.randomUUID()));
         repository.save(original);
 
         List<Order> restored = repository.findAllByCustomer(customer);
@@ -78,19 +79,19 @@ class OrderRepositoryAdapterIT extends AbstractIntegrationTest {
     void searchesAdministrationOrdersByOrderNumberWithPaging() {
         Order newest =
                 sampleOrder(
-                        "ORD-20260830-ADMINNEWEST1",
+                        "ORD-2026-100001",
                         CUSTOMER,
                         new CheckoutId(UUID.randomUUID()),
                         Instant.parse("2026-08-30T08:00:00Z"));
         Order older =
                 sampleOrder(
-                        "ORD-20260829-ADMINOLDER01",
+                        "ORD-2026-100002",
                         CUSTOMER,
                         new CheckoutId(UUID.randomUUID()),
                         Instant.parse("2026-08-29T08:00:00Z"));
         Order unrelated =
                 sampleOrder(
-                        "ORD-20260831-OTHERORDER01",
+                        "ORD-2026-100003",
                         CUSTOMER,
                         new CheckoutId(UUID.randomUUID()),
                         Instant.parse("2026-08-31T08:00:00Z"));
@@ -98,22 +99,48 @@ class OrderRepositoryAdapterIT extends AbstractIntegrationTest {
         repository.save(older);
         repository.save(unrelated);
 
-        var result = repository.searchForAdministration(new OrderAdminSearch(0, 1, "ADMIN"));
+        var result = repository.searchForAdministration(new OrderAdminSearch(0, 1, "10000"));
 
-        assertThat(result.totalElements()).isEqualTo(2);
+        assertThat(result.totalElements()).isEqualTo(3);
         assertThat(result.content())
                 .extracting(OrderAdminSummary::orderNumber)
-                .containsExactly(newest.orderNumber().value());
+                .containsExactly(unrelated.orderNumber().value());
         assertThat(result.page()).isZero();
         assertThat(result.size()).isEqualTo(1);
-        assertThat(result.totalPages()).isEqualTo(2);
+        assertThat(result.totalPages()).isEqualTo(3);
+    }
+
+    @Test
+    void searchesAdministrationOrdersWithinThePlacedRangeAndAggregatesAllMatchingRevenue() {
+        Instant from = Instant.parse("2026-09-01T00:00:00Z");
+        Instant before = Instant.parse("2026-10-01T00:00:00Z");
+        Order atFrom =
+                sampleOrder("ORD-2026-100010", CUSTOMER, new CheckoutId(UUID.randomUUID()), from);
+        Order inside =
+                sampleOrder(
+                        "ORD-2026-100011",
+                        CUSTOMER,
+                        new CheckoutId(UUID.randomUUID()),
+                        Instant.parse("2026-09-30T23:59:59Z"));
+        Order atExclusiveUpperBoundary =
+                sampleOrder("ORD-2026-100012", CUSTOMER, new CheckoutId(UUID.randomUUID()), before);
+        repository.save(atFrom);
+        repository.save(inside);
+        repository.save(atExclusiveUpperBoundary);
+
+        var result =
+                repository.searchForAdministration(new OrderAdminSearch(0, 1, null, from, before));
+
+        assertThat(result.totalElements()).isEqualTo(2);
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.metrics().revenue()).isEqualTo(new Money(new BigDecimal("136.96")));
     }
 
     @Test
     void findsAdministrationOrderByOrderNumberWithDetails() {
         Order original =
                 sampleOrder(
-                        "ORD-20260828-ADMINDETAIL1",
+                        "ORD-2026-100001",
                         CUSTOMER,
                         new CheckoutId(UUID.randomUUID()),
                         Instant.parse("2026-08-28T08:00:00Z"));
@@ -146,19 +173,19 @@ class OrderRepositoryAdapterIT extends AbstractIntegrationTest {
         CustomerId customer = new CustomerId(4343L);
         Order newest =
                 sampleOrder(
-                        "ORD-20260905-CUSTOMERNEW1",
+                        "ORD-2026-100001",
                         customer,
                         new CheckoutId(UUID.randomUUID()),
                         Instant.parse("2026-09-05T10:00:00Z"));
         Order older =
                 sampleOrder(
-                        "ORD-20260904-CUSTOMEROLD1",
+                        "ORD-2026-100002",
                         customer,
                         new CheckoutId(UUID.randomUUID()),
                         Instant.parse("2026-09-04T10:00:00Z"));
         Order unrelated =
                 sampleOrder(
-                        "ORD-20260906-OTHERORDER01",
+                        "ORD-2026-100003",
                         new CustomerId(4344L),
                         new CheckoutId(UUID.randomUUID()),
                         Instant.parse("2026-09-06T10:00:00Z"));
@@ -189,8 +216,7 @@ class OrderRepositoryAdapterIT extends AbstractIntegrationTest {
     @Test
     void storedRowsCarryTheComputedLineTotalsAndTotal() {
         Order original =
-                sampleOrder(
-                        "ORD-20260828-ABC333DEF333", CUSTOMER, new CheckoutId(UUID.randomUUID()));
+                sampleOrder("ORD-2026-100001", CUSTOMER, new CheckoutId(UUID.randomUUID()));
         repository.save(original);
         UUID orderId = original.orderId().value();
 

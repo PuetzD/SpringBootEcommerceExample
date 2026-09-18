@@ -1,3 +1,8 @@
+CREATE SEQUENCE order_number_sequence
+    START WITH 100001
+    INCREMENT BY 1
+    NO CYCLE;
+
 CREATE TABLE customer_order (
     id UUID NOT NULL,
     order_number VARCHAR(32) NOT NULL,
@@ -51,3 +56,6 @@ CREATE INDEX ix_customer_order_customer_number
 
 CREATE INDEX ix_customer_order_history
     ON customer_order (customer_id, placed_at DESC, id DESC);
+
+CREATE INDEX ix_customer_order_placed_at
+    ON customer_order (placed_at DESC, id DESC);

@@ -1,4 +1,4 @@
-import {Datagrid, List, Pagination, TextField, TextInput} from 'react-admin'
+import {DateField, Datagrid, List, Pagination, TextField, TextInput} from 'react-admin'
 
 const filters = [
   <TextInput key="q" source="q" label="Email or name" alwaysOn />,
@@ -16,6 +16,7 @@ export function CustomerList() {
         <TextField source="givenName" label="First name" sortable={false} />
         <TextField source="familyName" label="Last name" sortable={false} />
         <TextField source="contactEmail" label="Email" sortable={false} />
+        <DateField source="createdAt" label="Created" showTime sortable={false} />
       </Datagrid>
     </List>
   )

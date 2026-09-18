@@ -98,7 +98,7 @@ class CheckoutControllerTest {
                 .thenReturn(
                         new PlacedOrder(
                                 new OrderReference(UUID.randomUUID()),
-                                "ORD-20260830-ABCDEF123456",
+                                "ORD-2026-100001",
                                 new Money(new BigDecimal("12.00")),
                                 Instant.parse("2026-08-30T08:00:00Z")));
         mvc.perform(get("/checkout").with(user("customer").roles("CUSTOMER")))
@@ -112,7 +112,7 @@ class CheckoutControllerTest {
                                 .param("shippingAddressId", "11")
                                 .param("billingAddressId", "12"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/orders/ORD-20260830-ABCDEF123456"));
+                .andExpect(redirectedUrl("/orders/ORD-2026-100001"));
         ArgumentCaptor<PlaceOrderCommand> command =
                 ArgumentCaptor.forClass(PlaceOrderCommand.class);
         verify(orders).place(command.capture());

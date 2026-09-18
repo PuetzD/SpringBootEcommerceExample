@@ -9,6 +9,7 @@ const customer = {
   givenName: 'Alice',
   familyName: 'Example',
   contactEmail: 'alice@example.com',
+  createdAt: '2026-09-10T09:00:00Z',
   accountId: 44,
   addresses: [
     {
@@ -28,7 +29,7 @@ const customer = {
   ],
   orders: [
     {
-      orderNumber: 'ORD-20260905-ORDERADMIN1',
+      orderNumber: 'ORD-2026-100001',
       orderId: '00000000-0000-0000-0000-000000000009',
       total: 19.99,
       placedAt: '2026-09-05T09:00:00Z',
@@ -37,7 +38,7 @@ const customer = {
 }
 
 describe('Customer resource', () => {
-  it('renders searchable read-only customer columns', async () => {
+  it('renders searchable read-only customer columns including creation time', async () => {
     render(
       <AdminContext
         dataProvider={{getList: vi.fn().mockResolvedValue({data: [customer], total: 1})}}
@@ -52,6 +53,7 @@ describe('Customer resource', () => {
     expect(await screen.findByText('Alice')).toBeTruthy()
     expect(screen.getByText('Example')).toBeTruthy()
     expect(screen.getByText('alice@example.com')).toBeTruthy()
+    expect(screen.getByRole('columnheader', {name: 'Created'})).toBeTruthy()
     expect(within(screen.getByRole('table')).queryByRole('button', {name: 'ra.sort.sort_by'})).toBeNull()
     expect(screen.queryByRole('button', {name: /create|edit|delete/i})).toBeNull()
   })

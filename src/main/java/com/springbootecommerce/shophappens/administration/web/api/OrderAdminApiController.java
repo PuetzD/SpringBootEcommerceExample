@@ -7,8 +7,10 @@ import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdm
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdministrationQuery;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderItemView;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderNotFoundException;
+import java.time.Instant;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,17 +24,24 @@ public class OrderAdminApiController {
     private final OrderAdministrationQuery orders;
 
     @GetMapping
-    public PageResponse<OrderResponse> list(
+    public OrderPageResponse list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String q) {
-        var result = orders.searchOrders(new OrderAdminSearch(page, size, q));
-        return new PageResponse<>(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Instant from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Instant to) {
+        var result = orders.searchOrders(new OrderAdminSearch(page, size, q, from, to));
+        return new OrderPageResponse(
                 result.content().stream().map(this::toResponse).toList(),
                 result.page(),
                 result.size(),
                 result.totalElements(),
-                result.totalPages());
+                result.totalPages(),
+                new OrderMetricsResponse(
+                        result.metrics().revenue().amount(),
+                        result.metrics().revenue().currency().name()));
     }
 
     @GetMapping("/{orderNumber}")

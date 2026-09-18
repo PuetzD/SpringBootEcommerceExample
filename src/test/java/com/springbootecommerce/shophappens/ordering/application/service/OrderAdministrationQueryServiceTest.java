@@ -5,6 +5,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminDetail;
+import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminMetrics;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminPage;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminSearch;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminSummary;
@@ -33,11 +34,18 @@ class OrderAdministrationQueryServiceTest {
         var summary =
                 new OrderAdminSummary(
                         new OrderReference(java.util.UUID.randomUUID()),
-                        "ORD-2026-ABC",
+                        "ORD-2026-100001",
                         new CustomerId(7),
                         new Money(new BigDecimal("19.99")),
                         Instant.parse("2026-09-05T09:00:00Z"));
-        var expected = new OrderAdminPage(java.util.List.of(summary), 0, 20, 1, 1);
+        var expected =
+                new OrderAdminPage(
+                        java.util.List.of(summary),
+                        0,
+                        20,
+                        1,
+                        1,
+                        new OrderAdminMetrics(Money.zero()));
         when(orderRepository.searchForAdministration(search)).thenReturn(expected);
 
         var service = new OrderAdministrationQueryService(orderRepository);
@@ -48,7 +56,7 @@ class OrderAdministrationQueryServiceTest {
 
     @Test
     void findOrderReturnsTheRepositoryDetail() {
-        var orderNumber = "ORD-2026-ABC";
+        var orderNumber = "ORD-2026-100001";
         var expectedDetail =
                 new OrderAdminDetail(
                         new OrderReference(java.util.UUID.randomUUID()),
@@ -74,7 +82,7 @@ class OrderAdministrationQueryServiceTest {
                 List.of(
                         new OrderAdminSummary(
                                 new OrderReference(java.util.UUID.randomUUID()),
-                                "ORD-2026-CUSTOMER1",
+                                "ORD-2026-100002",
                                 customer,
                                 new Money(new BigDecimal("68.48")),
                                 Instant.parse("2026-09-05T09:00:00Z")));

@@ -1,5 +1,6 @@
 package com.springbootecommerce.shophappens.administration.web.api;
 
+import java.time.Instant;
 import java.util.List;
 
 public record CustomerResponse(
@@ -7,6 +8,7 @@ public record CustomerResponse(
         String givenName,
         String familyName,
         String contactEmail,
+        Instant createdAt,
         Long accountId,
         List<CustomerAddressResponse> addresses,
         List<CustomerOrderResponse> orders) {

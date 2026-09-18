@@ -11,7 +11,7 @@
       <li th:each="order : ${orders}" class="card bg-base-100 shadow-sm">
         <div class="card-body flex-row justify-between items-center">
           <div>
-            <h2 class="card-title" th:text="${order.orderNumber()}">ORD-00000000-000000000000</h2>
+            <h2 class="card-title" th:text="${order.orderNumber()}">ORD-2026-100001</h2>
             <p th:text="${#temporals.format(order.placedAt(), 'yyyy-MM-dd HH:mm')}">2026-08-30</p>
           </div>
           <div class="text-right">
@@ -26,4 +26,3 @@
 <th:block id="page-scripts"></th:block>
 </body>
 </html>
-

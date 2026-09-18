@@ -47,6 +47,8 @@ class CustomerRepositoryAdapter implements CustomerRepository {
         var page =
                 springData.searchForAdministration(
                         escapeLikePattern(search.query()),
+                        search.createdFrom(),
+                        search.createdBefore(),
                         '\\',
                         PageRequest.of(
                                 search.page(), search.size(), Sort.by(Sort.Direction.DESC, "id")));
@@ -58,7 +60,8 @@ class CustomerRepositoryAdapter implements CustomerRepository {
                                                 new CustomerId(customer.getId()),
                                                 customer.getGivenName(),
                                                 customer.getFamilyName(),
-                                                customer.getContactEmail()))
+                                                customer.getContactEmail(),
+                                                customer.getCreatedAt()))
                         .toList(),
                 search.page(),
                 search.size(),
@@ -124,6 +127,7 @@ class CustomerRepositoryAdapter implements CustomerRepository {
                 customer.getGivenName(),
                 customer.getFamilyName(),
                 customer.getContactEmail(),
+                customer.getCreatedAt(),
                 customer.getAddresses().stream().map(this::toAdminAddress).toList());
     }
 

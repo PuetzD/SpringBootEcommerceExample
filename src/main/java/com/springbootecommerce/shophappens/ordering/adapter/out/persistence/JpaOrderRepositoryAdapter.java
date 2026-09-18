@@ -2,6 +2,7 @@ package com.springbootecommerce.shophappens.ordering.adapter.out.persistence;
 
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAddressView;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminDetail;
+import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminMetrics;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminPage;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminSearch;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminSummary;
@@ -68,14 +69,20 @@ class JpaOrderRepositoryAdapter implements OrderRepository {
         var page =
                 springData.searchForAdministration(
                         search.query(),
+                        search.placedFrom(),
+                        search.placedBefore(),
                         org.springframework.data.domain.PageRequest.of(
                                 search.page(), search.size()));
+        var metrics =
+                springData.summarizeForAdministration(
+                        search.query(), search.placedFrom(), search.placedBefore());
         return new OrderAdminPage(
                 page.getContent().stream().map(this::toAdminSummary).toList(),
                 search.page(),
                 search.size(),
                 page.getTotalElements(),
-                page.getTotalPages());
+                page.getTotalPages(),
+                new OrderAdminMetrics(new Money(metrics.getRevenue())));
     }
 
     @Override

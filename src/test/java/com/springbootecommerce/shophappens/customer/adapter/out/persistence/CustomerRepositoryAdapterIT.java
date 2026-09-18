@@ -13,6 +13,8 @@ import com.springbootecommerce.shophappens.customer.domain.model.Customer;
 import com.springbootecommerce.shophappens.integration.AbstractIntegrationTest;
 import com.springbootecommerce.shophappens.sharedkernel.identity.AccountId;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -323,12 +325,18 @@ class CustomerRepositoryAdapterIT extends AbstractIntegrationTest {
         var first = saveCustomer("First", "Customer", "first-page@example.com");
         var second = saveCustomer("Second", "Customer", "second-page@example.com");
         var third = saveCustomer("Third", "Customer", "third-page@example.com");
+        var thirdCreatedAt = Instant.parse("2026-09-17T12:00:00Z");
+        jdbc.update(
+                "update customer set created_at = ? where id = ?",
+                Timestamp.from(thirdCreatedAt),
+                third);
 
         var page = customers.searchForAdministration(new CustomerAdminSearch(0, 2, null));
 
         assertThat(page.content())
                 .extracting(summary -> summary.customerId().value())
                 .containsExactly(third, second);
+        assertThat(page.content().getFirst().createdAt()).isEqualTo(thirdCreatedAt);
         assertThat(page.page()).isZero();
         assertThat(page.size()).isEqualTo(2);
         assertThat(page.totalElements()).isEqualTo(3);
@@ -367,6 +375,11 @@ class CustomerRepositoryAdapterIT extends AbstractIntegrationTest {
                                 "contact@example.com"));
         customer.addAddress(testCityAddress(), true, false);
         var saved = customers.save(customer);
+        var createdAt = Instant.parse("2026-09-17T12:00:00Z");
+        jdbc.update(
+                "update customer set created_at = ? where id = ?",
+                Timestamp.from(createdAt),
+                saved.id().orElseThrow().value());
 
         var detail = customers.findForAdministration(saved.id().orElseThrow()).orElseThrow();
 
@@ -375,6 +388,7 @@ class CustomerRepositoryAdapterIT extends AbstractIntegrationTest {
         assertThat(detail.givenName()).isEqualTo("Ada");
         assertThat(detail.familyName()).isEqualTo("Lovelace");
         assertThat(detail.contactEmail()).isEqualTo("contact@example.com");
+        assertThat(detail.createdAt()).isEqualTo(createdAt);
         assertThat(detail.addresses())
                 .singleElement()
                 .satisfies(
@@ -390,6 +404,38 @@ class CustomerRepositoryAdapterIT extends AbstractIntegrationTest {
     @Test
     void returnsEmptyForUnknownCustomerId() {
         assertThat(customers.findForAdministration(new CustomerId(Long.MAX_VALUE))).isEmpty();
+    }
+
+    @Test
+    void includesCustomersCreatedAtTheStartAndExcludesCustomersCreatedAtTheEnd() {
+        var atFrom = saveCustomer("Boundary", "From", "at-from@example.com");
+        var inside = saveCustomer("Boundary", "Inside", "inside-range@example.com");
+        var atBefore = saveCustomer("Boundary", "Before", "at-before@example.com");
+        var from = Instant.parse("2026-08-18T12:00:00Z");
+        var insideCreatedAt = Instant.parse("2026-09-01T12:00:00Z");
+        var before = Instant.parse("2026-09-17T12:00:00Z");
+        jdbc.update(
+                "update customer set created_at = ? where id = ?", Timestamp.from(from), atFrom);
+        jdbc.update(
+                "update customer set created_at = ? where id = ?",
+                Timestamp.from(insideCreatedAt),
+                inside);
+        jdbc.update(
+                "update customer set created_at = ? where id = ?",
+                Timestamp.from(before),
+                atBefore);
+
+        var page =
+                customers.searchForAdministration(
+                        new CustomerAdminSearch(0, 20, "Boundary", from, before));
+
+        assertThat(page.content())
+                .extracting(summary -> summary.customerId().value())
+                .containsExactlyInAnyOrder(atFrom, inside)
+                .doesNotContain(atBefore);
+        assertThat(page.content())
+                .extracting(summary -> summary.createdAt())
+                .containsExactlyInAnyOrder(from, insideCreatedAt);
     }
 
     private Long saveCustomer(String givenName, String familyName, String contactEmail) {

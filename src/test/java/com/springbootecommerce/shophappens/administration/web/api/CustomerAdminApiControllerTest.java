@@ -47,7 +47,12 @@ class CustomerAdminApiControllerTest {
     @Test
     void adminCanSearchCustomersAndUsesCustomerIdAsResponseId() throws Exception {
         var summary =
-                new CustomerAdminSummary(new CustomerId(7), "Alice", "Admin", "alice@example.com");
+                new CustomerAdminSummary(
+                        new CustomerId(7),
+                        "Alice",
+                        "Admin",
+                        "alice@example.com",
+                        Instant.parse("2026-09-17T12:00:00Z"));
         when(customerAdministrationQuery.searchCustomers(new CustomerAdminSearch(0, 20, "alice")))
                 .thenReturn(new CustomerAdminPage(List.of(summary), 0, 20, 1, 1));
 
@@ -60,6 +65,41 @@ class CustomerAdminApiControllerTest {
                 .andExpect(jsonPath("$.content[0].givenName").value("Alice"))
                 .andExpect(jsonPath("$.content[0].contactEmail").value("alice@example.com"))
                 .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @Test
+    void adminCanListCustomersInAnInclusiveExclusiveCreationPeriod() throws Exception {
+        Instant from = Instant.parse("2026-08-18T12:00:00Z");
+        Instant to = Instant.parse("2026-09-17T12:00:00Z");
+        Instant createdAt = Instant.parse("2026-09-05T09:00:00Z");
+        var summary =
+                new CustomerAdminSummary(
+                        new CustomerId(7), "Alice", "Admin", "alice@example.com", createdAt);
+        when(customerAdministrationQuery.searchCustomers(
+                        new CustomerAdminSearch(0, 20, null, from, to)))
+                .thenReturn(new CustomerAdminPage(List.of(summary), 0, 20, 1, 1));
+
+        mockMvc.perform(
+                        get("/api/admin/customers")
+                                .param("from", from.toString())
+                                .param("to", to.toString())
+                                .with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(7))
+                .andExpect(jsonPath("$.content[0].createdAt").value(createdAt.toString()));
+    }
+
+    @Test
+    void rejectsAnEmptyCustomerCreationPeriodBeforeQueryingCustomers() throws Exception {
+        Instant boundary = Instant.parse("2026-09-17T12:00:00Z");
+
+        mockMvc.perform(
+                        get("/api/admin/customers")
+                                .param("from", boundary.toString())
+                                .param("to", boundary.toString())
+                                .with(user("admin").roles("ADMIN")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("customer.invalid"));
     }
 
     @Test
@@ -88,7 +128,7 @@ class CustomerAdminApiControllerTest {
                         List.of(
                                 new OrderAdminSummary(
                                         new OrderReference(orderId),
-                                        "ORD-1001",
+                                        "ORD-2026-100001",
                                         new CustomerId(customerId),
                                         new Money(new BigDecimal("19.99")),
                                         Instant.parse("2026-09-05T09:00:00Z"))));
@@ -99,8 +139,9 @@ class CustomerAdminApiControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(customerId))
                 .andExpect(jsonPath("$.accountId").value(11))
+                .andExpect(jsonPath("$.createdAt").value("2026-09-17T12:00:00Z"))
                 .andExpect(jsonPath("$.addresses[0].id").value(31))
-                .andExpect(jsonPath("$.orders[0].orderNumber").value("ORD-1001"))
+                .andExpect(jsonPath("$.orders[0].orderNumber").value("ORD-2026-100001"))
                 .andExpect(jsonPath("$.orders[0].orderId").value(orderId.toString()))
                 .andExpect(jsonPath("$.orders[0].orderUrl").doesNotExist());
     }
@@ -170,6 +211,7 @@ class CustomerAdminApiControllerTest {
                 "Alice",
                 "Admin",
                 "alice@example.com",
+                Instant.parse("2026-09-17T12:00:00Z"),
                 List.of(
                         new CustomerAdminAddressView(
                                 new AddressReference(31),

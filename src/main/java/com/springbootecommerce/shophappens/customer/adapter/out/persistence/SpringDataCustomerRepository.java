@@ -1,6 +1,7 @@
 package com.springbootecommerce.shophappens.customer.adapter.out.persistence;
 
 import jakarta.persistence.LockModeType;
+import java.time.Instant;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,13 +25,17 @@ interface SpringDataCustomerRepository extends JpaRepository<CustomerJpaEntity, 
     @Query(
             """
             select c from CustomerJpaEntity c
-            where (:query is null or :query = ''
+            where (cast(:createdFrom as timestamp) is null or c.createdAt >= :createdFrom)
+              and (cast(:createdBefore as timestamp) is null or c.createdAt < :createdBefore)
+              and (:query is null or :query = ''
                    or lower(c.givenName) like lower(concat('%', :query, '%')) escape :escapeCharacter
                    or lower(c.familyName) like lower(concat('%', :query, '%')) escape :escapeCharacter
                    or lower(c.contactEmail) like lower(concat('%', :query, '%')) escape :escapeCharacter)
             """)
     Page<CustomerJpaEntity> searchForAdministration(
             @Param("query") String query,
+            @Param("createdFrom") Instant createdFrom,
+            @Param("createdBefore") Instant createdBefore,
             @Param("escapeCharacter") Character escapeCharacter,
             Pageable pageable);
 }

@@ -65,7 +65,7 @@ class JpaIntegrationEventOutboxTest {
                 .isEqualTo("11111111-1111-1111-1111-111111111111");
         assertThat(payload.get("orderId").asString())
                 .isEqualTo("22222222-2222-2222-2222-222222222222");
-        assertThat(payload.get("orderNumber").asString()).isEqualTo("ORD-20260831-ABC123DEF456");
+        assertThat(payload.get("orderNumber").asString()).isEqualTo("ORD-2026-100001");
         assertThat(payload.get("customerId").isIntegralNumber()).isTrue();
         assertThat(payload.get("customerId").longValue()).isEqualTo(42L);
         assertThat(payload.get("customerGivenName").asString()).isEqualTo("Jane");
@@ -132,7 +132,7 @@ class JpaIntegrationEventOutboxTest {
         return new OrderPlacedIntegrationEvent(
                 UUID.fromString("11111111-1111-1111-1111-111111111111"),
                 UUID.fromString("22222222-2222-2222-2222-222222222222"),
-                "ORD-20260831-ABC123DEF456",
+                "ORD-2026-100001",
                 42L,
                 "Jane",
                 "jane@example.com",

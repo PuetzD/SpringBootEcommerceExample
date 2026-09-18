@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 
 class CustomerAdminSearchTest {
@@ -41,5 +42,24 @@ class CustomerAdminSearchTest {
     @Test
     void stripsQueryWhitespace() {
         assertEquals("Ada", new CustomerAdminSearch(0, 10, "  Ada  ").query());
+    }
+
+    @Test
+    void rejectsAnEmptyOrReversedCreationRange() {
+        Instant boundary = Instant.parse("2026-09-17T12:00:00Z");
+
+        var emptyRange =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> new CustomerAdminSearch(0, 20, null, boundary, boundary));
+        var reversedRange =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () ->
+                                new CustomerAdminSearch(
+                                        0, 20, null, boundary, boundary.minusSeconds(1)));
+
+        assertEquals("Creation range start must be before end", emptyRange.getMessage());
+        assertEquals("Creation range start must be before end", reversedRange.getMessage());
     }
 }

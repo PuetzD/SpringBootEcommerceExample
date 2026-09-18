@@ -19,7 +19,7 @@ class OrderPlacedIntegrationEventTest {
                 new OrderPlacedIntegrationEvent(
                         UUID.randomUUID(),
                         UUID.randomUUID(),
-                        "ORD-20260828-ABC123DEF456",
+                        "ORD-2026-100001",
                         42L,
                         "Ada",
                         "ada@example.com",
