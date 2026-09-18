@@ -6,6 +6,7 @@ CREATE TABLE order_confirmation_delivery (
     last_error VARCHAR(200),
     next_attempt_at TIMESTAMPTZ NOT NULL,
     claim_expires_at TIMESTAMPTZ NOT NULL,
+    claim_token UUID NOT NULL,
     sent_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL,

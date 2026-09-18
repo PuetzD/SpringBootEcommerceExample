@@ -7,8 +7,10 @@ import static org.mockito.Mockito.doReturn;
 import com.springbootecommerce.shophappens.integration.AbstractIntegrationTest;
 import com.springbootecommerce.shophappens.ordering.application.event.OrderPlacedIntegrationEvent;
 import com.springbootecommerce.shophappens.ordering.notification.application.OrderConfirmationDeliveryService;
+import com.springbootecommerce.shophappens.ordering.notification.application.port.in.OrderConfirmationPendingException;
 import com.springbootecommerce.shophappens.ordering.notification.application.port.out.OrderConfirmationClaim;
 import com.springbootecommerce.shophappens.ordering.notification.application.port.out.OrderConfirmationDelivery;
+import com.springbootecommerce.shophappens.ordering.notification.application.port.out.StaleOrderConfirmationClaimException;
 import com.springbootecommerce.shophappens.sharedkernel.money.Currency;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -16,7 +18,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Executors;
@@ -46,10 +47,122 @@ class OrderConfirmationClaimIT extends AbstractIntegrationTest {
     }
 
     @Test
+    void futureRetryMustNotReturnSuccessfullyToTheListener() {
+        UUID eventId = UUID.randomUUID();
+        claim(eventId);
+        deliveries.markFailed(
+                eventId, token(eventId), "mail unavailable", NOW.plusSeconds(8), false);
+        var service =
+                new OrderConfirmationDeliveryService(
+                        deliveries, event -> null, message -> {}, clock);
+
+        assertThatThrownBy(() -> service.send(event(eventId)))
+                .isInstanceOf(OrderConfirmationPendingException.class);
+    }
+
+    @Test
+    void liveLeaseMustNotReturnSuccessfullyToTheListener() {
+        UUID eventId = UUID.randomUUID();
+        claim(eventId);
+        var service =
+                new OrderConfirmationDeliveryService(
+                        deliveries, event -> null, message -> {}, clock);
+
+        assertThatThrownBy(() -> service.send(event(eventId)))
+                .isInstanceOf(OrderConfirmationPendingException.class);
+    }
+
+    @Test
+    void staleFailureCannotOverwriteReplacementSentOutcome() {
+        UUID eventId = UUID.randomUUID();
+        claim(eventId);
+        UUID staleToken = token(eventId);
+        doReturn(NOW.plusSeconds(300)).when(clock).instant();
+        claim(eventId);
+        deliveries.markSent(eventId, token(eventId), clock.instant());
+
+        assertThatThrownBy(
+                        () ->
+                                deliveries.markFailed(
+                                        eventId, staleToken, "stale failure", NOW, false))
+                .isInstanceOf(StaleOrderConfirmationClaimException.class);
+        assertThat(row(eventId)).containsEntry("status", "SENT");
+    }
+
+    @Test
+    void staleSuccessCannotOverwriteReplacementFailureOutcome() {
+        UUID eventId = UUID.randomUUID();
+        claim(eventId);
+        UUID staleToken = token(eventId);
+        doReturn(NOW.plusSeconds(300)).when(clock).instant();
+        claim(eventId);
+        deliveries.markFailed(
+                eventId, token(eventId), "replacement failure", NOW.plusSeconds(301), false);
+
+        assertThatThrownBy(() -> deliveries.markSent(eventId, staleToken, NOW))
+                .isInstanceOf(StaleOrderConfirmationClaimException.class);
+        assertThat(row(eventId)).containsEntry("status", "FAILED");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"SENT", "FAILED", "QUARANTINED"})
+    void staleOutcomeCannotCompleteWhileReplacementOwnsClaim(String outcome) {
+        UUID eventId = UUID.randomUUID();
+        claim(eventId);
+        UUID staleToken = token(eventId);
+        doReturn(NOW.plusSeconds(300)).when(clock).instant();
+        claim(eventId);
+
+        assertThat(token(eventId)).isNotEqualTo(staleToken);
+        assertThatThrownBy(
+                        () -> {
+                            if (outcome.equals("SENT")) {
+                                deliveries.markSent(eventId, staleToken, NOW);
+                            } else {
+                                deliveries.markFailed(
+                                        eventId,
+                                        staleToken,
+                                        "stale failure",
+                                        NOW,
+                                        outcome.equals("QUARANTINED"));
+                            }
+                        })
+                .isInstanceOf(StaleOrderConfirmationClaimException.class);
+        assertThat(row(eventId)).containsEntry("status", "CLAIMED");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"SENT", "FAILED", "QUARANTINED"})
+    void completedTokenCannotRecordASecondOutcome(String outcome) {
+        UUID eventId = UUID.randomUUID();
+        var acquired = (OrderConfirmationClaim.Acquired) claim(eventId);
+        assertThat(token(eventId)).isEqualTo(acquired.claimToken());
+        if (outcome.equals("SENT")) {
+            deliveries.markSent(eventId, acquired.claimToken(), NOW);
+        } else {
+            deliveries.markFailed(
+                    eventId, acquired.claimToken(), "failure", NOW, outcome.equals("QUARANTINED"));
+        }
+        var completed = row(eventId);
+
+        assertThatThrownBy(() -> deliveries.markSent(eventId, acquired.claimToken(), NOW))
+                .isInstanceOf(StaleOrderConfirmationClaimException.class);
+        assertThatThrownBy(
+                        () ->
+                                deliveries.markFailed(
+                                        eventId, acquired.claimToken(), "again", NOW, false))
+                .isInstanceOf(StaleOrderConfirmationClaimException.class);
+        assertThat(row(eventId)).isEqualTo(completed).containsEntry("status", outcome);
+    }
+
+    @Test
     void firstClaimPersistsTheRequestedLeaseWithoutRecordingAFailure() {
         UUID eventId = UUID.randomUUID();
 
-        assertThat(claim(eventId)).contains(new OrderConfirmationClaim(0));
+        assertThat(claim(eventId))
+                .isInstanceOfSatisfying(
+                        OrderConfirmationClaim.Acquired.class,
+                        acquired -> assertThat(acquired.failedAttempts()).isEqualTo(0));
 
         assertThat(row(eventId))
                 .containsEntry("order_number", ORDER_NUMBER)
@@ -64,15 +177,18 @@ class OrderConfirmationClaimIT extends AbstractIntegrationTest {
     @Test
     void liveLeaseIsUnavailableAndBecomesReclaimableExactlyAtExpiry() {
         UUID eventId = UUID.randomUUID();
-        assertThat(claim(eventId)).isPresent();
+        assertThat(claim(eventId)).isInstanceOf(OrderConfirmationClaim.Acquired.class);
         Map<String, Object> original = row(eventId);
 
         doReturn(NOW.plusSeconds(299)).when(clock).instant();
-        assertThat(claim(eventId)).isEmpty();
+        assertThat(claim(eventId)).isInstanceOf(OrderConfirmationClaim.Pending.class);
         assertThat(row(eventId)).isEqualTo(original);
 
         doReturn(NOW.plusSeconds(300)).when(clock).instant();
-        assertThat(claim(eventId)).contains(new OrderConfirmationClaim(0));
+        assertThat(claim(eventId))
+                .isInstanceOfSatisfying(
+                        OrderConfirmationClaim.Acquired.class,
+                        acquired -> assertThat(acquired.failedAttempts()).isEqualTo(0));
         assertThat(row(eventId))
                 .containsEntry("claim_expires_at", Timestamp.from(NOW.plusSeconds(600)))
                 .containsEntry("created_at", Timestamp.from(NOW))
@@ -82,27 +198,33 @@ class OrderConfirmationClaimIT extends AbstractIntegrationTest {
     @Test
     void futureRetryRemainsUnavailableEvenAfterThePreviousLeaseExpires() {
         UUID eventId = UUID.randomUUID();
-        assertThat(claim(eventId)).isPresent();
-        deliveries.markFailed(eventId, "unavailable", NOW.plusSeconds(600), false);
+        assertThat(claim(eventId)).isInstanceOf(OrderConfirmationClaim.Acquired.class);
+        deliveries.markFailed(eventId, token(eventId), "unavailable", NOW.plusSeconds(600), false);
         Map<String, Object> original = row(eventId);
 
         doReturn(NOW.plusSeconds(599)).when(clock).instant();
 
-        assertThat(claim(eventId)).isEmpty();
+        assertThat(claim(eventId)).isInstanceOf(OrderConfirmationClaim.Pending.class);
         assertThat(row(eventId)).isEqualTo(original);
     }
 
     @Test
     void retryBecomesAvailableExactlyWhenDueAndPreservesPriorFailures() {
         UUID eventId = UUID.randomUUID();
-        assertThat(claim(eventId)).isPresent();
-        deliveries.markFailed(eventId, "first failure", NOW.plusSeconds(1), false);
+        assertThat(claim(eventId)).isInstanceOf(OrderConfirmationClaim.Acquired.class);
+        deliveries.markFailed(eventId, token(eventId), "first failure", NOW.plusSeconds(1), false);
         doReturn(NOW.plusSeconds(1)).when(clock).instant();
-        assertThat(claim(eventId)).contains(new OrderConfirmationClaim(1));
-        deliveries.markFailed(eventId, "second failure", NOW.plusSeconds(3), false);
+        assertThat(claim(eventId))
+                .isInstanceOfSatisfying(
+                        OrderConfirmationClaim.Acquired.class,
+                        acquired -> assertThat(acquired.failedAttempts()).isEqualTo(1));
+        deliveries.markFailed(eventId, token(eventId), "second failure", NOW.plusSeconds(3), false);
         doReturn(NOW.plusSeconds(3)).when(clock).instant();
 
-        assertThat(claim(eventId)).contains(new OrderConfirmationClaim(2));
+        assertThat(claim(eventId))
+                .isInstanceOfSatisfying(
+                        OrderConfirmationClaim.Acquired.class,
+                        acquired -> assertThat(acquired.failedAttempts()).isEqualTo(2));
 
         assertThat(row(eventId))
                 .containsEntry("status", "CLAIMED")
@@ -117,17 +239,17 @@ class OrderConfirmationClaimIT extends AbstractIntegrationTest {
     @ValueSource(strings = {"SENT", "QUARANTINED"})
     void terminalDeliveryCannotBeClaimedAfterItsLeaseAndRetryTime(String status) {
         UUID eventId = UUID.randomUUID();
-        assertThat(claim(eventId)).isPresent();
+        assertThat(claim(eventId)).isInstanceOf(OrderConfirmationClaim.Acquired.class);
         if (status.equals("SENT")) {
-            deliveries.markSent(eventId, NOW);
+            deliveries.markSent(eventId, token(eventId), NOW);
         } else {
-            deliveries.markFailed(eventId, "permanent failure", NOW, true);
+            deliveries.markFailed(eventId, token(eventId), "permanent failure", NOW, true);
         }
         Map<String, Object> original = row(eventId);
         assertThat(original).containsEntry("status", status);
         doReturn(NOW.plusSeconds(3600)).when(clock).instant();
 
-        assertThat(claim(eventId)).isEmpty();
+        assertThat(claim(eventId)).isEqualTo(OrderConfirmationClaim.Terminal.valueOf(status));
         assertThat(row(eventId)).isEqualTo(original);
     }
 
@@ -160,7 +282,7 @@ class OrderConfirmationClaimIT extends AbstractIntegrationTest {
         }
         assertThat(row(eventId).get("last_error").toString()).hasSize(200);
         doReturn(NOW.plusSeconds(3600)).when(clock).instant();
-        assertThat(claim(eventId)).isEmpty();
+        assertThat(claim(eventId)).isEqualTo(OrderConfirmationClaim.Terminal.QUARANTINED);
     }
 
     @ParameterizedTest
@@ -168,12 +290,11 @@ class OrderConfirmationClaimIT extends AbstractIntegrationTest {
     void simultaneousTransactionsGrantOneLeaseAndRecoverItAfterACrash(String initialStatus)
             throws Exception {
         UUID eventId = UUID.randomUUID();
-        int failedAttempts = 0;
+        final int failedAttempts = initialStatus.equals("FAILED") ? 1 : 0;
         if (!initialStatus.equals("NEW")) {
-            assertThat(claim(eventId)).isPresent();
+            assertThat(claim(eventId)).isInstanceOf(OrderConfirmationClaim.Acquired.class);
             if (initialStatus.equals("FAILED")) {
-                deliveries.markFailed(eventId, "previous failure", NOW, false);
-                failedAttempts = 1;
+                deliveries.markFailed(eventId, token(eventId), "previous failure", NOW, false);
             } else {
                 doReturn(NOW.plusSeconds(300)).when(clock).instant();
             }
@@ -186,16 +307,21 @@ class OrderConfirmationClaimIT extends AbstractIntegrationTest {
             var second = pool.submit(() -> concurrentClaim(eventId, barrier));
 
             assertThat(List.of(first.get(10, TimeUnit.SECONDS), second.get(10, TimeUnit.SECONDS)))
-                    .filteredOn(Optional::isPresent)
-                    .containsExactly(Optional.of(new OrderConfirmationClaim(failedAttempts)));
+                    .filteredOn(OrderConfirmationClaim.Acquired.class::isInstance)
+                    .hasSize(1);
 
             // Neither caller records an outcome: the winning process is assumed to have crashed.
             doReturn(claimedAt.plusSeconds(299)).when(clock).instant();
-            assertThat(pool.submit(() -> claim(eventId)).get(10, TimeUnit.SECONDS)).isEmpty();
+            assertThat(pool.submit(() -> claim(eventId)).get(10, TimeUnit.SECONDS))
+                    .isInstanceOf(OrderConfirmationClaim.Pending.class);
             doReturn(claimedAt.plusSeconds(301)).when(clock).instant();
             assertThat(pool.submit(() -> claim(eventId)).get(10, TimeUnit.SECONDS))
-                    .contains(new OrderConfirmationClaim(failedAttempts));
-            assertThat(claim(eventId)).isEmpty();
+                    .isInstanceOfSatisfying(
+                            OrderConfirmationClaim.Acquired.class,
+                            acquired ->
+                                    assertThat(acquired.failedAttempts())
+                                            .isEqualTo(failedAttempts));
+            assertThat(claim(eventId)).isInstanceOf(OrderConfirmationClaim.Pending.class);
             assertThat(row(eventId))
                     .containsEntry("attempt_count", failedAttempts)
                     .containsEntry("claim_expires_at", Timestamp.from(claimedAt.plusSeconds(601)));
@@ -204,7 +330,7 @@ class OrderConfirmationClaimIT extends AbstractIntegrationTest {
         }
     }
 
-    private Optional<OrderConfirmationClaim> concurrentClaim(UUID eventId, CyclicBarrier barrier) {
+    private OrderConfirmationClaim concurrentClaim(UUID eventId, CyclicBarrier barrier) {
         return new TransactionTemplate(transactions)
                 .execute(
                         status -> {
@@ -218,9 +344,14 @@ class OrderConfirmationClaimIT extends AbstractIntegrationTest {
                         });
     }
 
-    private Optional<OrderConfirmationClaim> claim(UUID eventId) {
+    private OrderConfirmationClaim claim(UUID eventId) {
         Instant now = clock.instant();
-        return deliveries.claim(eventId, ORDER_NUMBER, now, now.plusSeconds(300));
+        return deliveries.claim(
+                eventId, ORDER_NUMBER, UUID.randomUUID(), now, now.plusSeconds(300));
+    }
+
+    private UUID token(UUID eventId) {
+        return (UUID) row(eventId).get("claim_token");
     }
 
     private Map<String, Object> row(UUID eventId) {

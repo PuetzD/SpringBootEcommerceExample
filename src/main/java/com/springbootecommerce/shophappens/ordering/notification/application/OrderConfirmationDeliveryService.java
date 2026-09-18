@@ -1,13 +1,16 @@
 package com.springbootecommerce.shophappens.ordering.notification.application;
 
 import com.springbootecommerce.shophappens.ordering.application.event.OrderPlacedIntegrationEvent;
+import com.springbootecommerce.shophappens.ordering.notification.application.port.in.OrderConfirmationPendingException;
 import com.springbootecommerce.shophappens.ordering.notification.application.port.in.SendOrderConfirmationUseCase;
+import com.springbootecommerce.shophappens.ordering.notification.application.port.out.OrderConfirmationClaim;
 import com.springbootecommerce.shophappens.ordering.notification.application.port.out.OrderConfirmationDelivery;
 import com.springbootecommerce.shophappens.ordering.notification.application.port.out.OrderConfirmationRenderer;
 import com.springbootecommerce.shophappens.ordering.notification.application.port.out.OrderConfirmationSender;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -25,21 +28,35 @@ public class OrderConfirmationDeliveryService implements SendOrderConfirmationUs
     public void send(OrderPlacedIntegrationEvent event) {
         Instant now = clock.instant();
         var claim =
-                deliveries.claim(event.eventId(), event.orderNumber(), now, now.plus(CLAIM_LEASE));
-        if (claim.isEmpty()) {
+                deliveries.claim(
+                        event.eventId(),
+                        event.orderNumber(),
+                        UUID.randomUUID(),
+                        now,
+                        now.plus(CLAIM_LEASE));
+        if (claim instanceof OrderConfirmationClaim.Pending pending) {
+            throw new OrderConfirmationPendingException(pending.nextEligibleAt());
+        }
+        if (claim instanceof OrderConfirmationClaim.Terminal) {
             return;
         }
+        var acquired = (OrderConfirmationClaim.Acquired) claim;
 
         try {
             sender.send(renderer.render(event));
-            deliveries.markSent(event.eventId(), clock.instant());
+            deliveries.markSent(event.eventId(), acquired.claimToken(), clock.instant());
         } catch (RuntimeException exception) {
-            int attempt = claim.orElseThrow().failedAttempts() + 1;
+            int attempt = acquired.failedAttempts() + 1;
             boolean quarantine = attempt >= 5;
             Instant retryAt =
                     quarantine ? clock.instant() : clock.instant().plusSeconds(1L << (attempt - 1));
             try {
-                deliveries.markFailed(event.eventId(), diagnostic(exception), retryAt, quarantine);
+                deliveries.markFailed(
+                        event.eventId(),
+                        acquired.claimToken(),
+                        diagnostic(exception),
+                        retryAt,
+                        quarantine);
             } catch (RuntimeException markFailedException) {
                 if (markFailedException != exception) {
                     exception.addSuppressed(markFailedException);

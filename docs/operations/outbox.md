@@ -19,11 +19,33 @@ consumer does not query mutable Catalog or Customer Profile state.
 The `order_confirmation_delivery` table uses the event ID as its durable key.
 Each consumer attempt takes a five-minute lease. Transient SMTP failures use
 this exact sequence: `1s`, `2s`, `4s`, `8s`, then quarantine on the fifth
-failure. Inspect delivery state without exposing message payloads:
+failure.
+
+An attempt returns one of three decisions: acquired, pending until a specific instant, or
+terminal (`SENT`/`QUARANTINED`). A pending decision keeps the Kafka offset uncommitted and retries
+without an attempt limit, waiting until `next_attempt_at` for `FAILED` or `claim_expires_at` for
+`CLAIMED`. Restarting the consumer redelivers that same uncommitted record and honors the remaining
+wait. Only successful processing or a terminal delivery permits the normal record acknowledgment.
+Other exceptions retain Spring Kafka's default error handling. A persisted mail failure is
+immediately redelivered into this pending path, preserving the existing retry sequence.
+
+The notification listener disables automatic offset commits and uses record acknowledgments. Its
+ten-minute `max.poll.interval.ms` covers the five-minute claim wait; the wait stops promptly when
+the listener stops. Waiting holds up other records on that consumer. Keep this interval above the
+maximum lease/retry wait plus processing time if those durations change. There is no recovery
+scheduler or separate retry topic: recovery depends on the retained Kafka record and its retention.
+
+Each acquisition or reclaim installs a new UUID `claim_token`. Both success and failure updates
+must match the event ID, that token, and `CLAIMED` status in one atomic update. A stale worker
+cannot change a replacement worker's outcome or live claim; a zero-row update raises a stale-claim
+failure. If recording a mail failure loses ownership, that outcome failure is suppressed onto the
+original mail exception. Token fencing protects database ownership, but cannot undo an SMTP send.
+
+Inspect delivery state without exposing message payloads:
 
 ```sql
 SELECT event_id, order_number, status, attempt_count, last_error,
-       next_attempt_at, claim_expires_at, sent_at
+       next_attempt_at, claim_expires_at, claim_token, sent_at
 FROM order_confirmation_delivery
 WHERE status <> 'SENT'
 ORDER BY next_attempt_at, created_at;

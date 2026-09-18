@@ -22,6 +22,8 @@ public class OrderPlacedKafkaConsumer {
 
     @KafkaListener(
             topics = OrderPlacedIntegrationEvent.EVENT_TYPE,
+            containerFactory = "orderConfirmationKafkaListenerContainerFactory",
+            properties = {"enable.auto.commit=false", "max.poll.interval.ms=600000"},
             groupId = "${notifications.email.kafka.group:order-confirmation-email}")
     public void consume(ConsumerRecord<String, String> record) {
         confirmations.send(read(record.value()));

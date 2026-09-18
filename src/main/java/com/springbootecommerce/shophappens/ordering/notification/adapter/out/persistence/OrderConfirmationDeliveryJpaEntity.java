@@ -39,6 +39,9 @@ class OrderConfirmationDeliveryJpaEntity {
     @Column(name = "claim_expires_at", nullable = false)
     private Instant claimExpiresAt;
 
+    @Column(name = "claim_token", nullable = false)
+    private UUID claimToken;
+
     @Column(name = "sent_at")
     private Instant sentAt;
 
