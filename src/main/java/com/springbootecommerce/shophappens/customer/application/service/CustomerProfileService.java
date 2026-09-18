@@ -1,11 +1,11 @@
 package com.springbootecommerce.shophappens.customer.application.service;
 
-import com.springbootecommerce.shophappens.customer.application.CustomerNotFoundException;
-import com.springbootecommerce.shophappens.customer.application.CustomerProfileAlreadyExistsException;
 import com.springbootecommerce.shophappens.customer.application.port.in.AddressReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.AddressSnapshot;
 import com.springbootecommerce.shophappens.customer.application.port.in.CreateCustomerProfileUseCase;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerContactQuery;
+import com.springbootecommerce.shophappens.customer.application.port.in.CustomerNotFoundException;
+import com.springbootecommerce.shophappens.customer.application.port.in.CustomerProfileAlreadyExistsException;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReferenceQuery;
 import com.springbootecommerce.shophappens.customer.application.port.in.ExternalAccountId;

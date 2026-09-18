@@ -1,9 +1,9 @@
 package com.springbootecommerce.shophappens.customer.adapter.in.web;
 
-import com.springbootecommerce.shophappens.customer.application.CustomerNotFoundException;
 import com.springbootecommerce.shophappens.customer.application.port.in.AddressReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.AddressSnapshot;
 import com.springbootecommerce.shophappens.customer.application.port.in.CurrentCustomerIdentity;
+import com.springbootecommerce.shophappens.customer.application.port.in.CustomerNotFoundException;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.ManageCustomerAddressesUseCase;
 import com.springbootecommerce.shophappens.customer.application.port.in.ManageCustomerAddressesUseCase.SaveAddressCommand;

@@ -76,7 +76,7 @@ class CustomerProfileServiceTest {
                                         "Lovelace",
                                         "ada@example.com"))
                 .isInstanceOf(
-                        com.springbootecommerce.shophappens.customer.application
+                        com.springbootecommerce.shophappens.customer.application.port.in
                                 .CustomerProfileAlreadyExistsException.class);
     }
 

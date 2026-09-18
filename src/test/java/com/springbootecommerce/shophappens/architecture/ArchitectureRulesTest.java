@@ -22,6 +22,8 @@ class ArchitectureRulesTest {
     private static final String ROOT = "com.springbootecommerce.shophappens";
     private static final List<String> BOUNDED_CONTEXTS =
             List.of("account", "customer", "catalog", "cart", "ordering");
+    private static final List<String> DELIVERY_SLICES =
+            List.of("administration", "security", "storefront");
     // Extra cycle-detection slices for adapter and shared web code that is not a bounded
     // context. "sharedkernel" precedes "shared" so the longer prefix wins in sliceOf().
     private static final List<String> PROTECTED_SLICES =
@@ -297,19 +299,24 @@ class ArchitectureRulesTest {
     }
 
     @Test
-    void administrationUsesOnlyCatalogPublishedInputPorts() {
-        noClasses()
-                .that()
-                .resideInAnyPackage("..administration..")
-                .should()
-                .dependOnClassesThat()
-                .resideInAnyPackage(
-                        "..catalog.application.service..",
-                        "..catalog.application.port.out..",
-                        "..catalog.domain..",
-                        "..catalog.adapter..",
-                        "..catalog.application.command..")
-                .check(imported);
+    void deliverySlicesUseOnlyBoundedContextPublishedInputPorts() {
+        List<String> violations = new java.util.ArrayList<>();
+        for (JavaClass clazz : imported) {
+            String from = sliceOf(clazz);
+            if (from == null || !DELIVERY_SLICES.contains(from)) {
+                continue;
+            }
+            for (var dependency : clazz.getDirectDependenciesFromSelf()) {
+                JavaClass target = dependency.getTargetClass();
+                String to = sliceOf(target);
+                if (to != null
+                        && BOUNDED_CONTEXTS.contains(to)
+                        && !target.getPackageName().contains(".application.port.in")) {
+                    violations.add(clazz.getName() + " -> " + target.getName());
+                }
+            }
+        }
+        assertThat(violations).isEmpty();
     }
 
     @Test

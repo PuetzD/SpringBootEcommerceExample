@@ -1,11 +1,11 @@
 package com.springbootecommerce.shophappens.administration.web.api;
 
-import com.springbootecommerce.shophappens.customer.application.CustomerNotFoundException;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerAdminAddressView;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerAdminDetail;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerAdminSearch;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerAdminSummary;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerAdministrationQuery;
+import com.springbootecommerce.shophappens.customer.application.port.in.CustomerNotFoundException;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdminSummary;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdministrationQuery;
