@@ -382,6 +382,17 @@ class ArchitectureRulesTest {
     }
 
     @Test
+    void notificationInboundAdaptersDoNotDependOnConcreteNotificationApplicationClasses() {
+        noClasses()
+                .that()
+                .resideInAPackage("..ordering.notification.adapter.in..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAPackage("..ordering.notification.application")
+                .check(imported);
+    }
+
+    @Test
     void webAndAdaptersDoNotDependOnApplicationServices() {
         noClasses()
                 .that()

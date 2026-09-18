@@ -17,20 +17,34 @@ event contains the customer recipient snapshot and immutable order contents; the
 consumer does not query mutable Catalog or Customer Profile state.
 
 The `order_confirmation_delivery` table uses the event ID as its durable key.
-Transient mail failures are retried, and five failed attempts quarantine the
-delivery. Inspect delivery state without exposing message payloads:
+Each consumer attempt takes a five-minute lease. Transient SMTP failures use
+this exact sequence: `1s`, `2s`, `4s`, `8s`, then quarantine on the fifth
+failure. Inspect delivery state without exposing message payloads:
 
 ```sql
 SELECT event_id, order_number, status, attempt_count, last_error,
-       next_attempt_at, sent_at
+       next_attempt_at, claim_expires_at, sent_at
 FROM order_confirmation_delivery
 WHERE status <> 'SENT'
 ORDER BY next_attempt_at, created_at;
 ```
 
-Plain SMTP has a small crash window after the provider accepts a message but
-before the sent marker is committed; this workflow is at-least-once, not a
-distributed exactly-once guarantee.
+`CLAIMED` rows with `claim_expires_at <= CURRENT_TIMESTAMP` are abandoned.
+Inspect them directly when checking recovery:
+
+```sql
+SELECT event_id, order_number, attempt_count, last_error, claim_expires_at
+FROM order_confirmation_delivery
+WHERE status = 'CLAIMED'
+  AND claim_expires_at <= CURRENT_TIMESTAMP
+ORDER BY claim_expires_at;
+```
+
+A later delivery of the same event automatically reclaims an abandoned row;
+do not manually reset an expired claim. Plain SMTP has a crash window after
+the provider accepts a message but before the sent marker is committed, so the
+workflow is at-least-once and the customer can receive a duplicate email. It
+is not a distributed exactly-once guarantee.
 
 ## Inspect delivery state
 
