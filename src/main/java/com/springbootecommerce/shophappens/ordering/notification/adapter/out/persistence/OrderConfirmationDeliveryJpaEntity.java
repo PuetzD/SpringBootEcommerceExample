@@ -36,6 +36,9 @@ class OrderConfirmationDeliveryJpaEntity {
     @Column(name = "next_attempt_at", nullable = false)
     private Instant nextAttemptAt;
 
+    @Column(name = "claim_expires_at", nullable = false)
+    private Instant claimExpiresAt;
+
     @Column(name = "sent_at")
     private Instant sentAt;
 
@@ -44,16 +47,4 @@ class OrderConfirmationDeliveryJpaEntity {
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
-
-    static OrderConfirmationDeliveryJpaEntity create(
-            UUID eventId, String orderNumber, Instant now) {
-        var entity = new OrderConfirmationDeliveryJpaEntity();
-        entity.eventId = eventId;
-        entity.orderNumber = orderNumber;
-        entity.status = "CLAIMED";
-        entity.nextAttemptAt = now;
-        entity.createdAt = now;
-        entity.updatedAt = now;
-        return entity;
-    }
 }

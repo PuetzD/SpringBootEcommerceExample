@@ -1,11 +1,12 @@
 package com.springbootecommerce.shophappens.ordering.notification.adapter.out.persistence;
 
+import com.springbootecommerce.shophappens.ordering.notification.application.port.out.OrderConfirmationClaim;
 import com.springbootecommerce.shophappens.ordering.notification.application.port.out.OrderConfirmationDelivery;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,28 +18,11 @@ public class JpaOrderConfirmationDelivery implements OrderConfirmationDelivery {
 
     @Override
     @Transactional
-    public boolean claim(UUID eventId, String orderNumber) {
-        var existing = repository.findById(eventId);
-        if (existing.isPresent()) {
-            var entity = existing.get();
-            if (entity.getStatus().equals("SENT")
-                    || entity.getStatus().equals("CLAIMED")
-                    || entity.getStatus().equals("QUARANTINED")) {
-                return false;
-            }
-            entity.setStatus("CLAIMED");
-            entity.setUpdatedAt(Instant.now(clock));
-            repository.save(entity);
-            return true;
-        }
-        try {
-            repository.save(
-                    OrderConfirmationDeliveryJpaEntity.create(
-                            eventId, orderNumber, Instant.now(clock)));
-            return true;
-        } catch (DataIntegrityViolationException exception) {
-            return false;
-        }
+    public Optional<OrderConfirmationClaim> claim(
+            UUID eventId, String orderNumber, Instant now, Instant claimExpiresAt) {
+        return repository
+                .claim(eventId, orderNumber, now, claimExpiresAt)
+                .map(OrderConfirmationClaim::new);
     }
 
     @Override
@@ -57,14 +41,14 @@ public class JpaOrderConfirmationDelivery implements OrderConfirmationDelivery {
 
     @Override
     @Transactional
-    public void markFailed(UUID eventId, String diagnostic, Instant nextAttemptAt) {
+    public void markFailed(
+            UUID eventId, String diagnostic, Instant nextAttemptAt, boolean quarantine) {
         repository
                 .findById(eventId)
                 .ifPresent(
                         entity -> {
-                            entity.setStatus("FAILED");
+                            entity.setStatus(quarantine ? "QUARANTINED" : "FAILED");
                             entity.setAttemptCount(entity.getAttemptCount() + 1);
-                            if (entity.getAttemptCount() >= 5) entity.setStatus("QUARANTINED");
                             entity.setLastError(
                                     diagnostic == null
                                             ? null
