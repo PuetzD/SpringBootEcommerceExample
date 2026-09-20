@@ -34,7 +34,10 @@ class CustomerRepositoryAdapterIT extends AbstractIntegrationTest {
 
     @Test
     @Sql(
-            statements = "delete from account where email = 'duplicate-profile@example.com'",
+            statements = {
+                "delete from customer where account_id = (select id from account where email = 'duplicate-profile@example.com')",
+                "delete from account where email = 'duplicate-profile@example.com'"
+            },
             executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     void translatesDuplicateAccountProfileConstraint() {
         long account = newAccount("duplicate-profile@example.com");
@@ -63,7 +66,10 @@ class CustomerRepositoryAdapterIT extends AbstractIntegrationTest {
 
     @Test
     @Sql(
-            statements = "delete from account where email = 'repeat-edit@example.com'",
+            statements = {
+                "delete from customer where account_id = (select id from account where email = 'repeat-edit@example.com')",
+                "delete from account where email = 'repeat-edit@example.com'"
+            },
             executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     void editsAnAddressAcrossMultipleCommittedTransactions() {
         long account = newAccount("repeat-edit@example.com");
@@ -115,7 +121,10 @@ class CustomerRepositoryAdapterIT extends AbstractIntegrationTest {
 
     @Test
     @Sql(
-            statements = "delete from account where email = 'switch-defaults@example.com'",
+            statements = {
+                "delete from customer where account_id = (select id from account where email = 'switch-defaults@example.com')",
+                "delete from account where email = 'switch-defaults@example.com'"
+            },
             executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     void switchesShippingAndBillingDefaultsBetweenExistingAddresses() {
         long account = newAccount("switch-defaults@example.com");
@@ -152,7 +161,10 @@ class CustomerRepositoryAdapterIT extends AbstractIntegrationTest {
 
     @Test
     @Sql(
-            statements = "delete from account where email = 'sibling-change@example.com'",
+            statements = {
+                "delete from customer where account_id = (select id from account where email = 'sibling-change@example.com')",
+                "delete from account where email = 'sibling-change@example.com'"
+            },
             executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     void retainsAnEditedAddressWhileAddingAndRemovingASibling() {
         long account = newAccount("sibling-change@example.com");
@@ -199,7 +211,10 @@ class CustomerRepositoryAdapterIT extends AbstractIntegrationTest {
 
     @Test
     @Sql(
-            statements = "delete from account where email = 'rollback-defaults@example.com'",
+            statements = {
+                "delete from customer where account_id = (select id from account where email = 'rollback-defaults@example.com')",
+                "delete from account where email = 'rollback-defaults@example.com'"
+            },
             executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     void rollsBackTemporaryDefaultClearingWhenFinalUpdateFails() {
         long account = newAccount("rollback-defaults@example.com");
