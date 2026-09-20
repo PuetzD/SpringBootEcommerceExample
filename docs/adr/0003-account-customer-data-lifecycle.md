@@ -6,7 +6,7 @@ Define account deletion ownership and historical order retention.
 
 ## Status
 
-Accepted
+Superseded by ADR-0011
 
 ## Context
 
@@ -16,10 +16,9 @@ processing.
 
 ## Decision
 
-The account is the identity owner. Deleting an account cascades to its customer
-profile, addresses, and customer cart through database foreign keys. Orders
-retain their customer ID and immutable address and product snapshots; historical
-orders are not deleted as a side effect of account removal.
+The account is the identity owner. Orders retain their customer ID and immutable
+address and product snapshots; historical orders are not deleted as a side
+effect of account removal. The deletion workflow is defined by ADR-0011.
 
 Application services own business transactions. The scheduled outbox publisher
 reads pending events and delegates status mutations to `OutboxStatusService`,

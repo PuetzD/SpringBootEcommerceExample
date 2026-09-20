@@ -31,3 +31,9 @@ _Avoid_: Order Item, line item
 **Quantity**:
 The positive whole number of units selected for a Product Variant.
 _Avoid_: Amount, count
+
+## Ownership
+
+Cart owns its Customer Cart persistence and exposes an idempotent removal
+operation for Account deletion. The Customer identifier is a shared-kernel
+logical reference, not a database foreign key to Customer Profile.
