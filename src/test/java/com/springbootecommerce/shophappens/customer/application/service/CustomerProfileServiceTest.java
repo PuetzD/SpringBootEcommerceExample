@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import com.springbootecommerce.shophappens.customer.application.port.in.AddressReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.AddressSnapshot;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerContactQuery.CustomerContact;
+import com.springbootecommerce.shophappens.customer.application.port.in.CustomerProfileAlreadyExistsException;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.ExternalAccountId;
 import com.springbootecommerce.shophappens.customer.application.port.in.ManageCustomerAddressesUseCase.SaveAddressCommand;
@@ -27,7 +28,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataIntegrityViolationException;
 
 @ExtendWith(MockitoExtension.class)
 class CustomerProfileServiceTest {
@@ -66,7 +66,7 @@ class CustomerProfileServiceTest {
     void translatesConcurrentAccountConstraintViolationToProfileAlreadyExists() {
         when(customers.findByAccountId(new AccountId(42L))).thenReturn(Optional.empty());
         when(customers.save(any(Customer.class)))
-                .thenThrow(new DataIntegrityViolationException("duplicate account"));
+                .thenThrow(new CustomerProfileAlreadyExistsException(new ExternalAccountId(42L)));
 
         assertThatThrownBy(
                         () ->
@@ -75,9 +75,7 @@ class CustomerProfileServiceTest {
                                         "Ada",
                                         "Lovelace",
                                         "ada@example.com"))
-                .isInstanceOf(
-                        com.springbootecommerce.shophappens.customer.application.port.in
-                                .CustomerProfileAlreadyExistsException.class);
+                .isInstanceOf(CustomerProfileAlreadyExistsException.class);
     }
 
     @Test

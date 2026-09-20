@@ -6,6 +6,8 @@ import com.springbootecommerce.shophappens.customer.application.port.in.Customer
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerAdminPage;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerAdminSearch;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerAdminSummary;
+import com.springbootecommerce.shophappens.customer.application.port.in.CustomerProfileAlreadyExistsException;
+import com.springbootecommerce.shophappens.customer.application.port.in.ExternalAccountId;
 import com.springbootecommerce.shophappens.customer.application.port.out.CustomerRepository;
 import com.springbootecommerce.shophappens.customer.domain.model.Address;
 import com.springbootecommerce.shophappens.customer.domain.model.Customer;
@@ -14,6 +16,8 @@ import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
@@ -78,7 +82,15 @@ class CustomerRepositoryAdapter implements CustomerRepository {
     @Transactional
     public Customer save(Customer customer) {
         if (customer.id().isEmpty()) {
-            return mapper.toDomain(springData.saveAndFlush(mapper.toJpa(customer)));
+            try {
+                return mapper.toDomain(springData.saveAndFlush(mapper.toJpa(customer)));
+            } catch (DataIntegrityViolationException exception) {
+                if (hasConstraint(exception, "uk_customer_account")) {
+                    throw new CustomerProfileAlreadyExistsException(
+                            new ExternalAccountId(customer.accountId().value()));
+                }
+                throw exception;
+            }
         }
 
         var managed =
@@ -100,6 +112,16 @@ class CustomerRepositoryAdapter implements CustomerRepository {
         mapper.applyToJpa(managed, customer);
         springData.flush();
         return mapper.toDomain(managed);
+    }
+
+    private boolean hasConstraint(Throwable exception, String constraintName) {
+        for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+            if (cause instanceof ConstraintViolationException violation
+                    && constraintName.equals(violation.getConstraintName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Long defaultAddressId(CustomerJpaEntity customer, boolean shipping) {

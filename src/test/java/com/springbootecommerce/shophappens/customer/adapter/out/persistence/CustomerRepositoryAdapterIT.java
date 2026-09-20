@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerAdminSearch;
+import com.springbootecommerce.shophappens.customer.application.port.in.CustomerProfileAlreadyExistsException;
 import com.springbootecommerce.shophappens.customer.application.port.out.CustomerRepository;
 import com.springbootecommerce.shophappens.customer.domain.model.Address;
 import com.springbootecommerce.shophappens.customer.domain.model.AddressDetails;
@@ -30,6 +31,35 @@ class CustomerRepositoryAdapterIT extends AbstractIntegrationTest {
     @Autowired CustomerRepository customers;
     @Autowired JdbcTemplate jdbc;
     @Autowired PlatformTransactionManager transactions;
+
+    @Test
+    @Sql(
+            statements = "delete from account where email = 'duplicate-profile@example.com'",
+            executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
+    void translatesDuplicateAccountProfileConstraint() {
+        long account = newAccount("duplicate-profile@example.com");
+        inTransaction(
+                () ->
+                        customers.save(
+                                Customer.create(
+                                        new AccountId(account),
+                                        "Ada",
+                                        "Lovelace",
+                                        new ContactEmail("duplicate-profile@example.com"))));
+
+        assertThatThrownBy(
+                        () ->
+                                inTransaction(
+                                        () ->
+                                                customers.save(
+                                                        Customer.create(
+                                                                new AccountId(account),
+                                                                "Ada",
+                                                                "Lovelace",
+                                                                new ContactEmail(
+                                                                        "duplicate-profile@example.com")))))
+                .isInstanceOf(CustomerProfileAlreadyExistsException.class);
+    }
 
     @Test
     @Sql(

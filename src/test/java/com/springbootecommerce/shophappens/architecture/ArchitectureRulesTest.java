@@ -389,6 +389,28 @@ class ArchitectureRulesTest {
     }
 
     @Test
+    void applicationDoesNotDependOnPersistenceFrameworks() {
+        noClasses()
+                .that()
+                .resideInAnyPackage(
+                        "..account.application..",
+                        "..customer.application..",
+                        "..catalog.application..",
+                        "..cart.application..",
+                        "..ordering.application..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage(
+                        "org.springframework.dao..",
+                        "org.springframework.data..",
+                        "org.springframework.jdbc..",
+                        "org.springframework.orm..",
+                        "jakarta.persistence..",
+                        "org.hibernate..")
+                .check(imported);
+    }
+
+    @Test
     void notificationInboundAdaptersDoNotDependOnConcreteNotificationApplicationClasses() {
         noClasses()
                 .that()
