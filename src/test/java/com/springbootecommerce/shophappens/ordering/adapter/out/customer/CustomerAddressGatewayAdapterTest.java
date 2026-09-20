@@ -9,7 +9,7 @@ import com.springbootecommerce.shophappens.customer.application.port.in.AddressS
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.OwnedAddressQuery;
 import com.springbootecommerce.shophappens.customer.application.port.in.OwnedAddressUnavailableException;
-import com.springbootecommerce.shophappens.ordering.application.exception.CheckoutAddressUnavailableException;
+import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutAddressUnavailableException;
 import com.springbootecommerce.shophappens.ordering.application.port.out.AvailableAddress;
 import com.springbootecommerce.shophappens.ordering.domain.model.AddressRole;
 import com.springbootecommerce.shophappens.ordering.domain.model.OrderAddress;

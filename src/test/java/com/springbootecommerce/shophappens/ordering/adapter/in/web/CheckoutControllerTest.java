@@ -16,9 +16,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.springbootecommerce.shophappens.customer.application.port.in.CurrentCustomerIdentity;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
-import com.springbootecommerce.shophappens.ordering.application.exception.CheckoutAddressUnavailableException;
-import com.springbootecommerce.shophappens.ordering.application.exception.CheckoutItemUnavailableException;
+import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutAddressUnavailableException;
 import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutItem;
+import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutItemUnavailableException;
 import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutPreparation;
 import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutReview;
 import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutReviewChangedException;

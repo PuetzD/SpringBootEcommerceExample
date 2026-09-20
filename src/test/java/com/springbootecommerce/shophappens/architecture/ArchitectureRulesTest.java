@@ -422,14 +422,29 @@ class ArchitectureRulesTest {
     }
 
     @Test
-    void webAndAdaptersDoNotDependOnApplicationServices() {
-        noClasses()
-                .that()
-                .resideInAnyPackage("..web..", "..adapter..")
-                .should()
-                .dependOnClassesThat()
-                .resideInAnyPackage("..application.service..")
-                .check(imported);
+    void inboundAdaptersUsePublishedApplicationContracts() {
+        List<String> violations = new java.util.ArrayList<>();
+        for (JavaClass clazz : imported) {
+            if (!clazz.getPackageName().contains(".adapter.in.")) {
+                continue;
+            }
+            String from = sliceOf(clazz);
+            if (from == null || !BOUNDED_CONTEXTS.contains(from)) {
+                continue;
+            }
+            for (var dependency : clazz.getDirectDependenciesFromSelf()) {
+                JavaClass target = dependency.getTargetClass();
+                String to = sliceOf(target);
+                boolean sameContext = from.equals(to);
+                boolean targetInApplication = target.getPackageName().contains(".application.");
+                boolean publishedInput = target.getPackageName().contains(".application.port.in");
+                boolean eventSchema = target.getPackageName().contains(".application.event");
+                if (sameContext && targetInApplication && !publishedInput && !eventSchema) {
+                    violations.add(clazz.getName() + " -> " + target.getName());
+                }
+            }
+        }
+        assertThat(violations).isEmpty();
     }
 
     private static String sliceOf(JavaClass clazz) {

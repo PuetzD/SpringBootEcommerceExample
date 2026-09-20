@@ -10,7 +10,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.ProductRe
 import com.springbootecommerce.shophappens.catalog.application.port.out.ProductRepository;
 import com.springbootecommerce.shophappens.catalog.domain.model.Sku;
 import com.springbootecommerce.shophappens.integration.AbstractIntegrationTest;
-import com.springbootecommerce.shophappens.ordering.application.exception.CheckoutItemUnavailableException;
+import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutItemUnavailableException;
 import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutReference;
 import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutReviewChangedException;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderCommand;

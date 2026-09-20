@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.springbootecommerce.shophappens.integration.AbstractIntegrationTest;
 import com.springbootecommerce.shophappens.ordering.adapter.out.persistence.CheckoutSeeds.CustomerCartSeed;
-import com.springbootecommerce.shophappens.ordering.application.exception.CheckoutItemUnavailableException;
+import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutItemUnavailableException;
 import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutReference;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderCommand;
 import com.springbootecommerce.shophappens.ordering.application.port.in.PlaceOrderUseCase;
