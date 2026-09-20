@@ -54,6 +54,20 @@ class CustomerCartRepositoryAdapterIT extends AbstractIntegrationTest {
     }
 
     @Test
+    void deletesOnlyTheRequestedCustomerCartAndCanRepeat() {
+        CustomerId removed = new CustomerId(77L);
+        CustomerId retained = new CustomerId(88L);
+        repository.findOrCreate(removed);
+        repository.findOrCreate(retained);
+
+        repository.deleteByCustomerId(removed);
+        repository.deleteByCustomerId(removed);
+
+        assertThat(repository.find(removed)).isEmpty();
+        assertThat(repository.find(retained)).isPresent();
+    }
+
+    @Test
     void saveOverwritesTheCustomersExistingCart() {
         CustomerId customer = new CustomerId(55L);
         Cart cart = repository.findOrCreate(customer);

@@ -47,6 +47,12 @@ class CustomerRepositoryAdapter implements CustomerRepository {
     }
 
     @Override
+    @Transactional
+    public void deleteByAccountId(AccountId accountId) {
+        springData.deleteByAccountId(accountId.value());
+    }
+
+    @Override
     public CustomerAdminPage searchForAdministration(CustomerAdminSearch search) {
         var page =
                 springData.searchForAdministration(

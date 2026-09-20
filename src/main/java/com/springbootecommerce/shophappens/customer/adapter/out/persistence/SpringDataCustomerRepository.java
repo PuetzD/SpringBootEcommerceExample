@@ -22,6 +22,8 @@ interface SpringDataCustomerRepository extends JpaRepository<CustomerJpaEntity, 
     @EntityGraph(attributePaths = "addresses")
     Optional<CustomerJpaEntity> findByAccountId(Long accountId);
 
+    void deleteByAccountId(Long accountId);
+
     @Query(
             """
             select c from CustomerJpaEntity c

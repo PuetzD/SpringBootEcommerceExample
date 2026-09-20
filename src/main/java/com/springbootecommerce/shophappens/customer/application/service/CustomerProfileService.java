@@ -12,6 +12,7 @@ import com.springbootecommerce.shophappens.customer.application.port.in.External
 import com.springbootecommerce.shophappens.customer.application.port.in.ManageCustomerAddressesUseCase;
 import com.springbootecommerce.shophappens.customer.application.port.in.OwnedAddressQuery;
 import com.springbootecommerce.shophappens.customer.application.port.in.OwnedAddressUnavailableException;
+import com.springbootecommerce.shophappens.customer.application.port.in.RemoveCustomerProfileUseCase;
 import com.springbootecommerce.shophappens.customer.application.port.out.CustomerRepository;
 import com.springbootecommerce.shophappens.customer.domain.model.Address;
 import com.springbootecommerce.shophappens.customer.domain.model.AddressDetails;
@@ -34,7 +35,8 @@ public class CustomerProfileService
                 ManageCustomerAddressesUseCase,
                 OwnedAddressQuery,
                 CustomerReferenceQuery,
-                CustomerContactQuery {
+                CustomerContactQuery,
+                RemoveCustomerProfileUseCase {
 
     private final CustomerRepository customers;
 
@@ -54,6 +56,12 @@ public class CustomerProfileService
                                 familyName,
                                 new ContactEmail(contactEmail)));
         return new CustomerReference(saved.id().orElseThrow().value());
+    }
+
+    @Override
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
+    public void remove(ExternalAccountId accountId) {
+        customers.deleteByAccountId(new AccountId(accountId.value()));
     }
 
     @Override

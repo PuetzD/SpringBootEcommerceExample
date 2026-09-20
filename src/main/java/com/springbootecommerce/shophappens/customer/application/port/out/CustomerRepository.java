@@ -24,4 +24,6 @@ public interface CustomerRepository {
     Optional<CustomerAdminDetail> findForAdministration(CustomerId customerId);
 
     Customer save(Customer customer);
+
+    void deleteByAccountId(AccountId accountId);
 }

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -76,6 +77,14 @@ class CustomerProfileServiceTest {
                                         "Lovelace",
                                         "ada@example.com"))
                 .isInstanceOf(CustomerProfileAlreadyExistsException.class);
+    }
+
+    @Test
+    void removesCustomerProfileIdempotently() {
+        service.remove(new ExternalAccountId(7L));
+        service.remove(new ExternalAccountId(7L));
+
+        verify(customers, times(2)).deleteByAccountId(new AccountId(7L));
     }
 
     @Test
