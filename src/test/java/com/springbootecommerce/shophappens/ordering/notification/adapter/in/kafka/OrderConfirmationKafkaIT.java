@@ -68,6 +68,11 @@ class OrderConfirmationKafkaIT extends AbstractIntegrationTest {
     @AfterEach
     void stopListener() {
         registry.stop();
+        await().atMost(Duration.ofSeconds(30))
+                .until(
+                        () ->
+                                registry.getListenerContainers().stream()
+                                        .noneMatch(container -> container.isRunning()));
     }
 
     @Test
@@ -105,9 +110,9 @@ class OrderConfirmationKafkaIT extends AbstractIntegrationTest {
                         })
                 .when(sender)
                 .send(any());
-        long offset = publish(event);
         try (Admin admin = admin()) {
-            registry.start();
+            startListenerAndAwaitAssignment();
+            long offset = publish(event);
             verify(confirmations, timeout(10000)).send(event);
             await().during(Duration.ofSeconds(2))
                     .atMost(Duration.ofSeconds(3))
@@ -118,9 +123,9 @@ class OrderConfirmationKafkaIT extends AbstractIntegrationTest {
                                 verify(confirmations).send(event);
                             });
             if (restart) {
-                registry.stop();
+                stopListener();
                 assertThat(committedOffset(admin)).isLessThanOrEqualTo(offset);
-                registry.start();
+                startListenerAndAwaitAssignment();
                 verify(confirmations, timeout(10000).atLeast(2)).send(event);
             }
             await().atMost(Duration.ofSeconds(30))
@@ -151,14 +156,31 @@ class OrderConfirmationKafkaIT extends AbstractIntegrationTest {
         } else {
             deliveries.markFailed(event.eventId(), token, "permanent", now, true);
         }
-        long offset = publish(event);
         try (Admin admin = admin()) {
-            registry.start();
+            startListenerAndAwaitAssignment();
+            long offset = publish(event);
             await().atMost(Duration.ofSeconds(15))
                     .untilAsserted(() -> assertThat(committedOffset(admin)).isGreaterThan(offset));
             verify(confirmations).send(event);
             verifyNoInteractions(renderer, sender);
         }
+    }
+
+    private void startListenerAndAwaitAssignment() {
+        registry.start();
+        var partition = new TopicPartition(TOPIC, 0);
+        await().atMost(Duration.ofSeconds(30))
+                .until(
+                        () ->
+                                registry.getListenerContainers().stream()
+                                        .anyMatch(
+                                                container -> {
+                                                    var assigned =
+                                                            container.getAssignedPartitions();
+                                                    return container.isRunning()
+                                                            && assigned != null
+                                                            && assigned.contains(partition);
+                                                }));
     }
 
     private long publish(OrderPlacedIntegrationEvent event) throws Exception {
