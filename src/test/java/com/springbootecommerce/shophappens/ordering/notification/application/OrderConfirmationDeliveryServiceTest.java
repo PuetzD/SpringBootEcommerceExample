@@ -35,6 +35,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -100,12 +101,13 @@ class OrderConfirmationDeliveryServiceTest {
                         eq(false));
     }
 
-    @Test
-    void quarantinesTheFifthFailureWithoutSchedulingAnotherRetry() {
+    @ParameterizedTest
+    @ValueSource(ints = {4, 5, Integer.MAX_VALUE})
+    void quarantinesTheFifthAndLaterFailuresWithoutSchedulingAnotherRetry(int failedAttempts) {
         var event = event();
         var failure = new IllegalStateException("smtp unavailable");
         when(deliveries.claim(any(), any(), any(), any(), any()))
-                .thenReturn(new OrderConfirmationClaim.Acquired(4, CLAIM_TOKEN));
+                .thenReturn(new OrderConfirmationClaim.Acquired(failedAttempts, CLAIM_TOKEN));
         when(renderer.render(event)).thenReturn(RENDERED);
         doThrow(failure).when(sender).send(RENDERED);
 

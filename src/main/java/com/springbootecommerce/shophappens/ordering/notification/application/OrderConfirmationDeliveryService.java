@@ -46,10 +46,12 @@ public class OrderConfirmationDeliveryService implements SendOrderConfirmationUs
             sender.send(renderer.render(event));
             deliveries.markSent(event.eventId(), acquired.claimToken(), clock.instant());
         } catch (RuntimeException exception) {
-            int attempt = acquired.failedAttempts() + 1;
-            boolean quarantine = attempt >= 5;
+            int failedAttempts = acquired.failedAttempts();
+            boolean quarantine = failedAttempts >= 4;
             Instant retryAt =
-                    quarantine ? clock.instant() : clock.instant().plusSeconds(1L << (attempt - 1));
+                    quarantine
+                            ? clock.instant()
+                            : clock.instant().plusSeconds(1L << failedAttempts);
             try {
                 deliveries.markFailed(
                         event.eventId(),

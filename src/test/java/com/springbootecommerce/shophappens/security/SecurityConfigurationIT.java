@@ -38,6 +38,7 @@ class SecurityConfigurationIT extends AbstractIntegrationTest {
 
     @BeforeEach
     void clearAccounts() {
+        jdbc.update("delete from customer_cart");
         jdbc.update("delete from customer");
         jdbc.update("delete from account");
     }
