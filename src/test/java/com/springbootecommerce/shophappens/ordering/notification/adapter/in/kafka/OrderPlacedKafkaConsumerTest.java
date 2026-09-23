@@ -1,19 +1,12 @@
 package com.springbootecommerce.shophappens.ordering.notification.adapter.in.kafka;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import com.springbootecommerce.shophappens.ordering.application.event.OrderPlacedIntegrationEvent;
-import com.springbootecommerce.shophappens.ordering.notification.application.OrderConfirmationEmailService;
-import com.springbootecommerce.shophappens.ordering.notification.application.port.out.OrderConfirmationDelivery;
+import com.springbootecommerce.shophappens.ordering.notification.application.port.in.SendOrderConfirmationUseCase;
 import com.springbootecommerce.shophappens.sharedkernel.money.Currency;
 import java.math.BigDecimal;
-import java.time.Clock;
 import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -25,13 +18,11 @@ import tools.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 class OrderPlacedKafkaConsumerTest {
-    @Mock OrderConfirmationEmailService emails;
-    @Mock OrderConfirmationDelivery deliveries;
+    @Mock SendOrderConfirmationUseCase confirmations;
 
     @Test
-    void sendsAndMarksAClaimedOrderEvent() throws Exception {
+    void delegatesTheDeserializedEventToTheUseCase() throws Exception {
         var event = event();
-        when(deliveries.claim(event.eventId(), event.orderNumber())).thenReturn(true);
         var consumer = consumer();
 
         consumer.consume(
@@ -42,34 +33,11 @@ class OrderPlacedKafkaConsumerTest {
                         "order",
                         new ObjectMapper().writeValueAsString(event)));
 
-        verify(emails).send(event);
-        verify(deliveries).markSent(event.eventId(), Instant.parse("2026-09-13T10:00:00Z"));
+        verify(confirmations).send(event);
     }
 
     @Test
-    void skipsAnAlreadyClaimedEvent() throws Exception {
-        var event = event();
-        when(deliveries.claim(event.eventId(), event.orderNumber())).thenReturn(false);
-
-        consumer()
-                .consume(
-                        new ConsumerRecord<>(
-                                OrderPlacedIntegrationEvent.EVENT_TYPE,
-                                0,
-                                0,
-                                "order",
-                                new ObjectMapper().writeValueAsString(event)));
-
-        verify(emails, never()).send(any());
-        verify(deliveries, never()).markSent(any(), any());
-    }
-
-    @Test
-    void recordsAndPropagatesATransientEmailFailure() throws Exception {
-        var event = event();
-        when(deliveries.claim(event.eventId(), event.orderNumber())).thenReturn(true);
-        doThrow(new IllegalStateException("smtp unavailable")).when(emails).send(event);
-
+    void rejectsMalformedJsonWithoutCallingTheUseCase() {
         org.assertj.core.api.Assertions.assertThatThrownBy(
                         () ->
                                 consumer()
@@ -79,20 +47,13 @@ class OrderPlacedKafkaConsumerTest {
                                                         0,
                                                         0,
                                                         "order",
-                                                        new ObjectMapper()
-                                                                .writeValueAsString(event))))
-                .isInstanceOf(IllegalStateException.class);
-        verify(deliveries)
-                .markFailed(
-                        any(), org.mockito.ArgumentMatchers.contains("smtp unavailable"), any());
+                                                        "not-json")))
+                .isInstanceOf(IllegalArgumentException.class);
+        org.mockito.Mockito.verifyNoInteractions(confirmations);
     }
 
     private OrderPlacedKafkaConsumer consumer() {
-        return new OrderPlacedKafkaConsumer(
-                new ObjectMapper(),
-                emails,
-                deliveries,
-                Clock.fixed(Instant.parse("2026-09-13T10:00:00Z"), ZoneOffset.UTC));
+        return new OrderPlacedKafkaConsumer(new ObjectMapper(), confirmations);
     }
 
     private static OrderPlacedIntegrationEvent event() {

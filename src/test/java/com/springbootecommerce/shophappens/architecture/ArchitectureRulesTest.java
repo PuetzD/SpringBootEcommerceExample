@@ -22,6 +22,8 @@ class ArchitectureRulesTest {
     private static final String ROOT = "com.springbootecommerce.shophappens";
     private static final List<String> BOUNDED_CONTEXTS =
             List.of("account", "customer", "catalog", "cart", "ordering");
+    private static final List<String> DELIVERY_SLICES =
+            List.of("administration", "security", "storefront");
     // Extra cycle-detection slices for adapter and shared web code that is not a bounded
     // context. "sharedkernel" precedes "shared" so the longer prefix wins in sliceOf().
     private static final List<String> PROTECTED_SLICES =
@@ -297,19 +299,24 @@ class ArchitectureRulesTest {
     }
 
     @Test
-    void administrationUsesOnlyCatalogPublishedInputPorts() {
-        noClasses()
-                .that()
-                .resideInAnyPackage("..administration..")
-                .should()
-                .dependOnClassesThat()
-                .resideInAnyPackage(
-                        "..catalog.application.service..",
-                        "..catalog.application.port.out..",
-                        "..catalog.domain..",
-                        "..catalog.adapter..",
-                        "..catalog.application.command..")
-                .check(imported);
+    void deliverySlicesUseOnlyBoundedContextPublishedInputPorts() {
+        List<String> violations = new java.util.ArrayList<>();
+        for (JavaClass clazz : imported) {
+            String from = sliceOf(clazz);
+            if (from == null || !DELIVERY_SLICES.contains(from)) {
+                continue;
+            }
+            for (var dependency : clazz.getDirectDependenciesFromSelf()) {
+                JavaClass target = dependency.getTargetClass();
+                String to = sliceOf(target);
+                if (to != null
+                        && BOUNDED_CONTEXTS.contains(to)
+                        && !target.getPackageName().contains(".application.port.in")) {
+                    violations.add(clazz.getName() + " -> " + target.getName());
+                }
+            }
+        }
+        assertThat(violations).isEmpty();
     }
 
     @Test
@@ -382,14 +389,62 @@ class ArchitectureRulesTest {
     }
 
     @Test
-    void webAndAdaptersDoNotDependOnApplicationServices() {
+    void applicationDoesNotDependOnPersistenceFrameworks() {
         noClasses()
                 .that()
-                .resideInAnyPackage("..web..", "..adapter..")
+                .resideInAnyPackage(
+                        "..account.application..",
+                        "..customer.application..",
+                        "..catalog.application..",
+                        "..cart.application..",
+                        "..ordering.application..")
                 .should()
                 .dependOnClassesThat()
-                .resideInAnyPackage("..application.service..")
+                .resideInAnyPackage(
+                        "org.springframework.dao..",
+                        "org.springframework.data..",
+                        "org.springframework.jdbc..",
+                        "org.springframework.orm..",
+                        "jakarta.persistence..",
+                        "org.hibernate..")
                 .check(imported);
+    }
+
+    @Test
+    void notificationInboundAdaptersDoNotDependOnConcreteNotificationApplicationClasses() {
+        noClasses()
+                .that()
+                .resideInAPackage("..ordering.notification.adapter.in..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAPackage("..ordering.notification.application")
+                .check(imported);
+    }
+
+    @Test
+    void inboundAdaptersUsePublishedApplicationContracts() {
+        List<String> violations = new java.util.ArrayList<>();
+        for (JavaClass clazz : imported) {
+            if (!clazz.getPackageName().contains(".adapter.in.")) {
+                continue;
+            }
+            String from = sliceOf(clazz);
+            if (from == null || !BOUNDED_CONTEXTS.contains(from)) {
+                continue;
+            }
+            for (var dependency : clazz.getDirectDependenciesFromSelf()) {
+                JavaClass target = dependency.getTargetClass();
+                String to = sliceOf(target);
+                boolean sameContext = from.equals(to);
+                boolean targetInApplication = target.getPackageName().contains(".application.");
+                boolean publishedInput = target.getPackageName().contains(".application.port.in");
+                boolean eventSchema = target.getPackageName().contains(".application.event");
+                if (sameContext && targetInApplication && !publishedInput && !eventSchema) {
+                    violations.add(clazz.getName() + " -> " + target.getName());
+                }
+            }
+        }
+        assertThat(violations).isEmpty();
     }
 
     private static String sliceOf(JavaClass clazz) {

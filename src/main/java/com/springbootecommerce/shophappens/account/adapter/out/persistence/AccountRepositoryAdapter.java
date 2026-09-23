@@ -3,6 +3,7 @@ package com.springbootecommerce.shophappens.account.adapter.out.persistence;
 import com.springbootecommerce.shophappens.account.application.port.out.AccountRepository;
 import com.springbootecommerce.shophappens.account.domain.model.Account;
 import com.springbootecommerce.shophappens.account.domain.model.Email;
+import com.springbootecommerce.shophappens.sharedkernel.identity.AccountId;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -24,7 +25,17 @@ class AccountRepositoryAdapter implements AccountRepository {
     }
 
     @Override
+    public Optional<Account> findById(AccountId id) {
+        return springData.findById(id.value()).map(mapper::toDomain);
+    }
+
+    @Override
     public Account save(Account account) {
         return mapper.toDomain(springData.save(mapper.toJpa(account)));
+    }
+
+    @Override
+    public void delete(AccountId id) {
+        springData.deleteById(id.value());
     }
 }

@@ -9,6 +9,7 @@ import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartCon
 import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartReference;
 import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartSnapshot;
 import com.springbootecommerce.shophappens.cart.application.port.in.GuestCartUseCase;
+import com.springbootecommerce.shophappens.cart.application.port.in.RemoveCustomerCartUseCase;
 import com.springbootecommerce.shophappens.cart.application.port.out.CartMergeLedger;
 import com.springbootecommerce.shophappens.cart.application.port.out.CustomerCartRepository;
 import com.springbootecommerce.shophappens.cart.application.port.out.GuestCartRepository;
@@ -32,7 +33,8 @@ public class CartService
         implements GuestCartUseCase,
                 CustomerCartUseCase,
                 CustomerCartQuery,
-                ClearCustomerCartUseCase {
+                ClearCustomerCartUseCase,
+                RemoveCustomerCartUseCase {
     private final GuestCartRepository guests;
     private final CustomerCartRepository customers;
     private final GuestCartWriteGuard guestWrites;
@@ -132,6 +134,12 @@ public class CartService
     @Transactional(propagation = Propagation.MANDATORY)
     public void clear(CustomerId customer) {
         customers.clear(customer);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void remove(CustomerId customer) {
+        customers.deleteByCustomerId(customer);
     }
 
     private List<CartItemSnapshot> toItemSnapshots(Cart cart) {

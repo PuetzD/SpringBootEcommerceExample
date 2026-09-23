@@ -1,6 +1,4 @@
-package com.springbootecommerce.shophappens.customer.application;
-
-import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
+package com.springbootecommerce.shophappens.customer.application.port.in;
 
 public class CustomerNotFoundException extends RuntimeException {
     public CustomerNotFoundException(CustomerReference customer) {

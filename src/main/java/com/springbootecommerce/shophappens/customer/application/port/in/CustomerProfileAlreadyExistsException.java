@@ -1,6 +1,4 @@
-package com.springbootecommerce.shophappens.customer.application;
-
-import com.springbootecommerce.shophappens.customer.application.port.in.ExternalAccountId;
+package com.springbootecommerce.shophappens.customer.application.port.in;
 
 public class CustomerProfileAlreadyExistsException extends RuntimeException {
     public CustomerProfileAlreadyExistsException(ExternalAccountId accountId) {

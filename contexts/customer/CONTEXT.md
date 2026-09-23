@@ -44,3 +44,9 @@ _Avoid_: Primary delivery address
 **Default Billing Address**:
 The optional Address a Customer prefers to preselect for billing. A Customer has at most one.
 _Avoid_: Primary invoice address
+
+## Ownership
+
+Customer Profile owns the persistence of Customers and Addresses. It exposes an
+idempotent removal operation for Account deletion and retains no foreign key to
+the Account table. `account_id` is a logical, unique reference.

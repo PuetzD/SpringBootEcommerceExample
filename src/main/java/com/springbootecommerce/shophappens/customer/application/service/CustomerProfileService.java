@@ -1,17 +1,18 @@
 package com.springbootecommerce.shophappens.customer.application.service;
 
-import com.springbootecommerce.shophappens.customer.application.CustomerNotFoundException;
-import com.springbootecommerce.shophappens.customer.application.CustomerProfileAlreadyExistsException;
 import com.springbootecommerce.shophappens.customer.application.port.in.AddressReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.AddressSnapshot;
 import com.springbootecommerce.shophappens.customer.application.port.in.CreateCustomerProfileUseCase;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerContactQuery;
+import com.springbootecommerce.shophappens.customer.application.port.in.CustomerNotFoundException;
+import com.springbootecommerce.shophappens.customer.application.port.in.CustomerProfileAlreadyExistsException;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReference;
 import com.springbootecommerce.shophappens.customer.application.port.in.CustomerReferenceQuery;
 import com.springbootecommerce.shophappens.customer.application.port.in.ExternalAccountId;
 import com.springbootecommerce.shophappens.customer.application.port.in.ManageCustomerAddressesUseCase;
 import com.springbootecommerce.shophappens.customer.application.port.in.OwnedAddressQuery;
 import com.springbootecommerce.shophappens.customer.application.port.in.OwnedAddressUnavailableException;
+import com.springbootecommerce.shophappens.customer.application.port.in.RemoveCustomerProfileUseCase;
 import com.springbootecommerce.shophappens.customer.application.port.out.CustomerRepository;
 import com.springbootecommerce.shophappens.customer.domain.model.Address;
 import com.springbootecommerce.shophappens.customer.domain.model.AddressDetails;
@@ -24,7 +25,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,7 +35,8 @@ public class CustomerProfileService
                 ManageCustomerAddressesUseCase,
                 OwnedAddressQuery,
                 CustomerReferenceQuery,
-                CustomerContactQuery {
+                CustomerContactQuery,
+                RemoveCustomerProfileUseCase {
 
     private final CustomerRepository customers;
 
@@ -47,19 +48,20 @@ public class CustomerProfileService
         if (customers.findByAccountId(internalAccountId).isPresent()) {
             throw new CustomerProfileAlreadyExistsException(accountId);
         }
-        Customer saved;
-        try {
-            saved =
-                    customers.save(
-                            Customer.create(
-                                    internalAccountId,
-                                    givenName,
-                                    familyName,
-                                    new ContactEmail(contactEmail)));
-        } catch (DataIntegrityViolationException exception) {
-            throw new CustomerProfileAlreadyExistsException(accountId);
-        }
+        Customer saved =
+                customers.save(
+                        Customer.create(
+                                internalAccountId,
+                                givenName,
+                                familyName,
+                                new ContactEmail(contactEmail)));
         return new CustomerReference(saved.id().orElseThrow().value());
+    }
+
+    @Override
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
+    public void remove(ExternalAccountId accountId) {
+        customers.deleteByAccountId(new AccountId(accountId.value()));
     }
 
     @Override

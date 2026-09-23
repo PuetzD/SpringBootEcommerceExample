@@ -27,3 +27,8 @@ _Avoid_: Admin user, staff role
 **Registration**:
 The creation of a new Customer-role Account and its corresponding Customer identity.
 _Avoid_: Sign-in, enrollment
+
+**Account Deletion**:
+The Identity and Access operation that removes an Account and coordinates
+idempotent removal of its current Customer Profile and Cart state while retaining
+historical Orders.

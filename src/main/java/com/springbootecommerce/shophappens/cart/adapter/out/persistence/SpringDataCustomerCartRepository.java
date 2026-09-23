@@ -11,4 +11,6 @@ interface SpringDataCustomerCartRepository extends JpaRepository<CustomerCartJpa
     Optional<CustomerCartJpaEntity> findWithItemsByCustomerId(long customerId);
 
     Optional<CustomerCartJpaEntity> findByCustomerId(long customerId);
+
+    void deleteByCustomerId(long customerId);
 }

@@ -48,6 +48,8 @@ class ProductionSessionCookieIT extends AbstractIntegrationTest {
 
     @BeforeEach
     void createCustomerAccount() {
+        jdbc.update("delete from customer_cart");
+        jdbc.update("delete from customer");
         jdbc.update("delete from account");
         jdbc.update(
                 "insert into account (email, password_hash, role, enabled) values (?,?,?,?)",

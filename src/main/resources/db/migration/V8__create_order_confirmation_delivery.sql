@@ -5,6 +5,8 @@ CREATE TABLE order_confirmation_delivery (
     attempt_count INTEGER NOT NULL DEFAULT 0,
     last_error VARCHAR(200),
     next_attempt_at TIMESTAMPTZ NOT NULL,
+    claim_expires_at TIMESTAMPTZ NOT NULL,
+    claim_token UUID NOT NULL,
     sent_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL,
@@ -14,6 +16,6 @@ CREATE TABLE order_confirmation_delivery (
     CONSTRAINT chk_order_confirmation_delivery_attempt_count CHECK (attempt_count >= 0)
 );
 
-CREATE INDEX ix_order_confirmation_delivery_retry
-    ON order_confirmation_delivery (next_attempt_at, created_at, event_id)
-    WHERE status = 'FAILED';
+CREATE INDEX ix_order_confirmation_delivery_eligible
+    ON order_confirmation_delivery (next_attempt_at, claim_expires_at, created_at, event_id)
+    WHERE status IN ('FAILED', 'CLAIMED');

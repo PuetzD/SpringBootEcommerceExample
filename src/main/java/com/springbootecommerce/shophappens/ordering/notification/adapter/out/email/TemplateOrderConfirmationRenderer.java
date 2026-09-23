@@ -1,11 +1,10 @@
-package com.springbootecommerce.shophappens.ordering.notification.application;
+package com.springbootecommerce.shophappens.ordering.notification.adapter.out.email;
 
 import com.springbootecommerce.shophappens.ordering.application.event.OrderPlacedIntegrationEvent;
 import com.springbootecommerce.shophappens.ordering.application.event.OrderPlacedIntegrationEvent.Address;
 import com.springbootecommerce.shophappens.ordering.application.event.OrderPlacedIntegrationEvent.Item;
-import com.springbootecommerce.shophappens.shared.email.EmailAddress;
-import com.springbootecommerce.shophappens.shared.email.EmailMessage;
-import com.springbootecommerce.shophappens.shared.email.EmailSender;
+import com.springbootecommerce.shophappens.ordering.notification.application.port.out.OrderConfirmationRenderer;
+import com.springbootecommerce.shophappens.ordering.notification.application.port.out.RenderedOrderConfirmation;
 import com.springbootecommerce.shophappens.shared.email.EmailTemplateRenderer;
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -13,34 +12,31 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
-public class OrderConfirmationEmailService {
+@Component
+public class TemplateOrderConfirmationRenderer implements OrderConfirmationRenderer {
     private final EmailTemplateRenderer templates;
-    private final EmailSender sender;
     private final String from;
 
-    public OrderConfirmationEmailService(
+    public TemplateOrderConfirmationRenderer(
             EmailTemplateRenderer templates,
-            EmailSender sender,
             @Value("${notifications.email.from:shop@example.com}") String from) {
         this.templates = templates;
-        this.sender = sender;
         this.from = from;
     }
 
-    public void send(OrderPlacedIntegrationEvent event) {
+    @Override
+    public RenderedOrderConfirmation render(OrderPlacedIntegrationEvent event) {
         var variables = variables(event);
         String html = templates.render("email/order-confirmation-html", Locale.ROOT, variables);
         String text = templates.render("email/order-confirmation-text", Locale.ROOT, variables);
-        sender.send(
-                new EmailMessage(
-                        from,
-                        new EmailAddress(event.customerContactEmail()),
-                        "Order " + event.orderNumber() + " placed",
-                        text,
-                        html));
+        return new RenderedOrderConfirmation(
+                from,
+                event.customerContactEmail(),
+                "Order " + event.orderNumber() + " placed",
+                text,
+                html);
     }
 
     private static Map<String, Object> variables(OrderPlacedIntegrationEvent event) {

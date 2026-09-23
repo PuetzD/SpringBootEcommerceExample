@@ -5,7 +5,7 @@ import com.springbootecommerce.shophappens.catalog.application.port.in.Published
 import com.springbootecommerce.shophappens.catalog.application.port.in.PurchaseLine;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PurchaseProductsUseCase;
 import com.springbootecommerce.shophappens.catalog.application.port.in.PurchasedProductSnapshot;
-import com.springbootecommerce.shophappens.ordering.application.exception.CheckoutItemUnavailableException;
+import com.springbootecommerce.shophappens.ordering.application.port.in.CheckoutItemUnavailableException;
 import com.springbootecommerce.shophappens.ordering.application.port.out.CatalogPurchaseGateway;
 import com.springbootecommerce.shophappens.ordering.application.port.out.PurchasedProduct;
 import com.springbootecommerce.shophappens.ordering.application.port.out.RequestedProduct;

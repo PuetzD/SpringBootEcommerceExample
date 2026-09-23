@@ -12,4 +12,6 @@ public interface CustomerCartRepository {
     Cart save(Cart cart);
 
     void clear(CustomerId customerId);
+
+    void deleteByCustomerId(CustomerId customerId);
 }

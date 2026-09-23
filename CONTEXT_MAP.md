@@ -53,6 +53,10 @@ flowchart LR
 - **Identity and Access → Customer Profile**: customer Account registration creates the
   corresponding Customer through Customer Profile's published input contract. Identity and Access
   retains no Customer aggregate or profile persistence type.
+- **Identity and Access account deletion**: Account coordinates current Customer Profile and
+  Customer Cart cleanup through consumer-owned output ports and provider-owned published input
+  contracts. Customer and Cart own their state; shared-kernel identifiers are logical references,
+  not cross-context database foreign keys. Historical Orders remain retained.
 - **Cart → Customer Profile**: Cart's web adapter resolves an authenticated Customer through the
   published current-customer contract; an anonymous request falls back to a Guest Cart.
 - **Cart → Catalog**: Cart stores Product Variant identifiers and quantities. Its web adapter asks

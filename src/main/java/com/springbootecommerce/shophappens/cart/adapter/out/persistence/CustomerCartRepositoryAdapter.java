@@ -55,6 +55,12 @@ class CustomerCartRepositoryAdapter implements CustomerCartRepository {
         springData.findWithItemsByCustomerId(customerId.value()).ifPresent(springData::delete);
     }
 
+    @Override
+    @Transactional
+    public void deleteByCustomerId(CustomerId customerId) {
+        springData.deleteByCustomerId(customerId.value());
+    }
+
     private long customerIdOf(Cart cart) {
         if (!(cart.owner() instanceof CartOwner.Customer customer)) {
             throw new IllegalArgumentException("Only Customer Carts can be persisted");
