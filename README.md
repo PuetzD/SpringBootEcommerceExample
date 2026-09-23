@@ -1,9 +1,10 @@
 # Spring Boot Ecommerce Example
 
-This is a senior software engineer's Java learning project: a deliberately bounded ecommerce
-application used to practise Spring Boot, domain modeling, persistence, security, testing, and
-delivery trade-offs. It demonstrates a simulated merchandise purchase workflow, not a
-production-ready retail platform.
+This is a learning project for exploring Spring Boot, DDD, modular architecture, testing, and AI-assisted development.
+
+A significant part of the implementation has been generated or refined with coding agents. I use the project to practise directing those tools, reviewing their output, testing and debugging the resulting system, and increasingly reworking the architecture and implementation myself.
+
+It should therefore be read as an evolving learning project rather than as a sample of fully unaided Java/Spring implementation.
 
 ## Technology
 
