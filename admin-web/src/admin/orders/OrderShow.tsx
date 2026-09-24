@@ -1,4 +1,5 @@
-import {ArrayField, DateField, Datagrid, NumberField, Show, SimpleShowLayout, TextField} from 'react-admin'
+import {ArrayField, Datagrid, DateField, NumberField, Show, SimpleShowLayout, TextField} from 'react-admin'
+import {OrderConfirmationStatusPanel} from './OrderConfirmationStatusPanel';
 
 export function OrderShow() {
   return (
@@ -27,6 +28,7 @@ export function OrderShow() {
             <TextField source="countryCode" />
           </Datagrid>
         </ArrayField>
+        <OrderConfirmationStatusPanel />
       </SimpleShowLayout>
     </Show>
   )

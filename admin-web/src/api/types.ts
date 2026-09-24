@@ -113,6 +113,16 @@ export interface Order {
     addresses: OrderAddress[]
 }
 
+export interface OrderConfirmationStatus {
+    status: string
+    failedAttempts: number
+    lastError: string | null
+    retryAt: string | null
+    sentAt: string | null
+}
+export type OrderConfirmationStatusRecord = OrderConfirmationStatus & {
+    id: string
+}
 export interface CustomerAddress {
     id: number
     recipientName: string

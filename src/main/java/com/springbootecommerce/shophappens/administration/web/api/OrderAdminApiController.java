@@ -7,6 +7,8 @@ import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdm
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdministrationQuery;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderItemView;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderNotFoundException;
+import com.springbootecommerce.shophappens.ordering.notification.application.port.in.OrderConfirmationAdministrationQuery;
+import com.springbootecommerce.shophappens.ordering.notification.application.port.in.OrderConfirmationDeliveryView;
 import java.time.Instant;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/admin/orders")
 public class OrderAdminApiController {
     private final OrderAdministrationQuery orders;
+    private final OrderConfirmationAdministrationQuery confirmationQuery;
 
     @GetMapping
     public OrderPageResponse list(
@@ -47,6 +50,15 @@ public class OrderAdminApiController {
     @GetMapping("/{orderNumber}")
     public OrderResponse detail(@PathVariable String orderNumber) {
         return orders.findOrder(orderNumber)
+                .map(this::toResponse)
+                .orElseThrow(() -> new OrderNotFoundException(orderNumber));
+    }
+
+    @GetMapping("/{orderNumber}/confirmation-delivery")
+    public OrderConfirmationDeliveryResponse orderConfirmationStatus(
+            @PathVariable String orderNumber) {
+        return confirmationQuery
+                .findForOrderNumber(orderNumber)
                 .map(this::toResponse)
                 .orElseThrow(() -> new OrderNotFoundException(orderNumber));
     }
@@ -99,5 +111,14 @@ public class OrderAdminApiController {
                 address.postalCode(),
                 address.countryCode(),
                 address.phoneNumber());
+    }
+
+    private OrderConfirmationDeliveryResponse toResponse(OrderConfirmationDeliveryView view) {
+        return new OrderConfirmationDeliveryResponse(
+                view.status(),
+                view.failedAttempts(),
+                view.lastError(),
+                view.nextRetryAt(),
+                view.sentAt());
     }
 }
