@@ -55,4 +55,6 @@ interface SpringDataOrderConfirmationDeliveryRepository
             String diagnostic,
             Instant nextAttemptAt,
             Instant updatedAt);
+
+    Optional<OrderConfirmationDeliveryJpaEntity> findByOrderNumber(String orderNumber);
 }

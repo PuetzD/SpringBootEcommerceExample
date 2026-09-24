@@ -14,6 +14,8 @@ import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdm
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderAdministrationQuery;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderItemView;
 import com.springbootecommerce.shophappens.ordering.application.port.in.OrderReference;
+import com.springbootecommerce.shophappens.ordering.notification.application.port.in.OrderConfirmationAdministrationQuery;
+import com.springbootecommerce.shophappens.ordering.notification.application.port.in.OrderConfirmationDeliveryView;
 import com.springbootecommerce.shophappens.security.SecurityConfiguration;
 import com.springbootecommerce.shophappens.security.service.CartMergingAuthenticationSuccessHandler;
 import com.springbootecommerce.shophappens.sharedkernel.identity.CustomerId;
@@ -36,6 +38,7 @@ class OrderAdminApiControllerTest {
     @Autowired MockMvc mockMvc;
 
     @MockitoBean OrderAdministrationQuery orderAdministrationQuery;
+    @MockitoBean OrderConfirmationAdministrationQuery orderConfirmationAdministrationQuery;
     @MockitoBean CartMergingAuthenticationSuccessHandler successHandler;
 
     @Test
@@ -150,6 +153,20 @@ class OrderAdminApiControllerTest {
                 .andExpect(jsonPath("$.code").value("ordering.order.not-found"));
     }
 
+    @Test
+    void existingOrderReturnsConfirmationStatus() throws Exception {
+        var orderNumber = "ORD-2026-100002";
+        when(orderConfirmationAdministrationQuery.findForOrderNumber(orderNumber))
+                .thenReturn(Optional.of(confirmationDetail(orderNumber)));
+        mockMvc.perform(
+                        get("/api/admin/orders/ORD-2026-100002/confirmation-delivery")
+                                .with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("somestatus"))
+                .andExpect(jsonPath("$.failedAttempts").value(2))
+                .andExpect(jsonPath("$.lastError").value("someError"));
+    }
+
     private static OrderAdminSummary summary(String orderNumber) {
         return new OrderAdminSummary(
                 new OrderReference(UUID.randomUUID()),
@@ -176,5 +193,14 @@ class OrderAdminApiControllerTest {
                                 1,
                                 new Money(new BigDecimal("19.99")))),
                 List.of());
+    }
+
+    private static OrderConfirmationDeliveryView confirmationDetail(String orderNumber) {
+        return new OrderConfirmationDeliveryView(
+                "somestatus",
+                2,
+                "someError",
+                Instant.parse("2026-09-05T09:00:00Z"),
+                Instant.parse("2026-09-05T09:00:00Z"));
     }
 }

@@ -1,10 +1,13 @@
 package com.springbootecommerce.shophappens.ordering.notification.adapter.out.persistence;
 
+import com.springbootecommerce.shophappens.ordering.notification.application.port.in.OrderConfirmationDeliveryView;
 import com.springbootecommerce.shophappens.ordering.notification.application.port.out.OrderConfirmationClaim;
 import com.springbootecommerce.shophappens.ordering.notification.application.port.out.OrderConfirmationDelivery;
+import com.springbootecommerce.shophappens.ordering.notification.application.port.out.OrderConfirmationDeliveryQuery;
 import com.springbootecommerce.shophappens.ordering.notification.application.port.out.StaleOrderConfirmationClaimException;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -12,7 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 @RequiredArgsConstructor
-public class JpaOrderConfirmationDelivery implements OrderConfirmationDelivery {
+public class JpaOrderConfirmationDelivery
+        implements OrderConfirmationDelivery, OrderConfirmationDeliveryQuery {
     private final SpringDataOrderConfirmationDeliveryRepository repository;
     private final Clock clock;
 
@@ -72,5 +76,21 @@ public class JpaOrderConfirmationDelivery implements OrderConfirmationDelivery {
         if (updated == 0) {
             throw new StaleOrderConfirmationClaimException(eventId);
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<OrderConfirmationDeliveryView> findByOrderNumber(String orderNumber) {
+        return repository.findByOrderNumber(orderNumber).map(this::toView);
+    }
+
+    private OrderConfirmationDeliveryView toView(
+            OrderConfirmationDeliveryJpaEntity orderConfirmationDeliveryJpaEntity) {
+        return new OrderConfirmationDeliveryView(
+                orderConfirmationDeliveryJpaEntity.getStatus(),
+                orderConfirmationDeliveryJpaEntity.getAttemptCount(),
+                orderConfirmationDeliveryJpaEntity.getLastError(),
+                orderConfirmationDeliveryJpaEntity.getNextAttemptAt(),
+                orderConfirmationDeliveryJpaEntity.getSentAt());
     }
 }
