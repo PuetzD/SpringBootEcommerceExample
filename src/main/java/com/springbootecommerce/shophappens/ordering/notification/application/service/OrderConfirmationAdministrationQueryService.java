@@ -5,7 +5,9 @@ import com.springbootecommerce.shophappens.ordering.notification.application.por
 import com.springbootecommerce.shophappens.ordering.notification.application.port.out.OrderConfirmationDeliveryQuery;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
+@Service
 @RequiredArgsConstructor
 public class OrderConfirmationAdministrationQueryService
         implements OrderConfirmationAdministrationQuery {
