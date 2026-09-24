@@ -164,7 +164,8 @@ class OrderAdminApiControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("somestatus"))
                 .andExpect(jsonPath("$.failedAttempts").value(2))
-                .andExpect(jsonPath("$.lastError").value("someError"));
+                .andExpect(jsonPath("$.lastError").value("someError"))
+                .andExpect(jsonPath("$.retryAt").value("2026-09-05T09:00:00Z"));
     }
 
     private static OrderAdminSummary summary(String orderNumber) {
